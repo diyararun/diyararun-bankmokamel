@@ -1,0 +1,7 @@
+/* این کلاس در نسخه‌ی اولیه‌ی auth.html تعریف شده بود ولی روی هیچ عنصری
+   اعمال نشده بود (کد بلااستفاده). برای حفظ کامل کد اصلی نگه داشته شده است. */
+.auth-bg {
+  background-color: #0f172a;
+  background-image: radial-gradient(rgba(220, 38, 38, 0.2) 1px, transparent 1px);
+  background-size: 28px 28px;
+}

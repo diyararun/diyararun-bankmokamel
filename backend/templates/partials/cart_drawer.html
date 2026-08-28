@@ -1,0 +1,86 @@
+    <!-- ==================== CART DRAWER ( کشوی سبد خرید ) ==================== -->
+    <div
+      id="cartDrawerModal"
+      class="fixed inset-0 z-[110] opacity-0 pointer-events-none transition-opacity duration-300"
+    >
+      <!-- Backdrop -->
+      <div
+        onclick="closeCartDrawer()"
+        class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+      ></div>
+
+      <div
+        id="cartDrawer"
+        class="absolute top-0 left-0 h-full w-full max-w-md bg-white shadow-2xl transition-transform duration-300 -translate-x-full flex flex-col justify-between"
+      >
+        <!-- Header -->
+        <div
+          class="p-5 border-b border-slate-100 flex items-center justify-between"
+        >
+          <div class="flex items-center gap-2">
+            <svg
+              class="w-6 h-6 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+              />
+            </svg>
+            <h3 class="font-bold text-slate-900 text-lg">سبد خرید شما</h3>
+          </div>
+          <button
+            onclick="closeCartDrawer()"
+            class="p-2 text-slate-400 hover:text-slate-800 rounded-full transition-colors"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Content Area (Empty or Items) -->
+        <div id="cartContent" class="p-6 flex-1 overflow-y-auto">
+          <!-- به‌صورت دینامیک با JS پر می‌شود -->
+        </div>
+
+        <!-- Footer (مجموع قیمت و پرداخت) -->
+        <div
+          id="cartFooter"
+          class="p-5 border-t border-slate-100 bg-slate-50 hidden"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-sm font-bold text-slate-600"
+              >مبلغ قابل پرداخت:</span
+            >
+            <span class="text-lg font-black text-red-600" id="cartTotalPrice"
+              >۰ تومان</span
+            >
+          </div>
+          <a href="{% url 'store:checkout' %}">
+            <button
+              onclick="
+                showToast('تکمیل خرید', 'در حال انتقال به درگاه پرداخت...')
+              "
+              class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-red-600/30"
+            >
+              تکمیل فرآیند خرید
+            </button>
+          </a>
+        </div>
+      </div>
+    </div>

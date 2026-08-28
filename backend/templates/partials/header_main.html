@@ -1,0 +1,207 @@
+{% load static %}
+<header
+  class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm"
+>
+  <div
+    class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4"
+  >
+    <!-- راست: لوگو + نوبار -->
+    <div class="flex items-center gap-8">
+      <!-- لوگو -->
+      <a href="{% url 'store:index' %}" class="flex items-center gap-2 group">
+        <div
+          class="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-red-600/30 group-hover:scale-105 transition-transform"
+        >
+          BM
+        </div>
+        <span class="text-2xl font-black text-slate-900 tracking-tight"
+          >بانک<span class="text-red-600">مکمل</span></span
+        >
+      </a>
+
+      <!-- منو (Navbar) -->
+      <nav
+        class="hidden md:flex items-center gap-6 font-semibold text-slate-600 text-sm"
+      >
+        <a
+          href="{% url 'store:index' %}"
+          class="{% if active_nav == 'home' %}text-red-600{% else %}hover:text-red-600{% endif %} transition-colors"
+          >خانه</a
+        >
+        <a
+          href="{% url 'store:products' %}"
+          class="{% if active_nav == 'products' %}text-red-600{% else %}hover:text-red-600{% endif %} transition-colors"
+          >محصولات</a
+        >
+        <a
+          href="{% url 'store:about' %}"
+          class="{% if active_nav == 'about' %}text-red-600{% else %}hover:text-red-600{% endif %} transition-colors"
+          >درباره ما</a
+        >
+        <a
+          href="{% url 'store:contact' %}"
+          class="{% if active_nav == 'contact' %}text-red-600{% else %}hover:text-red-600{% endif %} transition-colors"
+          >ارتباط با ما</a
+        >
+      </nav>
+    </div>
+
+    <!-- چپ: سرچ + سبد خرید + لاگین/پروفایل -->
+    <div class="flex items-center gap-3">
+      <!-- اینپوت سرچ بازشونده -->
+      <div class="relative flex items-center">
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="جستجوی مکمل، برند..."
+          class="w-0 opacity-0 transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-red-600 bg-slate-100 text-sm rounded-full py-2 px-4 text-slate-800 border border-slate-200"
+        />
+        <button
+          id="searchBtn"
+          aria-label="Search"
+          class="p-2.5 text-slate-600 hover:text-red-600 hover:bg-slate-100 rounded-full transition-all"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <!-- سبد خرید -->
+      <button
+        onclick="openCartDrawer()"
+        class="relative p-2.5 text-slate-600 hover:text-red-600 hover:bg-slate-100 rounded-full transition-all"
+      >
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+          />
+        </svg>
+        <span
+          id="cartBadge"
+          class="absolute top-1 right-1 w-4 h-4 bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center transition-transform"
+          >۰</span
+        >
+      </button>
+
+      {% if user.is_authenticated %}
+        <!-- آیکون پروفایل کاربر لاگین‌کرده -->
+        <div class="relative hidden sm:block" id="profileMenuWrapper">
+          <button
+            id="profileMenuBtn"
+            onclick="toggleProfileMenu()"
+            class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm ps-2 pe-3 py-1.5 rounded-xl transition-all"
+          >
+            <span
+              class="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center text-base shrink-0"
+              >{{ user.avatar_emoji }}</span
+            >
+            <span class="max-w-[7rem] truncate">{{ user.display_name }}</span>
+            <svg
+              class="w-3.5 h-3.5 text-slate-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+
+          <div
+            id="profileMenuDropdown"
+            class="hidden absolute left-0 mt-2 w-52 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 z-50"
+          >
+            <a
+              href="{% url 'accounts:profile' %}"
+              class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-red-600 transition-colors"
+            >
+              <span>👤</span>
+              <span>پروفایل من</span>
+            </a>
+            <a
+              href="{% url 'store:checkout' %}"
+              class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-red-600 transition-colors"
+            >
+              <span>📦</span>
+              <span>سفارش‌های من</span>
+            </a>
+            <div class="my-1 border-t border-slate-100"></div>
+            <form action="{% url 'accounts:logout' %}" method="post">
+              {% csrf_token %}
+              <button
+                type="submit"
+                class="w-full text-right flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <span>🚪</span>
+                <span>خروج از حساب</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <!-- دکمه ورود / ثبت نام -->
+        <a
+          href="{% url 'accounts:auth' %}"
+          class="hidden sm:flex items-center gap-2 bg-slate-900 hover:bg-red-600 text-white font-medium text-sm px-5 py-2.5 rounded-xl transition-all shadow-md hover:shadow-red-600/20"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+            />
+          </svg>
+          ورود | ثبت‌نام
+        </a>
+      {% endif %}
+
+      <!-- دکمه منوی همبرگری (فقط موبایل/تبلت) -->
+      <button
+        id="mobileMenuBtn"
+        onclick="toggleMobileMenu()"
+        aria-label="باز کردن منو"
+        aria-expanded="false"
+        class="md:hidden relative w-10 h-10 flex flex-col items-center justify-center gap-[5px] rounded-xl text-slate-700 hover:bg-slate-100 transition-colors shrink-0"
+      >
+        <span
+          class="hamburger-bar w-5 h-0.5 bg-current rounded-full transition-all duration-300"
+        ></span>
+        <span
+          class="hamburger-bar w-5 h-0.5 bg-current rounded-full transition-all duration-300"
+        ></span>
+        <span
+          class="hamburger-bar w-5 h-0.5 bg-current rounded-full transition-all duration-300"
+        ></span>
+      </button>
+    </div>
+  </div>
+</header>

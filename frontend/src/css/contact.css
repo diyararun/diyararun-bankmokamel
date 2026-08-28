@@ -1,0 +1,5 @@
+.hero-pattern {
+  background-color: #0f172a;
+  background-image: radial-gradient(rgba(220, 38, 38, 0.15) 1px, transparent 1px);
+  background-size: 24px 24px;
+}

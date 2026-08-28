@@ -1,0 +1,84 @@
+<div
+  id="mobileMenuBackdrop"
+  onclick="toggleMobileMenu()"
+  class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 opacity-0 pointer-events-none transition-opacity duration-300 md:hidden"
+></div>
+<div
+  id="mobileMenu"
+  class="fixed top-20 inset-x-0 z-50 md:hidden bg-white border-b border-slate-100 shadow-2xl rounded-b-3xl overflow-hidden max-h-0 opacity-0 transition-all duration-300 ease-out"
+>
+  <nav class="px-5 py-5 space-y-1.5">
+    <a
+      href="{% url 'store:index' %}"
+      onclick="toggleMobileMenu()"
+      class="block px-4 py-3 rounded-xl font-bold text-sm {% if active_nav == 'home' %}text-red-600 bg-red-50{% else %}text-slate-700 hover:bg-slate-50 hover:text-red-600{% endif %} transition-colors"
+      >خانه</a
+    >
+    <a
+      href="{% url 'store:products' %}"
+      onclick="toggleMobileMenu()"
+      class="block px-4 py-3 rounded-xl font-bold text-sm {% if active_nav == 'products' %}text-red-600 bg-red-50{% else %}text-slate-700 hover:bg-slate-50 hover:text-red-600{% endif %} transition-colors"
+      >محصولات</a
+    >
+    <a
+      href="{% url 'store:about' %}"
+      onclick="toggleMobileMenu()"
+      class="block px-4 py-3 rounded-xl font-bold text-sm {% if active_nav == 'about' %}text-red-600 bg-red-50{% else %}text-slate-700 hover:bg-slate-50 hover:text-red-600{% endif %} transition-colors"
+      >درباره ما</a
+    >
+    <a
+      href="{% url 'store:contact' %}"
+      onclick="toggleMobileMenu()"
+      class="block px-4 py-3 rounded-xl font-bold text-sm {% if active_nav == 'contact' %}text-red-600 bg-red-50{% else %}text-slate-700 hover:bg-slate-50 hover:text-red-600{% endif %} transition-colors"
+      >ارتباط با ما</a
+    >
+
+    {% if user.is_authenticated %}
+      <div class="pt-3 mt-2 border-t border-slate-100 space-y-1.5">
+        <a
+          href="{% url 'accounts:profile' %}"
+          onclick="toggleMobileMenu()"
+          class="flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm text-slate-700 hover:bg-slate-50 hover:text-red-600 transition-colors"
+        >
+          <span
+            class="w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center text-sm shrink-0"
+            >{{ user.avatar_emoji }}</span
+          >
+          <span class="truncate">{{ user.display_name }}</span>
+        </a>
+        <form action="{% url 'accounts:logout' %}" method="post">
+          {% csrf_token %}
+          <button
+            type="submit"
+            class="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-red-50 text-red-600 font-bold text-sm px-5 py-3 rounded-xl transition-all"
+          >
+            <span>🚪</span>
+            خروج از حساب
+          </button>
+        </form>
+      </div>
+    {% else %}
+      <div class="pt-3 mt-2 border-t border-slate-100">
+        <a
+          href="{% url 'accounts:auth' %}"
+          class="flex items-center justify-center gap-2 bg-slate-900 hover:bg-red-600 text-white font-bold text-sm px-5 py-3 rounded-xl transition-all shadow-md"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+            />
+          </svg>
+          ورود | ثبت‌نام
+        </a>
+      </div>
+    {% endif %}
+  </nav>
+</div>

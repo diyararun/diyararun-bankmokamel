@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==================== یوتیلیتی‌های مشترک بین صفحات ====================
+   این کلاس‌ها قبلاً در تگ <style> هر صفحه تکرار می‌شدند؛ اینجا یک‌بار تعریف
+   شده‌اند تا در تمام صفحات (از طریق main.js) در دسترس باشند. */
+
+/* مخفی کردن اسکرول‌بار در اسلایدرها و دراپ‌داون‌ها */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* اسکرول‌بار باریک برای لیست نظرات و باکس‌های محتوایی بلند */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

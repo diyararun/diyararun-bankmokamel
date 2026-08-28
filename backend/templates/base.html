@@ -1,0 +1,44 @@
+{% load django_vite %}
+<!doctype html>
+<html lang="fa" dir="rtl" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token }}" />
+    <title>{% block title %}بانک مکمل | مرجع تخصصی مکمل‌های ورزشی و غذایی{% endblock %}</title>
+
+    <!-- Google Font: Vazirmatn -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    {% vite_hmr_client %}
+    {% vite_asset 'src/main.js' %}
+    {% block entry %}{% endblock %}
+
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body
+    class="{% block body_class %}font-sans bg-white text-slate-800 antialiased selection:bg-red-600 selection:text-white relative{% endblock %}"
+  >
+    {% include "partials/toast.html" %}
+
+    {% block cart_drawer %}
+      {% include "partials/cart_drawer.html" %}
+    {% endblock %}
+
+    {% block header %}
+      {% include "partials/header_main.html" %}
+      {% include "partials/mobile_menu.html" %}
+    {% endblock %}
+
+    {% block content %}{% endblock %}
+
+    {% block footer %}
+      {% include "partials/footer_main.html" %}
+    {% endblock %}
+  </body>
+</html>
