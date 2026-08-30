@@ -7,3 +7,10 @@ django-vite>=3.0,<4.0
 # Loads settings (SECRET_KEY, DB credentials, DEBUG flag, etc.) from a .env
 # file instead of hardcoding them in settings.py — wired up in Phase 0
 django-environ>=0.11,<1.0
+
+# Adds Jalali (Persian/Shamsi) calendar fields and admin widgets
+django-jalali>=7.0,<8.0
+
+# Limits how many times an endpoint can be called (e.g. OTP requests) —
+# used to throttle the phone-verification flow
+django-ratelimit>=4.1,<5.0
