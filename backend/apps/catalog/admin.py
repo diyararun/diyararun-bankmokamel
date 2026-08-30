@@ -7,7 +7,6 @@ import django_jalali.admin  # noqa: F401
 
 from .models import Brand, Category, Flavor, Product, ProductImage, ProductSpec, ProductVariant, Review
 
-
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ("name", "parent", "is_active")
