@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
+from django_ratelimit.decorators import ratelimit
 
 from .forms import OtpVerifyForm, PhoneForm, ProfileForm
 from .models import PhoneOTP
@@ -21,8 +22,27 @@ def auth_page(request):
 
 
 @require_POST
+# Two independent limits, checked together:
+#   - "post:phone": max 3 requests per minute for the SAME phone number,
+#     so one number can't be spammed with SMS codes.
+#   - "ip": max 10 requests per minute from the SAME IP address, so one
+#     visitor can't spam OTP requests for many different phone numbers.
+# block=False (instead of block=True) so we can return our own JSON error
+# below, matching the JSON-based API style of this view, instead of
+# django-ratelimit's default plain-text 403 response.
+@ratelimit(key="post:phone", rate="3/m", method="POST", block=False)
+@ratelimit(key="ip", rate="10/m", method="POST", block=False)
 def request_otp(request):
     """مرحله‌ی اول: دریافت شماره و ارسال کد تایید."""
+    if getattr(request, "limited", False):
+        return JsonResponse(
+            {
+                "ok": False,
+                "message": "تعداد درخواست‌های شما بیش از حد مجاز است. کمی صبر کنید و دوباره تلاش کنید.",
+            },
+            status=429,
+        )
+
     form = PhoneForm(request.POST)
     if not form.is_valid():
         return JsonResponse({"ok": False, "errors": form.errors}, status=400)
