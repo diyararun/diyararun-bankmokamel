@@ -1,16 +1,16 @@
 """
-تنظیمات محیط توسعه.
+Development environment settings.
 
-فعال‌سازی: DJANGO_SETTINGS_MODULE=config.settings.dev
-(این مقدار پیش‌فرض manage.py/wsgi.py/asgi.py است، پس نیازی به تنظیم
-دستی روی سیستم توسعه‌ی شما نیست.)
+Activated via: DJANGO_SETTINGS_MODULE=config.settings.dev
+(this is already the default in manage.py/wsgi.py/asgi.py, so no manual
+setup is needed on your development machine.)
 """
 from .base import *  # noqa: F401,F403
 
-# اگر DEBUG در .env مشخص نشده باشد، در dev پیش‌فرض True است (برخلاف
-# base.py که پیش‌فرضش False است — امن‌ترین حالت پیش‌فرض کلی)
+# Defaults to True in dev if DEBUG isn't set in .env (unlike base.py,
+# whose default is False — the safest default overall).
 DEBUG = env.bool("DEBUG", default=True)
 
-# اگر ALLOWED_HOSTS در .env خالی بود، حداقل روی لوکال کار کند
+# Fall back to localhost if ALLOWED_HOSTS is empty in .env
 if not ALLOWED_HOSTS:
     ALLOWED_HOSTS = ["localhost", "127.0.0.1"]

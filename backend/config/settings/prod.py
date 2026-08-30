@@ -1,23 +1,25 @@
 """
-تنظیمات محیط تولید (production).
+Production environment settings.
 
-فعال‌سازی: DJANGO_SETTINGS_MODULE=config.settings.prod
-(این مقدار در docker-compose.prod.yml به‌صورت صریح ست شده است.)
+Activated via: DJANGO_SETTINGS_MODULE=config.settings.prod
+(explicitly set in docker-compose.prod.yml.)
 """
 from .base import *  # noqa: F401,F403
 
 DEBUG = False
 
-# در production نباید ALLOWED_HOSTS خالی باشد؛ خالی گذاشتنش عمداً باعث
-# خطا می‌شود تا با تنظیمات ناقص/فراموش‌شده دیپلوی نکنیم.
+# ALLOWED_HOSTS must never be empty in production; failing loudly here
+# prevents deploying with an incomplete/forgotten .env file.
 if not ALLOWED_HOSTS:
     raise ValueError("ALLOWED_HOSTS must be set via the .env file in production")
 
-# محل واقعی فایل‌های build‌شده‌ی فرانت (توسط مرحله‌ی frontend-builder در
-# Dockerfile ساخته می‌شود) — رفع همان باگ قبلی STATICFILES_DIRS
+# Real location of the built frontend assets (produced by the
+# frontend-builder stage in the Dockerfile) — fixes the earlier
+# STATICFILES_DIRS bug.
 STATICFILES_DIRS = [BASE_DIR.parent / "frontend" / "dist"]
 
-# نکته: تنظیمات امنیتی سطح‌بالاتر (HTTPS اجباری، HSTS و ...) عمداً اینجا
-# نیستند — طبق نقشه راه، این‌ها در فاز سخت‌سازی (فاز ۶) اضافه می‌شوند،
-# چون به تنظیمات Nginx/Coolify واقعی سرور نیاز دارند و زودتر از موعد
-# اضافه‌کردنشان می‌تواند باعث ریدایرکت‌لوپ یا قفل‌شدن غیرمنتظره بشود.
+# Note: stronger security settings (forced HTTPS, HSTS, etc.) are
+# intentionally NOT here yet. Per the roadmap these belong to the
+# hardening phase (Phase 6), since they depend on the real Nginx/Coolify
+# setup — adding them too early could cause redirect loops or unexpected
+# lockouts.
