@@ -1,0 +1,45 @@
+# Development environment.
+# Run with: docker compose up --build
+
+services:
+  db:
+    image: postgres:16-alpine
+    env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      # Exposed to the host so you can connect a local DB GUI tool
+      # (DBeaver, TablePlus, pgAdmin...) directly. Removed in prod compose.
+      - "5432:5432"
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/django/Dockerfile
+      target: dev
+    env_file: .env
+    volumes:
+      # Bind-mount the source so code edits on the host reload instantly
+      # (this is what makes "target: dev" different from "target: prod")
+      - ./backend:/app/backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  frontend:
+    # No custom Dockerfile needed for dev — we just run the Vite dev server
+    # directly off the official Node image, since it only serves during
+    # development (production uses the pre-built assets from the Dockerfile).
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    # "--host" is required so Vite listens on 0.0.0.0 instead of just
+    # localhost, otherwise it wouldn't be reachable from outside the container
+    command: sh -c "npm install && npm run dev -- --host"
+    ports:
+      - "5173:5173"
+
+volumes:
+  postgres_data:
