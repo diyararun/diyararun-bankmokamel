@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django_vite",
     "django_jalali",
     "accounts",
+    "catalog",
     "store",
 ]
 
@@ -113,6 +114,10 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # in prod.py, because it points at the frontend build output
 # (frontend/dist), which doesn't exist in dev mode (we connect to the
 # live Vite dev server instead of a pre-built file there).
+
+# User-uploaded files (product images, brand logos, etc.)
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
