@@ -18,6 +18,11 @@ services:
       dockerfile: docker/django/Dockerfile
       target: prod
     env_file: .env
+    # "environment:" takes precedence over the same variable coming from
+    # "env_file:", so this always wins even though .env sets it to "dev"
+    # for local development.
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.prod
     volumes:
       # Named volumes so static/media files survive container restarts and
       # so the Nginx container (below) can read the same files
