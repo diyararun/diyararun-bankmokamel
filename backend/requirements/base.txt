@@ -1,0 +1,9 @@
+# Core web framework
+Django>=5.0,<6.0
+
+# Bridges Django templates with Vite-built frontend assets (JS/CSS bundles)
+django-vite>=3.0,<4.0
+
+# Loads settings (SECRET_KEY, DB credentials, DEBUG flag, etc.) from a .env
+# file instead of hardcoding them in settings.py — wired up in Phase 0
+django-environ>=0.11,<1.0
