@@ -1,29 +1,42 @@
-from django.shortcuts import render
+from django.views.generic import TemplateView
+
+from apps.catalog.models import Product
 
 
-def index(request):
-    return render(request, "pages/index.html", {"active_nav": "home"})
+class IndexView(TemplateView):
+    template_name = "pages/index.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["active_nav"] = "home"
+        # Newest active products with at least one active variant, for the
+        # "featured products" section on the homepage.
+        context["featured_products"] = (
+            Product.objects.filter(is_active=True, variants__is_active=True)
+            .select_related("brand", "category")
+            .prefetch_related("images", "variants")
+            .distinct()
+            .order_by("-created_at")[:8]
+        )
+        return context
 
 
-def products(request):
-    return render(request, "pages/products.html", {"active_nav": "products"})
+class AboutView(TemplateView):
+    template_name = "pages/about.html"
+
+    def get_context_data(self, **kwargs):
+        return {**super().get_context_data(**kwargs), "active_nav": "about"}
 
 
-def product_detail(request, slug=None):
-    return render(
-        request,
-        "pages/product_detail.html",
-        {"slug": slug, "active_nav": "products"},
-    )
+class ContactView(TemplateView):
+    template_name = "pages/contact.html"
+
+    def get_context_data(self, **kwargs):
+        return {**super().get_context_data(**kwargs), "active_nav": "contact"}
 
 
-def about(request):
-    return render(request, "pages/about.html", {"active_nav": "about"})
+class CheckoutView(TemplateView):
+    template_name = "pages/checkout.html"
 
-
-def contact(request):
-    return render(request, "pages/contact.html", {"active_nav": "contact"})
-
-
-def checkout(request):
-    return render(request, "pages/checkout.html", {"active_nav": "checkout"})
+    def get_context_data(self, **kwargs):
+        return {**super().get_context_data(**kwargs), "active_nav": "checkout"}
