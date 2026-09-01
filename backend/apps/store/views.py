@@ -4,7 +4,7 @@ from apps.catalog.models import Product
 
 
 class IndexView(TemplateView):
-    template_name = "pages/index.html"
+    template_name = "store/index.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -22,21 +22,21 @@ class IndexView(TemplateView):
 
 
 class AboutView(TemplateView):
-    template_name = "pages/about.html"
+    template_name = "store/about.html"
 
     def get_context_data(self, **kwargs):
         return {**super().get_context_data(**kwargs), "active_nav": "about"}
 
 
 class ContactView(TemplateView):
-    template_name = "pages/contact.html"
+    template_name = "store/contact.html"
 
     def get_context_data(self, **kwargs):
         return {**super().get_context_data(**kwargs), "active_nav": "contact"}
 
 
 class CheckoutView(TemplateView):
-    template_name = "pages/checkout.html"
+    template_name = "store/checkout.html"
 
     def get_context_data(self, **kwargs):
         return {**super().get_context_data(**kwargs), "active_nav": "checkout"}
