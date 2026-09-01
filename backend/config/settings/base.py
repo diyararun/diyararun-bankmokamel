@@ -36,9 +36,11 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_vite",
     "django_jalali",
-    "accounts",
-    "catalog",
-    "store",
+    "apps.accounts",
+    "apps.catalog",
+    "apps.reviews",
+    "apps.cart",
+    "apps.store",
 ]
 
 MIDDLEWARE = [
@@ -65,7 +67,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 # Makes the cart and its badge available on every page
-                "store.context_processors.cart",
+                "apps.store.context_processors.cart",
             ],
         },
     },
