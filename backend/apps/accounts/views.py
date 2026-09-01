@@ -18,7 +18,7 @@ def auth_page(request):
     """صفحه‌ی ورود / ثبت‌نام (همان auth.html سابق)."""
     if request.user.is_authenticated:
         return redirect("store:index")
-    return render(request, "pages/auth.html")
+    return render(request, "accounts/auth.html")
 
 
 @require_POST
@@ -100,4 +100,4 @@ def profile_view(request):
     else:
         form = ProfileForm(instance=request.user)
 
-    return render(request, "pages/profile.html", {"form": form})
+    return render(request, "accounts/profile.html", {"form": form})
