@@ -12,7 +12,7 @@ SORT_FIELD_MAP = {
 
 class ProductListView(ListView):
     model = Product
-    template_name = "pages/products.html"
+    template_name = "catalog/products.html"
     context_object_name = "products"
     paginate_by = 9  # matches the template's copy ("۱ تا ۹ از ...")
 
@@ -57,7 +57,7 @@ class ProductListView(ListView):
 
 class ProductDetailView(DetailView):
     model = Product
-    template_name = "pages/product_detail.html"
+    template_name = "catalog/product_detail.html"
     context_object_name = "product"
     slug_url_kwarg = "slug"
 
