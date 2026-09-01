@@ -35,6 +35,12 @@ services:
     working_dir: /app
     volumes:
       - ./frontend:/app
+      # tailwind.config.js scans "../backend/templates" (relative to
+      # frontend/, i.e. resolves to /backend/templates inside this
+      # container's working_dir /app). Without this mount, the frontend
+      # container has no access to backend/ at all, so Tailwind silently
+      # finds zero HTML files and generates almost no utility classes.
+      - ./backend/templates:/backend/templates:ro
     # "--host" is required so Vite listens on 0.0.0.0 instead of just
     # localhost, otherwise it wouldn't be reachable from outside the container
     command: sh -c "npm install && npm run dev -- --host"
