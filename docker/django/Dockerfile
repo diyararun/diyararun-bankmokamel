@@ -17,6 +17,13 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
 COPY frontend/ ./
+
+# tailwind.config.js scans "../backend/templates" (relative to frontend/,
+# i.e. resolves to /backend/templates given WORKDIR /frontend here) — same
+# path django-vite itself uses to find the built manifest later. Without
+# this, "npm run build" would silently generate almost no utility classes.
+COPY backend/templates /backend/templates
+
 RUN npm run build
 # Output lands in /frontend/dist (manifest.json + hashed JS/CSS bundles),
 # which is exactly what django-vite reads in production mode.
@@ -83,7 +90,7 @@ COPY --from=frontend-builder /frontend/dist /app/frontend/dist
 
 WORKDIR /app/backend
 
-# NOTE (Phase 0 to do): collectstatic needs a valid SECRET_KEY and DB
+# NOTE (Phase 0 TODO): collectstatic needs a valid SECRET_KEY and DB
 # configuration to run, which requires settings.py to read from .env first.
 # We wire that up in Phase 0 — until then this stays commented out.
 # RUN python manage.py collectstatic --noinput
