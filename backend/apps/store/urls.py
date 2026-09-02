@@ -12,5 +12,8 @@ urlpatterns = [
     path("products/", include("apps.catalog.urls")),
     path("about/", views.AboutView.as_view(), name="about"),
     path("contact/", views.ContactView.as_view(), name="contact"),
-    path("checkout/", views.CheckoutView.as_view(), name="checkout"),
+    # Checkout view now lives in apps.orders (that's its domain); included
+    # here (without a namespace of its own) so it stays reversible as
+    # "store:checkout".
+    path("checkout/", include("apps.orders.urls")),
 ]
