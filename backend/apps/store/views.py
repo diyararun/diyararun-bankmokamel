@@ -33,10 +33,3 @@ class ContactView(TemplateView):
 
     def get_context_data(self, **kwargs):
         return {**super().get_context_data(**kwargs), "active_nav": "contact"}
-
-
-class CheckoutView(TemplateView):
-    template_name = "store/checkout.html"
-
-    def get_context_data(self, **kwargs):
-        return {**super().get_context_data(**kwargs), "active_nav": "checkout"}
