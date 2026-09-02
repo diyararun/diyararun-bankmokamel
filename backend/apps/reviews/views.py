@@ -1,74 +1,56 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
-from django.views.generic import View
+from django.views.generic import FormView
 
-from apps.cart.services import get_cart, serialize_cart
+from apps.catalog.models import Product
 
-from .forms import CheckoutForm
-from .models import Order, OrderItem
-
-# Flat shipping cost for now — no shipping-rate calculation exists yet.
-# TODO: replace with a real rule once that logic is built.
-FLAT_SHIPPING_COST = 49000
+from .forms import ReviewForm
+from .models import Review
 
 
-class CheckoutView(LoginRequiredMixin, View):
-    """GET renders the checkout page (recipient/address/payment form +
-    order summary from the real cart). POST validates the form and, if
-    the cart isn't empty, creates the Order + OrderItem rows and clears
-    the cart.
+class ReviewCreateView(LoginRequiredMixin, FormView):
+    """Handles the review-submission form on the product detail page.
 
-    No payment gateway integration yet — that's Phase 3 of the roadmap.
-    The order is created with status="pending_payment" and the customer
-    is redirected with a success message; actually charging them is
-    future work, not part of this pass.
+    Login is required — per the project decision, reviews are tied to a
+    real account rather than a free-typed name/email, since
+    "is_verified_purchase" only makes sense once we actually know who
+    the reviewer is. Anonymous users are redirected to the login page
+    (LOGIN_URL) and bounced back here afterwards.
+
+    POST-only: this view never renders its own page, it only ever
+    redirects back to the product detail page (with a message), so there
+    is no template_name / GET handling to write.
     """
 
-    template_name = "orders/checkout.html"
+    form_class = ReviewForm
+    http_method_names = ["post"]
 
-    def get(self, request):
-        cart = get_cart(request, create=False)
-        return render(request, self.template_name, self._context(CheckoutForm(), cart))
+    def dispatch(self, request, *args, **kwargs):
+        self.product = get_object_or_404(Product, slug=kwargs["slug"], is_active=True)
+        return super().dispatch(request, *args, **kwargs)
 
-    def post(self, request):
-        cart = get_cart(request, create=False)
-        cart_data = serialize_cart(cart)
-
-        if not cart_data["items"]:
-            messages.error(request, "سبد خرید شما خالی است.")
-            return redirect(reverse("store:index"))
-
-        form = CheckoutForm(request.POST)
-        if not form.is_valid():
-            return render(request, self.template_name, self._context(form, cart))
-
-        subtotal = cart_data["total_price"]
-        shipping_cost = FLAT_SHIPPING_COST
-        discount_amount = 0  # real coupon validation is the future "coupons" app's job
-
-        order = Order.objects.create(
-            user=request.user,
-            subtotal_price=subtotal,
-            discount_amount=discount_amount,
-            shipping_cost=shipping_cost,
-            total_price=subtotal - discount_amount + shipping_cost,
-            **form.cleaned_data,
+    def form_valid(self, form):
+        # update_or_create so a user resubmitting their review updates the
+        # existing row instead of hitting the (product, user) unique
+        # constraint with an error — resubmitting reads naturally as
+        # "editing my review".
+        Review.objects.update_or_create(
+            product=self.product,
+            user=self.request.user,
+            defaults={
+                "rating": form.cleaned_data["rating"],
+                "comment": form.cleaned_data["comment"],
+                "is_approved": False,  # every (re-)submission goes back through moderation
+            },
         )
-        for item in cart.items.select_related("variant__product").all():
-            OrderItem.objects.create(
-                order=order,
-                variant=item.variant,
-                product_name=item.variant.product.name,
-                variant_label=item.variant.label,
-                unit_price=item.variant.price,
-                quantity=item.quantity,
-            )
-        cart.items.all().delete()
+        messages.success(self.request, "دیدگاه شما ثبت شد و پس از بررسی نمایش داده می‌شود.")
+        return redirect(self.get_success_url())
 
-        messages.success(request, f"سفارش شما با شماره #{order.pk} با موفقیت ثبت شد.")
-        return redirect(reverse("store:index"))
+    def form_invalid(self, form):
+        messages.error(self.request, "لطفاً امتیاز و متن دیدگاه را کامل وارد کنید.")
+        return redirect(self.get_success_url())
 
-    def _context(self, form, cart):
-        return {"form": form, "cart": serialize_cart(cart), "active_nav": "checkout"}
+    def get_success_url(self):
+        return reverse("store:product_detail", kwargs={"slug": self.product.slug})
