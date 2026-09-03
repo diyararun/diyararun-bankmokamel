@@ -35,12 +35,14 @@ services:
     working_dir: /app
     volumes:
       - ./frontend:/app
-      # tailwind.config.js scans "../backend/templates" (relative to
-      # frontend/, i.e. resolves to /backend/templates inside this
-      # container's working_dir /app). Without this mount, the frontend
-      # container has no access to backend/ at all, so Tailwind silently
-      # finds zero HTML files and generates almost no utility classes.
-      - ./backend/templates:/backend/templates:ro
+      # tailwind.config.js scans "../backend/templates" AND
+      # "../backend/apps/*/templates" (relative to frontend/, i.e.
+      # resolves to /backend/... inside this container's working_dir
+      # /app). Mounting the whole backend/ (not just backend/templates)
+      # means any app's templates are visible without editing this file
+      # again later. Read-only: the frontend container never needs to
+      # write here.
+      - ./backend:/backend:ro
     # "--host" is required so Vite listens on 0.0.0.0 instead of just
     # localhost, otherwise it wouldn't be reachable from outside the container
     command: sh -c "npm install && npm run dev -- --host"
