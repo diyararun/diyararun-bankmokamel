@@ -18,11 +18,14 @@ RUN npm ci
 
 COPY frontend/ ./
 
-# tailwind.config.js scans "../backend/templates" (relative to frontend/,
-# i.e. resolves to /backend/templates given WORKDIR /frontend here) — same
-# path django-vite itself uses to find the built manifest later. Without
-# this, "npm run build" would silently generate almost no utility classes.
-COPY backend/templates /backend/templates
+# tailwind.config.js scans "../backend/templates" AND
+# "../backend/apps/*/templates" (relative to frontend/, i.e. resolves to
+# /backend/... given WORKDIR /frontend here). Copying the whole backend/
+# (not just backend/templates) means any app's templates are covered
+# without editing this Dockerfile again later — this stage is discarded
+# after the build, so the extra Python files add zero cost to the final
+# image.
+COPY backend /backend
 
 RUN npm run build
 # Output lands in /frontend/dist (manifest.json + hashed JS/CSS bundles),
