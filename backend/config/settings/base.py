@@ -69,6 +69,9 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 # Makes the cart and its badge available on every page
                 "apps.store.context_processors.cart",
+                # Makes editable hero/footer/about/social content available
+                # on every page
+                "apps.store.context_processors.site_settings",
             ],
         },
     },
