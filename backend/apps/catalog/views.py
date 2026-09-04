@@ -87,4 +87,11 @@ class ProductDetailView(DetailView):
             .select_related("brand")
             .prefetch_related("images", "variants")[:4]
         )
+        default_variant = product.default_variant
+        context["product_json"] = {
+            "name": product.name,
+            "images": [img.image.url for img in product.images.all()],
+            "defaultVariantId": default_variant.id if default_variant else None,
+            "defaultVariantPrice": default_variant.price if default_variant else 0,
+        }
         return context
