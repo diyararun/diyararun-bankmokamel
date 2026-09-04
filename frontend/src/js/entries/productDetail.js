@@ -4,16 +4,23 @@ import { addMultipleToCart } from "../cartDrawer.js";
 import { showToast } from "../toast.js";
 
 let currentQuantity = 1;
-const productImageHTML =
-  '<img class="w-full h-full object-cover" src="./test4.webp" alt="" />';
-const galleryImages = [
-  productImageHTML,
-  productImageHTML,
-  productImageHTML,
-  productImageHTML,
-  productImageHTML,
-  productImageHTML,
-];
+
+// Real product data, injected by Django via {{ product_json|json_script:"product-data" }}
+// in product_detail.html (see apps/catalog/views.py ProductDetailView).
+const productData = JSON.parse(
+  document.getElementById("product-data").textContent,
+);
+
+const productImageHTML = (url) =>
+  `<img class="w-full h-full object-cover" src="${url}" alt="${productData.name}" />`;
+
+// Falls back to a single empty placeholder if the product has no
+// uploaded images yet, so the gallery/thumbnail code below never has to
+// special-case an empty array.
+const galleryImages =
+  productData.images.length > 0
+    ? productData.images.map(productImageHTML)
+    : [productImageHTML("")];
 let currentGalleryIndex = 0;
 
 // این آرایه به‌جای «cart» عمومی (که حالا در cartDrawer.js مدیریت می‌شود) فقط
@@ -106,7 +113,7 @@ function updateGalleryModalContent() {
   document.getElementById("modalEmojiContainer").innerHTML =
     galleryImages[currentGalleryIndex];
   document.getElementById("modalImageCaption").innerText =
-    `تصویر ${currentGalleryIndex + 1} از ${galleryImages.length} - وی گلد استاندارد`;
+    `تصویر ${currentGalleryIndex + 1} از ${galleryImages.length} - ${productData.name}`;
 }
 
 function switchTab(tabKey) {
@@ -133,11 +140,12 @@ function adjustQuantity(delta) {
 }
 
 function addCurrentProductToCart() {
-  // TODO: وقتی مدل Product در جنگو اضافه شد، نام/قیمت/اسلاگ واقعی محصول
-  // باید از context صفحه (به‌جای مقادیر ثابت) خوانده شود.
-  const productName = "وی گلد استاندارد 100%";
-  const productPrice = 3570000;
+  const productName = productData.name;
+  const productPrice = productData.defaultVariantPrice;
 
+  // NOTE: still calls the current cartDrawer.js API (name/price/html),
+  // not variant_id — that switch happens together with the cartDrawer.js
+  // → /cart/ API rewrite tracked separately (see the frontend handoff doc).
   addMultipleToCart(productName, productPrice, galleryImages[0], currentQuantity);
   showToast(
     "افزوده شد به سبد",
