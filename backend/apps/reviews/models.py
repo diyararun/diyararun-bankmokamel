@@ -40,3 +40,7 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.product.name} ({self.rating}★)"
+
+    @property
+    def stars_display(self):
+        return "★" * self.rating + "☆" * (5 - self.rating)
