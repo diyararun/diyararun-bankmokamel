@@ -1,7 +1,9 @@
 from django.views.generic import DetailView, ListView
 
+from apps.reviews.forms import ReviewForm
+
 from .forms import ProductFilterForm
-from .models import Brand, Category, Product
+from .models import Brand, Category, Flavor, Product
 
 SORT_FIELD_MAP = {
     "newest": "-created_at",
@@ -71,6 +73,14 @@ class ProductDetailView(DetailView):
         context["active_nav"] = "products"
         product = self.object
         context["reviews"] = product.reviews.filter(is_approved=True).select_related("user")
+        context["review_form"] = ReviewForm()
+        # Distinct flavors among this product's active variants, for the
+        # flavor-picker buttons. Combining a selected flavor with the
+        # matching weight/serving variant is a frontend JS job (like
+        # cartDrawer.js) — the backend just provides all the raw data.
+        context["flavors"] = Flavor.objects.filter(
+            variants__product=product, variants__is_active=True
+        ).distinct()
         context["related_products"] = (
             Product.objects.filter(is_active=True, category=product.category)
             .exclude(pk=product.pk)
