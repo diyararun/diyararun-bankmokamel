@@ -22,6 +22,10 @@ class ReviewForm(forms.ModelForm):
         labels = {"comment": "متن دیدگاه"}
         widgets = {
             "comment": forms.Textarea(
-                attrs={"rows": 4, "placeholder": "تجربه استفاده خود از این محصول را بنویسید..."}
+                attrs={
+                    "rows": 4,
+                    "placeholder": "تجربه استفاده خود از این محصول را بنویسید...",
+                    "class": "w-full p-2.5 bg-white rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-red-600",
+                }
             ),
         }
