@@ -6,6 +6,7 @@
 {% block entry %}{% vite_asset 'src/js/entries/productDetail.js' %}{% endblock %}
 
 {% block content %}
+    {{ product_json|json_script:"product-data" }}
     <!-- ==================== BREADCRUMB ==================== -->
     <div class="bg-white border-b border-slate-200/80 py-3.5">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
