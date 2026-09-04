@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load django_vite %}
 
-{% block title %}وی گلد استاندارد 100% | بانک مکمل{% endblock %}
+{% block title %}{{ product.name }} | بانک مکمل{% endblock %}
 
 {% block entry %}{% vite_asset 'src/js/entries/productDetail.js' %}{% endblock %}
 
@@ -32,11 +32,11 @@
             خانه
           </a>
           <span class="text-slate-300">/</span>
-          <a href="{% url 'store:products' %}" class="hover:text-red-600 transition-colors"
-            >پروتئین</a
+          <a href="{% url 'store:products' %}?category={{ product.category.slug }}" class="hover:text-red-600 transition-colors"
+            >{{ product.category.name }}</a
           >
           <span class="text-slate-300">/</span>
-          <span class="text-slate-800 font-bold">وی گلد استاندارد 100%</span>
+          <span class="text-slate-800 font-bold">{{ product.name }}</span>
         </nav>
       </div>
     </div>
@@ -54,16 +54,20 @@
             <span
               id="mainImageEmoji"
               class="w-full h-full transition-all duration-300 group-hover:scale-105 select-none flex items-center justify-center"
-              ><img
+              >{% with image=product.images.first %}<img
                     class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  /></span
+                    src="{% if image %}{{ image.image.url }}{% endif %}"
+                    alt="{{ product.name }}"
+                  />{% endwith %}</span
             >
+            {% with variant=product.default_variant %}
+            {% if variant.discount_percent %}
             <span
               class="absolute top-4 right-4 bg-red-600 text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-sm"
-              >۱۵٪ تخفیف</span
+              >{{ variant.discount_percent }}٪ تخفیف</span
             >
+            {% endif %}
+            {% endwith %}
 
             <button
               onclick="openGalleryModal()"
@@ -97,62 +101,59 @@
               <div class="flex items-center gap-2">
                 <span
                   class="text-xs font-bold text-red-600 bg-red-50 px-2.5 py-0.5 rounded-md"
-                  >پروتئین وی</span
+                  >{{ product.category.name }}</span
                 >
                 <span class="text-slate-300">•</span>
                 <span class="text-xs text-slate-400 font-medium"
-                  >اپتیموم نوتریشن (ON)</span
+                  >{{ product.brand.name }}</span
                 >
               </div>
               <div class="flex items-center gap-1 text-xs">
-                <span class="text-amber-400 font-bold">★ ۴.۸</span>
-                <span class="text-slate-400 text-[11px]">(۴۵ نظر)</span>
+                <span class="text-amber-400 font-bold">★ {{ product.average_rating|floatformat:1|default:"—" }}</span>
+                <span class="text-slate-400 text-[11px]">({{ reviews.count }} نظر)</span>
               </div>
             </div>
 
             <h1 class="text-2xl font-black text-slate-900 mt-2 leading-snug">
-              پروتئین وی گلد استاندارد 100% اپتیموم نوتریشن
+              {{ product.name }}
             </h1>
 
             <p class="text-slate-500 text-xs sm:text-sm leading-relaxed mt-3">
-              حاوی ۲۴ گرم پروتئین خالص ایزوله، ۵.۵ گرم BCAA و ۴ گرم گلوتامین در
-              هر سروینگ جهت عضله‌سازی بدون چربی و ریکاوری سریع.
+              {{ product.short_description }}
             </p>
 
             <div class="mt-6 space-y-4 border-t border-slate-100 pt-5">
+              {% if flavors %}
               <div>
                 <span class="text-xs font-bold text-slate-700 block mb-2"
                   >انتخاب طعم:</span
                 >
                 <div class="flex flex-wrap gap-2">
+                  {% for flavor in flavors %}
                   <button
-                    class="px-3 py-1.5 border-2 border-red-600 text-red-600 font-bold rounded-lg text-xs bg-red-50"
+                    data-flavor-id="{{ flavor.id }}"
+                    class="px-3 py-1.5 border-2 {% if forloop.first %}border-red-600 text-red-600 font-bold bg-red-50{% else %}border-slate-200 text-slate-600 hover:border-slate-300{% endif %} rounded-lg text-xs"
                   >
-                    شکلات دبل
+                    {{ flavor.name }}
                   </button>
-                  <button
-                    class="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg text-xs hover:border-slate-300"
-                  >
-                    وانیل بستنی
-                  </button>
-                  <button
-                    class="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg text-xs hover:border-slate-300"
-                  >
-                    موز
-                  </button>
+                  {% endfor %}
                 </div>
               </div>
+              {% endif %}
 
               <div>
                 <span class="text-xs font-bold text-slate-700 block mb-2"
                   >وزن / سروینگ:</span
                 >
                 <div class="flex flex-wrap gap-2">
+                  {% for variant in product.active_variants %}
                   <button
-                    class="px-3 py-1.5 border-2 border-red-600 text-red-600 font-bold rounded-lg text-xs bg-red-50"
+                    data-variant-id="{{ variant.id }}"
+                    class="px-3 py-1.5 border-2 {% if forloop.first %}border-red-600 text-red-600 font-bold bg-red-50{% else %}border-slate-200 text-slate-600 hover:border-slate-300{% endif %} rounded-lg text-xs"
                   >
-                    ۲۲۷۰ گرم (۷۴ سروینگ)
+                    {{ variant.label }}
                   </button>
+                  {% endfor %}
                 </div>
               </div>
             </div>
@@ -161,13 +162,16 @@
           <div
             class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 mt-auto"
           >
+            {% with variant=product.default_variant %}
             <div>
+              {% if variant.compare_at_price %}
               <span class="block text-xs text-slate-400 line-through"
-                >۴,۲۰۰,۰۰۰</span
+                >{{ variant.compare_at_price }}</span
               >
+              {% endif %}
               <div class="flex items-baseline gap-1">
                 <span class="text-2xl font-black text-red-600" id="productPrice"
-                  >۳,۵۷۰,۰۰۰</span
+                  >{{ variant.price|default:"—" }}</span
                 >
                 <span class="text-xs font-bold text-slate-600">تومان</span>
               </div>
@@ -198,7 +202,9 @@
 
               <button
                 onclick="addCurrentProductToCart()"
-                class="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-xl transition-all shadow-md shadow-red-600/20 flex items-center justify-center gap-2"
+                data-variant-id="{{ variant.id }}"
+                {% if not variant.is_in_stock %}disabled{% endif %}
+                class="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-xl transition-all shadow-md shadow-red-600/20 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <svg
                   class="w-4 h-4"
@@ -213,9 +219,10 @@
                     d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                   />
                 </svg>
-                افزودن به سبد خرید
+                {% if variant.is_in_stock %}افزودن به سبد خرید{% else %}ناموجود{% endif %}
               </button>
             </div>
+            {% endwith %}
           </div>
         </div>
       </div>
@@ -246,7 +253,7 @@
             id="tabBtn-reviews"
             class="tab-btn px-6 py-4 font-bold text-sm text-slate-500 border-b-2 border-transparent hover:text-slate-800 transition-colors whitespace-nowrap"
           >
-            نظرات کاربران (۳)
+            نظرات کاربران ({{ reviews.count }})
           </button>
         </div>
 
@@ -257,21 +264,18 @@
             class="tab-content active space-y-4 text-slate-600 text-xs sm:text-sm leading-relaxed max-w-4xl"
           >
             <h3 class="text-base font-extrabold text-slate-900">
-              نقد و بررسی وی گلد استاندارد
+              نقد و بررسی {{ product.name }}
             </h3>
-            <p>
-              مکمل وی گلد استاندارد ۱۰۰٪ اپتیموم نوتریشن یکی از محبوب‌ترین و
-              باکیفیت‌ترین مکمل‌های پروتئینی جهان است. این محصول با ترکیب وی
-              ایزوله تصفیه شده و وی کنسانتره، بیشترین میزان پروتئین خالص را بدون
-              چربی‌های اضافی و لاکتوز به بدنسازان ارائه می‌دهد.
-            </p>
+            <div>
+              {{ product.description|linebreaks }}
+            </div>
+            {% if product.usage_instructions %}
             <div
               class="bg-amber-50 border border-amber-200/60 p-4 rounded-xl text-amber-900 text-xs mt-3"
             >
-              💡 <strong>نحوه مصرف:</strong> یک پیمانه از پودر را با ۲۵۰
-              میلی‌لیتر آب سرد یا شیر کم‌چرب مخلوط کرده و به مدت ۳۰ ثانیه تکان
-              دهید. بهترین زمان مصرف: بلافاصله پس از تمرین یا صبح ناشتا.
+              💡 <strong>نحوه مصرف:</strong> {{ product.usage_instructions }}
             </div>
+            {% endif %}
           </div>
 
           <!-- مشخصات -->
@@ -279,32 +283,16 @@
             <div
               class="max-w-xl border border-slate-100 rounded-2xl overflow-hidden bg-white"
             >
+              {% for spec in product.specs.all %}
               <div
-                class="grid grid-cols-2 p-3.5 bg-slate-50 border-b border-slate-100 text-xs"
+                class="grid grid-cols-2 p-3.5 {% if forloop.counter0|divisibleby:2 %}bg-slate-50{% endif %} {% if not forloop.last %}border-b border-slate-100{% endif %} text-xs"
               >
-                <span class="font-bold text-slate-500">وزن بسته‌بندی</span>
-                <span class="font-bold text-slate-900">۲۲۷۰ گرم</span>
+                <span class="font-bold text-slate-500">{{ spec.key }}</span>
+                <span class="font-bold text-slate-900">{{ spec.value }}</span>
               </div>
-              <div
-                class="grid grid-cols-2 p-3.5 border-b border-slate-100 text-xs"
-              >
-                <span class="font-bold text-slate-500">تعداد سروینگ</span>
-                <span class="font-bold text-slate-900">۷۴ سروینگ</span>
-              </div>
-              <div
-                class="grid grid-cols-2 p-3.5 bg-slate-50 border-b border-slate-100 text-xs"
-              >
-                <span class="font-bold text-slate-500"
-                  >پروتئین در هر سروینگ</span
-                >
-                <span class="font-bold text-slate-900">۲۴ گرم</span>
-              </div>
-              <div class="grid grid-cols-2 p-3.5 text-xs">
-                <span class="font-bold text-slate-500">اصالت کالا</span>
-                <span class="font-bold text-slate-900"
-                  >دارای کد IRC و استعلام سازمان غذا و دارو</span
-                >
-              </div>
+              {% empty %}
+              <div class="p-3.5 text-xs text-slate-400">مشخصات فنی برای این محصول ثبت نشده است.</div>
+              {% endfor %}
             </div>
           </div>
 
@@ -337,51 +325,26 @@
                   نظرات شما پس از تایید مدیریت نمایش داده می‌شوند.
                 </p>
 
+                {% if request.user.is_authenticated %}
                 <form
-                  onsubmit="
-                    event.preventDefault();
-                    showToast(
-                      'نظر شما ثبت شد',
-                      'دیدگاه شما پس از بررسی منتشر خواهد شد.',
-                    );
-                  "
+                  method="post"
+                  action="{% url 'reviews:submit' slug=product.slug %}"
                   class="space-y-3"
                 >
+                  {% csrf_token %}
                   <div>
                     <label
                       class="block text-[11px] font-bold text-slate-700 mb-1"
-                      >نام و نام خانوادگی</label
+                      >امتیاز</label
                     >
-                    <input
-                      type="text"
-                      required
-                      placeholder="مثال: علی رضایی"
-                      class="w-full p-2.5 bg-white rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-red-600"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      class="block text-[11px] font-bold text-slate-700 mb-1"
-                      >آدرس ایمیل</label
-                    >
-                    <input
-                      type="email"
-                      required
-                      placeholder="name@example.com"
-                      class="w-full p-2.5 bg-white rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-red-600"
-                    />
+                    {{ review_form.rating }}
                   </div>
                   <div>
                     <label
                       class="block text-[11px] font-bold text-slate-700 mb-1"
                       >متن دیدگاه</label
                     >
-                    <textarea
-                      rows="4"
-                      required
-                      placeholder="تجربه استفاده خود از این محصول را بنویسید..."
-                      class="w-full p-2.5 bg-white rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-red-600"
-                    ></textarea>
+                    {{ review_form.comment }}
                   </div>
                   <button
                     type="submit"
@@ -390,6 +353,12 @@
                     ارسال دیدگاه
                   </button>
                 </form>
+                {% else %}
+                <p class="text-xs text-slate-600">
+                  برای ثبت دیدگاه ابتدا باید
+                  <a href="{% url 'accounts:auth' %}" class="text-red-600 font-bold hover:underline">وارد شوید</a>.
+                </p>
+                {% endif %}
               </div>
 
               <!-- ستون چپ: لیست نظرات -->
@@ -404,11 +373,11 @@
                   >
                   <span
                     class="text-xs font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-lg"
-                    >امتیاز ۴.۸ از ۵</span
+                    >امتیاز {{ product.average_rating|floatformat:1|default:"—" }} از ۵</span
                   >
                 </div>
 
-                <!-- نظر ۱ -->
+                {% for review in reviews %}
                 <div
                   class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2 hover:border-slate-200 transition-colors"
                 >
@@ -417,88 +386,31 @@
                       <div
                         class="w-8 h-8 rounded-full bg-red-100 text-red-600 font-bold text-xs flex items-center justify-center"
                       >
-                        ع‌ر
+                        {{ review.user.avatar_emoji }}
                       </div>
                       <div>
                         <h5 class="font-bold text-xs text-slate-900">
-                          علی رضایی
+                          {{ review.user.display_name }}
                         </h5>
+                        {% if review.is_verified_purchase %}
                         <span class="text-[10px] text-emerald-600 font-medium"
                           >✓ خریدار محصول</span
                         >
+                        {% endif %}
                       </div>
                     </div>
                     <span class="text-[10px] text-slate-400"
-                      >۱۴ مرداد ۱۴۰۵</span
+                      >{{ review.created_at }}</span
                     >
                   </div>
-                  <div class="text-amber-400 text-xs">★ ★ ★ ★ ★</div>
+                  <div class="text-amber-400 text-xs">{{ review.stars_display }}</div>
                   <p class="text-xs text-slate-600 leading-relaxed">
-                    عالی از هر نظر. طعم شکلاتش اصلاً دل رو نمی‌زنه و
-                    انحلال‌پذیریش هم حرف نداره. تحویل ۳ ساعته بانک مکمل
-                    فوق‌العاده بود.
+                    {{ review.comment }}
                   </p>
                 </div>
-
-                <!-- نظر ۲ -->
-                <div
-                  class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2 hover:border-slate-200 transition-colors"
-                >
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <div
-                        class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center"
-                      >
-                        م‌ص
-                      </div>
-                      <div>
-                        <h5 class="font-bold text-xs text-slate-900">
-                          محمدصادق
-                        </h5>
-                        <span class="text-[10px] text-emerald-600 font-medium"
-                          >✓ خریدار محصول</span
-                        >
-                      </div>
-                    </div>
-                    <span class="text-[10px] text-slate-400"
-                      >۰۲ مرداد ۱۴۰۵</span
-                    >
-                  </div>
-                  <div class="text-amber-400 text-xs">★ ★ ★ ★ ☆</div>
-                  <p class="text-xs text-slate-600 leading-relaxed">
-                    اصالت کالا رو از سامانه استعلام گرفتم کاملا تایید شد. کیفیت
-                    پروتیین وی اون نیازی به تعریف نداره.
-                  </p>
-                </div>
-
-                <!-- نظر ۳ -->
-                <div
-                  class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-2 hover:border-slate-200 transition-colors"
-                >
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <div
-                        class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center"
-                      >
-                        ح‌م
-                      </div>
-                      <div>
-                        <h5 class="font-bold text-xs text-slate-900">
-                          حسین محمدی
-                        </h5>
-                        <span class="text-[10px] text-emerald-600 font-medium"
-                          >✓ خریدار محصول</span
-                        >
-                      </div>
-                    </div>
-                    <span class="text-[10px] text-slate-400">۲۸ تیر ۱۴۰۵</span>
-                  </div>
-                  <div class="text-amber-400 text-xs">★ ★ ★ ★ ★</div>
-                  <p class="text-xs text-slate-600 leading-relaxed">
-                    پروتئین فوق‌العاده سبک و بدون دردسر معده. حتما پیشنهاد
-                    می‌کنم.
-                  </p>
-                </div>
+                {% empty %}
+                <p class="text-xs text-slate-400 py-6 text-center">هنوز نظری برای این محصول ثبت نشده است.</p>
+                {% endfor %}
               </div>
             </div>
           </div>
@@ -560,41 +472,44 @@
           id="relatedSlider"
           class="flex gap-5 overflow-x-auto no-scrollbar scroll-smooth py-1"
         >
+          {% for p in related_products %}
           <div
             class="min-w-[250px] sm:min-w-[270px] bg-slate-50/70 rounded-2xl p-4 border border-slate-100 hover:bg-white hover:border-slate-200 hover:shadow-xl transition-all group flex flex-col justify-between"
           >
-            <div>
+            <a href="{% url 'store:product_detail' slug=p.slug %}">
               <div
                 class="h-40 bg-white rounded-xl mb-3 flex items-center justify-center text-4xl shadow-sm overflow-hidden"
               >
+                {% with image=p.images.first %}
                 <img
                     class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
+                    src="{% if image %}{{ image.image.url }}{% endif %}"
+                    alt="{{ p.name }}"
                   />
+                {% endwith %}
               </div>
-              <span class="text-[11px] text-red-600 font-bold">کراتین</span>
+              <span class="text-[11px] text-red-600 font-bold">{{ p.category.name }}</span>
               <h3 class="font-bold text-slate-900 text-sm mt-0.5 line-clamp-1">
-                کراتین میکرونایز شده ۳۰۰ گرم
+                {{ p.name }}
               </h3>
               <p class="text-slate-400 text-[11px] mt-0.5">
-                بادی اتک | خلوص ۱۰۰٪
+                {{ p.brand.name }}
               </p>
-            </div>
+            </a>
             <div
               class="mt-5 flex items-center justify-between border-t pt-3 border-slate-200/60"
             >
+              {% with variant=p.default_variant %}
               <span class="font-black text-slate-900 text-sm"
-                >۱,۱۵۰,۰۰۰
+                >{{ variant.price|default:"—" }}
                 <span class="text-[10px] font-normal text-slate-500"
                   >تومان</span
                 ></span
               >
               <button
-                onclick="
-                  addToCart('کراتین میکرونایز شده ۳۰۰ گرم', 1150000, '<img class=\'w-full h-full object-cover\' src=\'/test4.webp\' alt=\'\' />')
-                "
-                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors"
+                data-variant-id="{{ variant.id }}"
+                {% if not variant.is_in_stock %}disabled{% endif %}
+                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <svg
                   class="w-4 h-4"
@@ -610,314 +525,12 @@
                   />
                 </svg>
               </button>
+              {% endwith %}
             </div>
           </div>
-
-          <div
-            class="min-w-[250px] sm:min-w-[270px] bg-slate-50/70 rounded-2xl p-4 border border-slate-100 hover:bg-white hover:border-slate-200 hover:shadow-xl transition-all group flex flex-col justify-between"
-          >
-            <div>
-              <div
-                class="h-40 bg-white rounded-xl mb-3 flex items-center justify-center text-4xl shadow-sm overflow-hidden"
-              >
-                <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-              </div>
-              <span class="text-[11px] text-red-600 font-bold">آمینو اسید</span>
-              <h3 class="font-bold text-slate-900 text-sm mt-0.5 line-clamp-1">
-                BCAA شاخه‌دار ۳۰۰ قرص
-              </h3>
-              <p class="text-slate-400 text-[11px] mt-0.5">
-                برند BSN | بازسازی عضلات
-              </p>
-            </div>
-            <div
-              class="mt-5 flex items-center justify-between border-t pt-3 border-slate-200/60"
-            >
-              <span class="font-black text-slate-900 text-sm"
-                >۱,۶۸۰,۰۰۰
-                <span class="text-[10px] font-normal text-slate-500"
-                  >تومان</span
-                ></span
-              >
-              <button
-                onclick="addToCart('BCAA شاخه‌دار ۳۰۰ قرص', 1680000, '<img class=\'w-full h-full object-cover\' src=\'/test4.webp\' alt=\'\' />')"
-                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors"
-              >
-                <svg
-                  class="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div
-            class="min-w-[250px] sm:min-w-[270px] bg-slate-50/70 rounded-2xl p-4 border border-slate-100 hover:bg-white hover:border-slate-200 hover:shadow-xl transition-all group flex flex-col justify-between"
-          >
-            <div>
-              <div
-                class="h-40 bg-white rounded-xl mb-3 flex items-center justify-center text-4xl shadow-sm overflow-hidden"
-              >
-                <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-              </div>
-              <span class="text-[11px] text-red-600 font-bold">گلوتامین</span>
-              <h3 class="font-bold text-slate-900 text-sm mt-0.5 line-clamp-1">
-                گلوتامین دایماتیز ۳۰۰ گرم
-              </h3>
-              <p class="text-slate-400 text-[11px] mt-0.5">
-                بازیابی و ریکاوری بدن
-              </p>
-            </div>
-            <div
-              class="mt-5 flex items-center justify-between border-t pt-3 border-slate-200/60"
-            >
-              <span class="font-black text-slate-900 text-sm"
-                >۹۸۰,۰۰۰
-                <span class="text-[10px] font-normal text-slate-500"
-                  >تومان</span
-                ></span
-              >
-              <button
-                onclick="addToCart('گلوتامین دایماتیز ۳۰۰ گرم', 980000, '<img class=\'w-full h-full object-cover\' src=\'/test4.webp\' alt=\'\' />')"
-                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors"
-              >
-                <svg
-                  class="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div
-            class="min-w-[250px] sm:min-w-[270px] bg-slate-50/70 rounded-2xl p-4 border border-slate-100 hover:bg-white hover:border-slate-200 hover:shadow-xl transition-all group flex flex-col justify-between"
-          >
-            <div>
-              <div
-                class="h-40 bg-white rounded-xl mb-3 flex items-center justify-center text-4xl shadow-sm overflow-hidden"
-              >
-                <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-              </div>
-              <span class="text-[11px] text-red-600 font-bold">گلوتامین</span>
-              <h3 class="font-bold text-slate-900 text-sm mt-0.5 line-clamp-1">
-                گلوتامین دایماتیز ۳۰۰ گرم
-              </h3>
-              <p class="text-slate-400 text-[11px] mt-0.5">
-                بازیابی و ریکاوری بدن
-              </p>
-            </div>
-            <div
-              class="mt-5 flex items-center justify-between border-t pt-3 border-slate-200/60"
-            >
-              <span class="font-black text-slate-900 text-sm"
-                >۹۸۰,۰۰۰
-                <span class="text-[10px] font-normal text-slate-500"
-                  >تومان</span
-                ></span
-              >
-              <button
-                onclick="addToCart('گلوتامین دایماتیز ۳۰۰ گرم', 980000, '<img class=\'w-full h-full object-cover\' src=\'/test4.webp\' alt=\'\' />')"
-                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors"
-              >
-                <svg
-                  class="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div
-            class="min-w-[250px] sm:min-w-[270px] bg-slate-50/70 rounded-2xl p-4 border border-slate-100 hover:bg-white hover:border-slate-200 hover:shadow-xl transition-all group flex flex-col justify-between"
-          >
-            <div>
-              <div
-                class="h-40 bg-white rounded-xl mb-3 flex items-center justify-center text-4xl shadow-sm overflow-hidden"
-              >
-                <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-              </div>
-              <span class="text-[11px] text-red-600 font-bold">گلوتامین</span>
-              <h3 class="font-bold text-slate-900 text-sm mt-0.5 line-clamp-1">
-                گلوتامین دایماتیز ۳۰۰ گرم
-              </h3>
-              <p class="text-slate-400 text-[11px] mt-0.5">
-                بازیابی و ریکاوری بدن
-              </p>
-            </div>
-            <div
-              class="mt-5 flex items-center justify-between border-t pt-3 border-slate-200/60"
-            >
-              <span class="font-black text-slate-900 text-sm"
-                >۹۸۰,۰۰۰
-                <span class="text-[10px] font-normal text-slate-500"
-                  >تومان</span
-                ></span
-              >
-              <button
-                onclick="addToCart('گلوتامین دایماتیز ۳۰۰ گرم', 980000, '<img class=\'w-full h-full object-cover\' src=\'/test4.webp\' alt=\'\' />')"
-                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors"
-              >
-                <svg
-                  class="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div
-            class="min-w-[250px] sm:min-w-[270px] bg-slate-50/70 rounded-2xl p-4 border border-slate-100 hover:bg-white hover:border-slate-200 hover:shadow-xl transition-all group flex flex-col justify-between"
-          >
-            <div>
-              <div
-                class="h-40 bg-white rounded-xl mb-3 flex items-center justify-center text-4xl shadow-sm overflow-hidden"
-              >
-                <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-              </div>
-              <span class="text-[11px] text-red-600 font-bold">گلوتامین</span>
-              <h3 class="font-bold text-slate-900 text-sm mt-0.5 line-clamp-1">
-                گلوتامین دایماتیز ۳۰۰ گرم
-              </h3>
-              <p class="text-slate-400 text-[11px] mt-0.5">
-                بازیابی و ریکاوری بدن
-              </p>
-            </div>
-            <div
-              class="mt-5 flex items-center justify-between border-t pt-3 border-slate-200/60"
-            >
-              <span class="font-black text-slate-900 text-sm"
-                >۹۸۰,۰۰۰
-                <span class="text-[10px] font-normal text-slate-500"
-                  >تومان</span
-                ></span
-              >
-              <button
-                onclick="addToCart('گلوتامین دایماتیز ۳۰۰ گرم', 980000, '<img class=\'w-full h-full object-cover\' src=\'/test4.webp\' alt=\'\' />')"
-                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors"
-              >
-                <svg
-                  class="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div
-            class="min-w-[250px] sm:min-w-[270px] bg-slate-50/70 rounded-2xl p-4 border border-slate-100 hover:bg-white hover:border-slate-200 hover:shadow-xl transition-all group flex flex-col justify-between"
-          >
-            <div>
-              <div
-                class="h-40 bg-white rounded-xl mb-3 flex items-center justify-center text-4xl shadow-sm overflow-hidden"
-              >
-                <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-              </div>
-              <span class="text-[11px] text-red-600 font-bold">گلوتامین</span>
-              <h3 class="font-bold text-slate-900 text-sm mt-0.5 line-clamp-1">
-                گلوتامین دایماتیز ۳۰۰ گرم
-              </h3>
-              <p class="text-slate-400 text-[11px] mt-0.5">
-                بازیابی و ریکاوری بدن
-              </p>
-            </div>
-            <div
-              class="mt-5 flex items-center justify-between border-t pt-3 border-slate-200/60"
-            >
-              <span class="font-black text-slate-900 text-sm"
-                >۹۸۰,۰۰۰
-                <span class="text-[10px] font-normal text-slate-500"
-                  >تومان</span
-                ></span
-              >
-              <button
-                onclick="addToCart('گلوتامین دایماتیز ۳۰۰ گرم', 980000, '<img class=\'w-full h-full object-cover\' src=\'/test4.webp\' alt=\'\' />')"
-                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors"
-              >
-                <svg
-                  class="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
+          {% empty %}
+          <p class="text-slate-400 text-xs py-6">محصول مرتبطی یافت نشد.</p>
+          {% endfor %}
         </div>
       </section>
     </main>
@@ -970,13 +583,15 @@
           id="modalEmojiContainer"
           class="modal-img-animate w-64 h-64 sm:w-80 sm:h-80 bg-slate-800 rounded-3xl flex items-center justify-center shadow-2xl border border-slate-700 select-none overflow-hidden"
         >
-          <img class="w-full h-full object-cover" src="./test4.webp" alt="" />
+          {% with image=product.images.first %}
+          <img class="w-full h-full object-cover" src="{% if image %}{{ image.image.url }}{% endif %}" alt="{{ product.name }}" />
+          {% endwith %}
         </div>
         <p
           id="modalImageCaption"
           class="text-white text-xs sm:text-sm font-bold"
         >
-          تصویر ۱ از ۶ - وی گلد استاندارد
+          {{ product.name }}
         </p>
       </div>
 
@@ -1006,7 +621,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- کارت اینستاگرام -->
           <a
-            href="https://instagram.com"
+            href="{{ site_settings.instagram_url|default:'#' }}"
             target="_blank"
             class="group relative bg-slate-800/50 hover:bg-slate-800/90 border border-slate-700/60 hover:border-red-500/50 rounded-3xl p-6 shadow-2xl backdrop-blur-xl transition-all duration-500 hover:-translate-y-1.5 overflow-hidden flex items-center justify-between"
           >
@@ -1064,7 +679,7 @@
 
           <!-- کارت تلگرام -->
           <a
-            href="https://t.me"
+            href="{{ site_settings.telegram_url|default:'#' }}"
             target="_blank"
             class="group relative bg-slate-800/50 hover:bg-slate-800/90 border border-slate-700/60 hover:border-red-500/50 rounded-3xl p-6 shadow-2xl backdrop-blur-xl transition-all duration-500 hover:-translate-y-1.5 overflow-hidden flex items-center justify-between"
           >
