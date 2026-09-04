@@ -52,7 +52,8 @@ class CartAddView(View):
 
 
 class CartUpdateView(View):
-    """POST /cart/update/ — body: variant_id, delta (+1 / -1).
+    """
+    POST /cart/update/ — body: variant_id, delta (+1 / -1).
     Matches cartDrawer.js's updateQuantity(name, delta) behavior exactly:
     quantity <= 0 after the delta removes the line entirely.
     """
@@ -79,8 +80,10 @@ class CartUpdateView(View):
 
 
 class CartRemoveView(View):
-    """POST /cart/remove/ — body: variant_id. Removes a line outright
-    (for a dedicated "remove" button, distinct from decrementing to 0)."""
+    """
+    POST /cart/remove/ — body: variant_id. Removes a line outright
+    (for a dedicated "remove" button, distinct from decrementing to 0).
+    """
 
     def post(self, request):
         variant_id = request.POST.get("variant_id")
