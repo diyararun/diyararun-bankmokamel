@@ -82,7 +82,8 @@ class PhoneOTP(models.Model):
         # در محیط توسعه کد ثابت ۱۱۱۱۱ صادر می‌شود تا نیاز به سرویس پیامک نباشد.
         # برای اتصال به سرویس پیامک واقعی (کاوه‌نگار/ملی‌پیامک و ...) این متد را
         # جایگزین کنید و ارسال پیامک را در همینجا انجام دهید.
-        code = "11111" if True else f"{random.randint(10000, 99999)}"
+        code = "11111"
+        # if True else f"{random.randint(10000, 99999)}" this code for top
         return cls.objects.create(phone=phone, code=code)
 
     def is_expired(self) -> bool:
