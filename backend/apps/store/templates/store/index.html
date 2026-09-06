@@ -46,11 +46,11 @@
           <h1
             class="text-4xl sm:text-6xl lg:text-7xl font-black text-slate-900 leading-[1.15] tracking-tight"
           >
-            سوخت حرفه‌ای برای <br />
+            {{ site_settings.hero_title|default:"سوخت حرفه‌ای برای" }} <br />
             <span
               class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-rose-600 to-orange-500"
             >
-              اهداف بزرگ شما
+              {{ site_settings.hero_subtitle|default:"اهداف بزرگ شما" }}
             </span>
           </h1>
 
@@ -58,9 +58,7 @@
           <p
             class="text-slate-600 text-base sm:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0 font-normal"
           >
-            بانک مکمل، مرجع تخصصی تامین مکمل‌های ورزشی با مجوز رسمی. جدیدترین
-            محصولات برندهای مطرح جهان را با تضمین اصالت و بهترین قیمت دریافت
-            کنید.
+            {{ site_settings.hero_description|default:"بانک مکمل، مرجع تخصصی تامین مکمل‌های ورزشی با مجوز رسمی. جدیدترین محصولات برندهای مطرح جهان را با تضمین اصالت و بهترین قیمت دریافت کنید." }}
           </p>
 
           <!-- دکمه‌های CTA -->
@@ -141,6 +139,8 @@
             </div>
           </div>
 
+          {% with product=featured_products.0 %}
+          {% if product %}
           <!-- کارت اصلی محصول با هاله قرمز و افکت شناور -->
           <div
             class="relative w-full max-w-md bg-white border border-slate-100 rounded-3xl p-6 shadow-2xl shadow-slate-200/80 group"
@@ -161,28 +161,31 @@
             <div
               class="relative h-72 w-full rounded-2xl mb-6 bg-slate-100/80 border border-slate-200/60 overflow-hidden"
             >
-              <a href="{% url 'store:products' %}">
+              <a href="{% url 'store:product_detail' slug=product.slug %}">
+                {% with image=product.images.first %}
                 <img
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  src="./test4.webp"
-                  alt="پروتئین وی ایزوله"
+                  src="{% if image %}{{ image.image.url }}{% endif %}"
+                  alt="{{ product.name }}"
                 />
+                {% endwith %}
               </a>
             </div>
 
             <!-- اطلاعات محصول -->
             <div class="space-y-1">
-              <a href="{% url 'store:products' %}">
+              <a href="{% url 'store:product_detail' slug=product.slug %}">
                 <h3 class="text-xl font-bold text-slate-900">
-                  پروتئین وی ایزوله ۱۰۰٪
+                  {{ product.name }}
                 </h3>
               </a>
               <p class="text-slate-500 text-xs">
-                برند معتبر جهانی • وزن ۲.۲ کیلوگرم
+                {{ product.brand.name }}{% with variant=product.default_variant %}{% if variant.label %} • وزن {{ variant.label }}{% endif %}{% endwith %}
               </p>
             </div>
 
             <!-- قیمت و افزودن به سبد -->
+            {% with variant=product.default_variant %}
             <div
               class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between"
             >
@@ -191,7 +194,7 @@
                   >قیمت ویژه:</span
                 >
                 <span class="text-red-600 font-black text-2xl tracking-tight"
-                  >۳,۴۵۰,۰۰۰
+                  >{{ variant.price|default:"—" }}
                   <span class="text-xs text-slate-500 font-normal"
                     >تومان</span
                   ></span
@@ -199,8 +202,9 @@
               </div>
 
               <button
-                onclick="addToCart('پروتئین وی ایزوله ۱۰۰٪', 3450000, '🏋️‍♂️')"
-                class="bg-slate-900 hover:bg-red-600 active:scale-95 text-white p-3.5 rounded-2xl shadow-md transition-all duration-300"
+                data-variant-id="{{ variant.id }}"
+                {% if not variant.is_in_stock %}disabled{% endif %}
+                class="bg-slate-900 hover:bg-red-600 active:scale-95 text-white p-3.5 rounded-2xl shadow-md transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <svg
                   class="w-6 h-6"
@@ -217,7 +221,10 @@
                 </svg>
               </button>
             </div>
+            {% endwith %}
           </div>
+          {% endif %}
+          {% endwith %}
         </div>
       </div>
     </section>
@@ -237,195 +244,17 @@
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          <!-- پروتئین وی -->
+          {% for cat in categories %}
           <a
-            href="#"
+            href="{% url 'store:products' %}?category={{ cat.slug }}"
             class="group p-5 bg-slate-50 hover:bg-red-600 rounded-2xl transition-all duration-300 border border-slate-100 hover:shadow-xl hover:shadow-red-600/25 text-center flex flex-col items-center"
           >
             <div
-              class="w-14 h-14 mb-3 rounded-xl bg-red-50 group-hover:bg-white/20 text-red-600 group-hover:text-white flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:-rotate-3"
+              class="w-14 h-14 mb-3 rounded-xl bg-red-50 group-hover:bg-white/20 text-red-600 group-hover:text-white flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:-rotate-3 overflow-hidden"
             >
-              <!-- SVG Shaker / Protein -->
-              <svg
-                class="w-7 h-7"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M8.5 2h7l.5 3h-8z" />
-                <path
-                  d="M5 5h14l-1.5 16a2 2 0 0 1-2 1.5h-7a2 2 0 0 1-2-1.5L5 5z"
-                />
-                <path d="M12 9v8" />
-                <path d="M9 13h6" />
-              </svg>
-            </div>
-            <h3
-              class="font-bold text-slate-900 group-hover:text-white text-sm transition-colors"
-            >
-              پروتئین وی
-            </h3>
-            <span
-              class="text-xs text-slate-400 group-hover:text-red-100 mt-1 block transition-colors"
-            >
-              ۴۵ محصول
-            </span>
-          </a>
-
-          <!-- کراتین -->
-          <a
-            href="#"
-            class="group p-5 bg-slate-50 hover:bg-red-600 rounded-2xl transition-all duration-300 border border-slate-100 hover:shadow-xl hover:shadow-red-600/25 text-center flex flex-col items-center"
-          >
-            <div
-              class="w-14 h-14 mb-3 rounded-xl bg-red-50 group-hover:bg-white/20 text-red-600 group-hover:text-white flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:-rotate-3"
-            >
-              <!-- SVG Lightning / Energy -->
-              <svg
-                class="w-7 h-7"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-              </svg>
-            </div>
-            <h3
-              class="font-bold text-slate-900 group-hover:text-white text-sm transition-colors"
-            >
-              کراتین
-            </h3>
-            <span
-              class="text-xs text-slate-400 group-hover:text-red-100 mt-1 block transition-colors"
-            >
-              ۲۸ محصول
-            </span>
-          </a>
-
-          <!-- BCAA و آمینو -->
-          <a
-            href="#"
-            class="group p-5 bg-slate-50 hover:bg-red-600 rounded-2xl transition-all duration-300 border border-slate-100 hover:shadow-xl hover:shadow-red-600/25 text-center flex flex-col items-center"
-          >
-            <div
-              class="w-14 h-14 mb-3 rounded-xl bg-red-50 group-hover:bg-white/20 text-red-600 group-hover:text-white flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:-rotate-3"
-            >
-              <!-- SVG Capsules / Pills -->
-              <svg
-                class="w-7 h-7"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path
-                  d="M10.5 20.5l10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7z"
-                />
-                <path d="M8.5 8.5l7 7" />
-              </svg>
-            </div>
-            <h3
-              class="font-bold text-slate-900 group-hover:text-white text-sm transition-colors"
-            >
-              BCAA و آمینو
-            </h3>
-            <span
-              class="text-xs text-slate-400 group-hover:text-red-100 mt-1 block transition-colors"
-            >
-              ۳۲ محصول
-            </span>
-          </a>
-
-          <!-- گینر -->
-          <a
-            href="#"
-            class="group p-5 bg-slate-50 hover:bg-red-600 rounded-2xl transition-all duration-300 border border-slate-100 hover:shadow-xl hover:shadow-red-600/25 text-center flex flex-col items-center"
-          >
-            <div
-              class="w-14 h-14 mb-3 rounded-xl bg-red-50 group-hover:bg-white/20 text-red-600 group-hover:text-white flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:-rotate-3"
-            >
-              <!-- SVG Dumbbell / Weight -->
-              <svg
-                class="w-7 h-7"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M6.5 6.5h11" />
-                <path d="M6.5 17.5h11" />
-                <path d="M6 3v18" />
-                <path d="M18 3v18" />
-                <path d="M3 7v10" />
-                <path d="M21 7v10" />
-              </svg>
-            </div>
-            <h3
-              class="font-bold text-slate-900 group-hover:text-white text-sm transition-colors"
-            >
-              گینر (افزایش وزن)
-            </h3>
-            <span
-              class="text-xs text-slate-400 group-hover:text-red-100 mt-1 block transition-colors"
-            >
-              ۱۹ محصول
-            </span>
-          </a>
-
-          <!-- چربی‌سوز -->
-          <a
-            href="#"
-            class="group p-5 bg-slate-50 hover:bg-red-600 rounded-2xl transition-all duration-300 border border-slate-100 hover:shadow-xl hover:shadow-red-600/25 text-center flex flex-col items-center"
-          >
-            <div
-              class="w-14 h-14 mb-3 rounded-xl bg-red-50 group-hover:bg-white/20 text-red-600 group-hover:text-white flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:-rotate-3"
-            >
-              <!-- SVG Flame / Fat Burner -->
-              <svg
-                class="w-7 h-7"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path
-                  d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3z"
-                />
-              </svg>
-            </div>
-            <h3
-              class="font-bold text-slate-900 group-hover:text-white text-sm transition-colors"
-            >
-              چربی‌سوز
-            </h3>
-            <span
-              class="text-xs text-slate-400 group-hover:text-red-100 mt-1 block transition-colors"
-            >
-              ۱۵ محصول
-            </span>
-          </a>
-
-          <!-- مولتی‌ویتامین -->
-          <a
-            href="#"
-            class="group p-5 bg-slate-50 hover:bg-red-600 rounded-2xl transition-all duration-300 border border-slate-100 hover:shadow-xl hover:shadow-red-600/25 text-center flex flex-col items-center"
-          >
-            <div
-              class="w-14 h-14 mb-3 rounded-xl bg-red-50 group-hover:bg-white/20 text-red-600 group-hover:text-white flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:-rotate-3"
-            >
-              <!-- SVG Shield / Health -->
+              {% if cat.icon %}
+              <img src="{{ cat.icon.url }}" alt="{{ cat.name }}" class="w-full h-full object-cover" />
+              {% else %}
               <svg
                 class="w-7 h-7"
                 viewBox="0 0 24 24"
@@ -436,21 +265,21 @@
                 stroke-linejoin="round"
               >
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <path d="M12 8v8" />
-                <path d="M8 12h8" />
               </svg>
+              {% endif %}
             </div>
             <h3
               class="font-bold text-slate-900 group-hover:text-white text-sm transition-colors"
             >
-              مولتی‌ویتامین
+              {{ cat.name }}
             </h3>
             <span
               class="text-xs text-slate-400 group-hover:text-red-100 mt-1 block transition-colors"
             >
-              ۳۷ محصول
+              {{ cat.active_product_count }} محصول
             </span>
           </a>
+          {% endfor %}
         </div>
       </div>
     </section>
@@ -510,8 +339,7 @@
           id="bestSlider"
           class="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth py-2"
         >
-          <!-- کارت ۱ -->
-
+          {% for p in featured_products %}
           <div
             class="min-w-[260px] sm:min-w-[290px] bg-white rounded-2xl p-5 border border-slate-200/80 hover:shadow-xl transition-all group flex flex-col justify-between relative"
           >
@@ -519,38 +347,42 @@
               <div
                 class="h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group"
               >
-                <a href="{% url 'store:product_detail' slug='demo' %}">
+                <a href="{% url 'store:product_detail' slug=p.slug %}">
+                  {% with image=p.images.first %}
                   <img
                     class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
+                    src="{% if image %}{{ image.image.url }}{% endif %}"
+                    alt="{{ p.name }}"
                   />
+                  {% endwith %}
                 </a>
               </div>
-              <span class="text-xs text-red-600 font-bold">پروتئین</span>
-              <a href="{% url 'store:product_detail' slug='demo' %}">
+              <span class="text-xs text-red-600 font-bold">{{ p.category.name }}</span>
+              <a href="{% url 'store:product_detail' slug=p.slug %}">
                 <h3
                   class="font-bold text-slate-900 text-base mt-1 line-clamp-1 group-hover:text-red-600 transition-colors"
                 >
-                  وی گلد استاندارد 100%
+                  {{ p.name }}
                 </h3>
               </a>
+              {% with variant=p.default_variant %}
               <p class="text-slate-400 text-xs mt-1">
-                وزن: ۲۲۷۰ گرم | طعم شکلات
+                {% if variant.label %}وزن: {{ variant.label }}{% endif %}{% if variant.flavor %} | طعم {{ variant.flavor.name }}{% endif %}
               </p>
             </div>
             <div
               class="mt-6 flex items-center justify-between border-t pt-4 border-slate-100"
             >
               <span class="font-black text-slate-900 text-base"
-                >۴,۲۰۰,۰۰۰
+                >{{ variant.price|default:"—" }}
                 <span class="text-xs font-normal text-slate-500"
                   >تومان</span
                 ></span
               >
               <button
-                onclick="addToCart('وی گلد استاندارد 100%', 4200000, '')"
-                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors"
+                data-variant-id="{{ variant.id }}"
+                {% if not variant.is_in_stock %}disabled{% endif %}
+                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <svg
                   class="w-5 h-5"
@@ -567,232 +399,11 @@
                 </svg>
               </button>
             </div>
+            {% endwith %}
           </div>
-
-          <!-- کارت ۲ -->
-          <div
-            class="min-w-[260px] sm:min-w-[290px] bg-white rounded-2xl p-5 border border-slate-200/80 hover:shadow-xl transition-all group flex flex-col justify-between relative"
-          >
-            <div>
-              <div
-                class="h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group"
-              >
-                <a href="{% url 'store:product_detail' slug='demo' %}">
-                  <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-                </a>
-              </div>
-              <span class="text-xs text-red-600 font-bold">کراتین</span>
-              <h3
-                class="font-bold text-slate-900 text-base mt-1 line-clamp-1 group-hover:text-red-600 transition-colors"
-              >
-                کراتین میکرونایز شده ۳۰۰ گرم
-              </h3>
-              <p class="text-slate-400 text-xs mt-1">خلوص ۱۰۰٪ طعم ساده</p>
-            </div>
-            <div
-              class="mt-6 flex items-center justify-between border-t pt-4 border-slate-100"
-            >
-              <span class="font-black text-slate-900 text-base"
-                >۱,۱۵۰,۰۰۰
-                <span class="text-xs font-normal text-slate-500"
-                  >تومان</span
-                ></span
-              >
-              <button
-                onclick="
-                  addToCart('کراتین میکرونایز شده ۳۰۰ گرم', 1150000, '')
-                "
-                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- کارت ۳ -->
-          <div
-            class="min-w-[260px] sm:min-w-[290px] bg-white rounded-2xl p-5 border border-slate-200/80 hover:shadow-xl transition-all group flex flex-col justify-between relative"
-          >
-            <div>
-              <div
-                class="h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group"
-              >
-                <a href="{% url 'store:product_detail' slug='demo' %}">
-                  <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-                </a>
-              </div>
-              <span class="text-xs text-red-600 font-bold">آمینو اسید</span>
-              <h3
-                class="font-bold text-slate-900 text-base mt-1 line-clamp-1 group-hover:text-red-600 transition-colors"
-              >
-                BCAA شاخه‌دار ۳۰۰ قرص
-              </h3>
-              <p class="text-slate-400 text-xs mt-1">
-                نسبت ۲:۱:۱ برای بازسازی عضلات
-              </p>
-            </div>
-            <div
-              class="mt-6 flex items-center justify-between border-t pt-4 border-slate-100"
-            >
-              <span class="font-black text-slate-900 text-base"
-                >۱,۶۸۰,۰۰۰
-                <span class="text-xs font-normal text-slate-500"
-                  >تومان</span
-                ></span
-              >
-              <button
-                onclick="addToCart('BCAA شاخه‌دار ۳۰۰ قرص', 1680000, '')"
-                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- کارت ۴ -->
-          <div
-            class="min-w-[260px] sm:min-w-[290px] bg-white rounded-2xl p-5 border border-slate-200/80 hover:shadow-xl transition-all group flex flex-col justify-between relative"
-          >
-            <div>
-              <div
-                class="h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group"
-              >
-                <a href="{% url 'store:product_detail' slug='demo' %}">
-                  <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-                </a>
-              </div>
-              <span class="text-xs text-red-600 font-bold">چربی سوز</span>
-              <h3
-                class="font-bold text-slate-900 text-base mt-1 line-clamp-1 group-hover:text-red-600 transition-colors"
-              >
-                ال کارنیتین ۲۰۰۰ میلی‌گرم
-              </h3>
-              <p class="text-slate-400 text-xs mt-1">۱۰۰ عدد قرص جوشان</p>
-            </div>
-            <div
-              class="mt-6 flex items-center justify-between border-t pt-4 border-slate-100"
-            >
-              <span class="font-black text-slate-900 text-base"
-                >۸۹۰,۰۰۰
-                <span class="text-xs font-normal text-slate-500"
-                  >تومان</span
-                ></span
-              >
-              <button
-                onclick="addToCart('ال کارنیتین ۲۰۰۰ میلی‌گرم', 890000, '')"
-                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- کارت ۵ -->
-
-          <div
-            class="min-w-[260px] sm:min-w-[290px] bg-white rounded-2xl p-5 border border-slate-200/80 hover:shadow-xl transition-all group flex flex-col justify-between relative"
-          >
-            <div>
-              <div
-                class="h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group"
-              >
-                <a href="{% url 'store:product_detail' slug='demo' %}">
-                  <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-                </a>
-              </div>
-              <span class="text-xs text-red-600 font-bold">پروتئین</span>
-              <a href="{% url 'store:product_detail' slug='demo' %}">
-                <h3
-                  class="font-bold text-slate-900 text-base mt-1 line-clamp-1 group-hover:text-red-600 transition-colors"
-                >
-                  وی گلد استاندارد 100%
-                </h3>
-              </a>
-              <p class="text-slate-400 text-xs mt-1">
-                وزن: ۲۲۷۰ گرم | طعم شکلات
-              </p>
-            </div>
-            <div
-              class="mt-6 flex items-center justify-between border-t pt-4 border-slate-100"
-            >
-              <span class="font-black text-slate-900 text-base"
-                >۴,۲۰۰,۰۰۰
-                <span class="text-xs font-normal text-slate-500"
-                  >تومان</span
-                ></span
-              >
-              <button
-                onclick="addToCart('وی گلد استاندارد 100%', 4200000, '')"
-                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
+          {% empty %}
+          <p class="text-slate-400 text-sm py-10">هنوز محصولی ثبت نشده است.</p>
+          {% endfor %}
         </div>
       </div>
     </section>
@@ -986,49 +597,58 @@
           id="discSlider"
           class="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth py-2"
         >
+          {% for p in discounted_products %}
+          {% with variant=p.default_variant %}
           <div
             class="min-w-[260px] sm:min-w-[290px] bg-white text-slate-900 rounded-2xl p-5 shadow-xl relative flex flex-col justify-between"
           >
+            {% if variant.discount_percent %}
             <div
               class="absolute top-3 right-3 bg-red-600 text-white font-black text-xs px-2.5 py-1 rounded-lg"
             >
-              ۲۰٪ تخفیف
+              {{ variant.discount_percent }}٪ تخفیف
             </div>
+            {% endif %}
             <div>
               <div
                 class="h-44 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl"
               >
-                <a href="{% url 'store:product_detail' slug='demo' %}">
+                <a href="{% url 'store:product_detail' slug=p.slug %}">
+                  {% with image=p.images.first %}
                   <img
                     class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
+                    src="{% if image %}{{ image.image.url }}{% endif %}"
+                    alt="{{ p.name }}"
                   />
+                  {% endwith %}
                 </a>
               </div>
-              <span class="text-xs text-red-600 font-bold">پروتئین کازئین</span>
+              <span class="text-xs text-red-600 font-bold">{{ p.category.name }}</span>
               <h3 class="font-bold text-slate-900 text-base mt-1 line-clamp-1">
-                کازئین شبانه ۹۰۸ گرم
+                <a href="{% url 'store:product_detail' slug=p.slug %}">{{ p.name }}</a>
               </h3>
               <p class="text-slate-400 text-xs mt-1">
-                جذب آهسته مناسب برای قبل خواب
+                {{ p.short_description }}
               </p>
             </div>
             <div
               class="mt-6 flex items-center justify-between border-t pt-4 border-slate-100"
             >
               <div>
+                {% if variant.compare_at_price %}
                 <span class="block text-xs text-slate-400 line-through"
-                  >۲,۱۰۰,۰۰۰</span
+                  >{{ variant.compare_at_price }}</span
                 >
+                {% endif %}
                 <span class="font-black text-red-600 text-base"
-                  >۱,۶۸۰,۰۰۰
+                  >{{ variant.price|default:"—" }}
                   <span class="text-xs font-normal">تومان</span></span
                 >
               </div>
               <button
-                onclick="addToCart('کازئین شبانه ۹۰۸ گرم', 1680000, '')"
-                class="bg-slate-900 hover:bg-red-600 text-white p-2.5 rounded-xl transition-colors"
+                data-variant-id="{{ variant.id }}"
+                {% if not variant.is_in_stock %}disabled{% endif %}
+                class="bg-slate-900 hover:bg-red-600 text-white p-2.5 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <svg
                   class="w-5 h-5"
@@ -1046,433 +666,10 @@
               </button>
             </div>
           </div>
-
-          <div
-            class="min-w-[260px] sm:min-w-[290px] bg-white text-slate-900 rounded-2xl p-5 shadow-xl relative flex flex-col justify-between"
-          >
-            <div
-              class="absolute top-3 right-3 bg-red-600 text-white font-black text-xs px-2.5 py-1 rounded-lg"
-            >
-              ۲۰٪ تخفیف
-            </div>
-            <div>
-              <div
-                class="h-44 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl"
-              >
-                <a href="{% url 'store:product_detail' slug='demo' %}">
-                  <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-                </a>
-              </div>
-              <span class="text-xs text-red-600 font-bold">پروتئین کازئین</span>
-              <h3 class="font-bold text-slate-900 text-base mt-1 line-clamp-1">
-                کازئین شبانه ۹۰۸ گرم
-              </h3>
-              <p class="text-slate-400 text-xs mt-1">
-                جذب آهسته مناسب برای قبل خواب
-              </p>
-            </div>
-            <div
-              class="mt-6 flex items-center justify-between border-t pt-4 border-slate-100"
-            >
-              <div>
-                <span class="block text-xs text-slate-400 line-through"
-                  >۲,۱۰۰,۰۰۰</span
-                >
-                <span class="font-black text-red-600 text-base"
-                  >۱,۶۸۰,۰۰۰
-                  <span class="text-xs font-normal">تومان</span></span
-                >
-              </div>
-              <button
-                onclick="addToCart('کازئین شبانه ۹۰۸ گرم', 1680000, '')"
-                class="bg-slate-900 hover:bg-red-600 text-white p-2.5 rounded-xl transition-colors"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div
-            class="min-w-[260px] sm:min-w-[290px] bg-white text-slate-900 rounded-2xl p-5 shadow-xl relative flex flex-col justify-between"
-          >
-            <div
-              class="absolute top-3 right-3 bg-red-600 text-white font-black text-xs px-2.5 py-1 rounded-lg"
-            >
-              ۲۰٪ تخفیف
-            </div>
-            <div>
-              <div
-                class="h-44 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl"
-              >
-                <a href="{% url 'store:product_detail' slug='demo' %}">
-                  <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-                </a>
-              </div>
-              <span class="text-xs text-red-600 font-bold">پروتئین کازئین</span>
-              <h3 class="font-bold text-slate-900 text-base mt-1 line-clamp-1">
-                کازئین شبانه ۹۰۸ گرم
-              </h3>
-              <p class="text-slate-400 text-xs mt-1">
-                جذب آهسته مناسب برای قبل خواب
-              </p>
-            </div>
-            <div
-              class="mt-6 flex items-center justify-between border-t pt-4 border-slate-100"
-            >
-              <div>
-                <span class="block text-xs text-slate-400 line-through"
-                  >۲,۱۰۰,۰۰۰</span
-                >
-                <span class="font-black text-red-600 text-base"
-                  >۱,۶۸۰,۰۰۰
-                  <span class="text-xs font-normal">تومان</span></span
-                >
-              </div>
-              <button
-                onclick="addToCart('کازئین شبانه ۹۰۸ گرم', 1680000, '')"
-                class="bg-slate-900 hover:bg-red-600 text-white p-2.5 rounded-xl transition-colors"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div
-            class="min-w-[260px] sm:min-w-[290px] bg-white text-slate-900 rounded-2xl p-5 shadow-xl relative flex flex-col justify-between"
-          >
-            <div
-              class="absolute top-3 right-3 bg-red-600 text-white font-black text-xs px-2.5 py-1 rounded-lg"
-            >
-              ۲۰٪ تخفیف
-            </div>
-            <div>
-              <div
-                class="h-44 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl"
-              >
-                <a href="{% url 'store:product_detail' slug='demo' %}">
-                  <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-                </a>
-              </div>
-              <span class="text-xs text-red-600 font-bold">پروتئین کازئین</span>
-              <h3 class="font-bold text-slate-900 text-base mt-1 line-clamp-1">
-                کازئین شبانه ۹۰۸ گرم
-              </h3>
-              <p class="text-slate-400 text-xs mt-1">
-                جذب آهسته مناسب برای قبل خواب
-              </p>
-            </div>
-            <div
-              class="mt-6 flex items-center justify-between border-t pt-4 border-slate-100"
-            >
-              <div>
-                <span class="block text-xs text-slate-400 line-through"
-                  >۲,۱۰۰,۰۰۰</span
-                >
-                <span class="font-black text-red-600 text-base"
-                  >۱,۶۸۰,۰۰۰
-                  <span class="text-xs font-normal">تومان</span></span
-                >
-              </div>
-              <button
-                onclick="addToCart('کازئین شبانه ۹۰۸ گرم', 1680000, '')"
-                class="bg-slate-900 hover:bg-red-600 text-white p-2.5 rounded-xl transition-colors"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div
-            class="min-w-[260px] sm:min-w-[290px] bg-white text-slate-900 rounded-2xl p-5 shadow-xl relative flex flex-col justify-between"
-          >
-            <div
-              class="absolute top-3 right-3 bg-red-600 text-white font-black text-xs px-2.5 py-1 rounded-lg"
-            >
-              ۲۰٪ تخفیف
-            </div>
-            <div>
-              <div
-                class="h-44 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl"
-              >
-                <a href="{% url 'store:product_detail' slug='demo' %}">
-                  <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-                </a>
-              </div>
-              <span class="text-xs text-red-600 font-bold">پروتئین کازئین</span>
-              <h3 class="font-bold text-slate-900 text-base mt-1 line-clamp-1">
-                کازئین شبانه ۹۰۸ گرم
-              </h3>
-              <p class="text-slate-400 text-xs mt-1">
-                جذب آهسته مناسب برای قبل خواب
-              </p>
-            </div>
-            <div
-              class="mt-6 flex items-center justify-between border-t pt-4 border-slate-100"
-            >
-              <div>
-                <span class="block text-xs text-slate-400 line-through"
-                  >۲,۱۰۰,۰۰۰</span
-                >
-                <span class="font-black text-red-600 text-base"
-                  >۱,۶۸۰,۰۰۰
-                  <span class="text-xs font-normal">تومان</span></span
-                >
-              </div>
-              <button
-                onclick="addToCart('کازئین شبانه ۹۰۸ گرم', 1680000, '')"
-                class="bg-slate-900 hover:bg-red-600 text-white p-2.5 rounded-xl transition-colors"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div
-            class="min-w-[260px] sm:min-w-[290px] bg-white text-slate-900 rounded-2xl p-5 shadow-xl relative flex flex-col justify-between"
-          >
-            <div
-              class="absolute top-3 right-3 bg-red-600 text-white font-black text-xs px-2.5 py-1 rounded-lg"
-            >
-              ۲۰٪ تخفیف
-            </div>
-            <div>
-              <div
-                class="h-44 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl"
-              >
-                <a href="{% url 'store:product_detail' slug='demo' %}">
-                  <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-                </a>
-              </div>
-              <span class="text-xs text-red-600 font-bold">پروتئین کازئین</span>
-              <h3 class="font-bold text-slate-900 text-base mt-1 line-clamp-1">
-                کازئین شبانه ۹۰۸ گرم
-              </h3>
-              <p class="text-slate-400 text-xs mt-1">
-                جذب آهسته مناسب برای قبل خواب
-              </p>
-            </div>
-            <div
-              class="mt-6 flex items-center justify-between border-t pt-4 border-slate-100"
-            >
-              <div>
-                <span class="block text-xs text-slate-400 line-through"
-                  >۲,۱۰۰,۰۰۰</span
-                >
-                <span class="font-black text-red-600 text-base"
-                  >۱,۶۸۰,۰۰۰
-                  <span class="text-xs font-normal">تومان</span></span
-                >
-              </div>
-              <button
-                onclick="addToCart('کازئین شبانه ۹۰۸ گرم', 1680000, '')"
-                class="bg-slate-900 hover:bg-red-600 text-white p-2.5 rounded-xl transition-colors"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div
-            class="min-w-[260px] sm:min-w-[290px] bg-white text-slate-900 rounded-2xl p-5 shadow-xl relative flex flex-col justify-between"
-          >
-            <div
-              class="absolute top-3 right-3 bg-red-600 text-white font-black text-xs px-2.5 py-1 rounded-lg"
-            >
-              ۲۰٪ تخفیف
-            </div>
-            <div>
-              <div
-                class="h-44 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl"
-              >
-                <a href="{% url 'store:product_detail' slug='demo' %}">
-                  <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-                </a>
-              </div>
-              <span class="text-xs text-red-600 font-bold">پروتئین کازئین</span>
-              <h3 class="font-bold text-slate-900 text-base mt-1 line-clamp-1">
-                کازئین شبانه ۹۰۸ گرم
-              </h3>
-              <p class="text-slate-400 text-xs mt-1">
-                جذب آهسته مناسب برای قبل خواب
-              </p>
-            </div>
-            <div
-              class="mt-6 flex items-center justify-between border-t pt-4 border-slate-100"
-            >
-              <div>
-                <span class="block text-xs text-slate-400 line-through"
-                  >۲,۱۰۰,۰۰۰</span
-                >
-                <span class="font-black text-red-600 text-base"
-                  >۱,۶۸۰,۰۰۰
-                  <span class="text-xs font-normal">تومان</span></span
-                >
-              </div>
-              <button
-                onclick="addToCart('کازئین شبانه ۹۰۸ گرم', 1680000, '')"
-                class="bg-slate-900 hover:bg-red-600 text-white p-2.5 rounded-xl transition-colors"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div
-            class="min-w-[260px] sm:min-w-[290px] bg-white text-slate-900 rounded-2xl p-5 shadow-xl relative flex flex-col justify-between"
-          >
-            <div
-              class="absolute top-3 right-3 bg-red-600 text-white font-black text-xs px-2.5 py-1 rounded-lg"
-            >
-              ۲۰٪ تخفیف
-            </div>
-            <div>
-              <div
-                class="h-44 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl"
-              >
-                <a href="{% url 'store:product_detail' slug='demo' %}">
-                  <img
-                    class="w-full h-full object-cover"
-                    src="./test4.webp"
-                    alt=""
-                  />
-                </a>
-              </div>
-              <span class="text-xs text-red-600 font-bold">پروتئین کازئین</span>
-              <h3 class="font-bold text-slate-900 text-base mt-1 line-clamp-1">
-                کازئین شبانه ۹۰۸ گرم
-              </h3>
-              <p class="text-slate-400 text-xs mt-1">
-                جذب آهسته مناسب برای قبل خواب
-              </p>
-            </div>
-            <div
-              class="mt-6 flex items-center justify-between border-t pt-4 border-slate-100"
-            >
-              <div>
-                <span class="block text-xs text-slate-400 line-through"
-                  >۲,۱۰۰,۰۰۰</span
-                >
-                <span class="font-black text-red-600 text-base"
-                  >۱,۶۸۰,۰۰۰
-                  <span class="text-xs font-normal">تومان</span></span
-                >
-              </div>
-              <button
-                onclick="addToCart('کازئین شبانه ۹۰۸ گرم', 1680000, '')"
-                class="bg-slate-900 hover:bg-red-600 text-white p-2.5 rounded-xl transition-colors"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
+          {% endwith %}
+          {% empty %}
+          <p class="text-white/80 text-sm py-10">در حال حاضر تخفیف ویژه‌ای فعال نیست.</p>
+          {% endfor %}
         </div>
       </div>
     </section>
@@ -1491,60 +688,24 @@
         <div
           class="flex shrink-0 items-center justify-around gap-12 min-w-full animate-infinite-scroll"
         >
+          {% for brand in brands %}
           <span
             class="text-2xl font-extrabold text-slate-300 hover:text-red-600 transition-colors"
-            >OPTIMUM NUTRITION</span
+            >{{ brand.name }}</span
           >
-          <span
-            class="text-2xl font-extrabold text-slate-300 hover:text-red-600 transition-colors"
-            >MUSCLETECH</span
-          >
-          <span
-            class="text-2xl font-extrabold text-slate-300 hover:text-red-600 transition-colors"
-            >BSN</span
-          >
-          <span
-            class="text-2xl font-extrabold text-slate-300 hover:text-red-600 transition-colors"
-            >CELLUCOR</span
-          >
-          <span
-            class="text-2xl font-extrabold text-slate-300 hover:text-red-600 transition-colors"
-            >DYMATIZE</span
-          >
-          <span
-            class="text-2xl font-extrabold text-slate-300 hover:text-red-600 transition-colors"
-            >MUTANT</span
-          >
+          {% endfor %}
         </div>
         <!-- لیست همسان کپی‌شده برای لوپ یکپارچه بدون گپ -->
         <div
           aria-hidden="true"
           class="flex shrink-0 items-center justify-around gap-12 min-w-full animate-infinite-scroll"
         >
+          {% for brand in brands %}
           <span
             class="text-2xl font-extrabold text-slate-300 hover:text-red-600 transition-colors"
-            >OPTIMUM NUTRITION</span
+            >{{ brand.name }}</span
           >
-          <span
-            class="text-2xl font-extrabold text-slate-300 hover:text-red-600 transition-colors"
-            >MUSCLETECH</span
-          >
-          <span
-            class="text-2xl font-extrabold text-slate-300 hover:text-red-600 transition-colors"
-            >BSN</span
-          >
-          <span
-            class="text-2xl font-extrabold text-slate-300 hover:text-red-600 transition-colors"
-            >CELLUCOR</span
-          >
-          <span
-            class="text-2xl font-extrabold text-slate-300 hover:text-red-600 transition-colors"
-            >DYMATIZE</span
-          >
-          <span
-            class="text-2xl font-extrabold text-slate-300 hover:text-red-600 transition-colors"
-            >MUTANT</span
-          >
+          {% endfor %}
         </div>
       </div>
     </section>
@@ -1748,7 +909,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- کارت اینستاگرام -->
           <a
-            href="https://instagram.com"
+            href="{{ site_settings.instagram_url|default:'#' }}"
             target="_blank"
             class="group relative bg-slate-800/50 hover:bg-slate-800/90 border border-slate-700/60 hover:border-red-500/50 rounded-3xl p-6 shadow-2xl backdrop-blur-xl transition-all duration-500 hover:-translate-y-1.5 overflow-hidden flex items-center justify-between"
           >
@@ -1806,7 +967,7 @@
 
           <!-- کارت تلگرام -->
           <a
-            href="https://t.me"
+            href="{{ site_settings.telegram_url|default:'#' }}"
             target="_blank"
             class="group relative bg-slate-800/50 hover:bg-slate-800/90 border border-slate-700/60 hover:border-red-500/50 rounded-3xl p-6 shadow-2xl backdrop-blur-xl transition-all duration-500 hover:-translate-y-1.5 overflow-hidden flex items-center justify-between"
           >
