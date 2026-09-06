@@ -8,6 +8,13 @@ class Category(models.Model):
 
     name = models.CharField("نام دسته‌بندی", max_length=100)
     slug = models.SlugField("اسلاگ", max_length=120, unique=True)
+    icon = models.ImageField(
+        "آیکون", upload_to="categories/", blank=True, null=True,
+        help_text="در کارت‌های دسته‌بندی صفحه‌ی اصلی نمایش داده می‌شود",
+    )
+    icon = models.ImageField(
+        "آیکون", upload_to="categories/", blank=True, null=True, help_text="در کارت دسته‌بندی صفحه‌ی اصلی نمایش داده می‌شود"
+    )
     parent = models.ForeignKey(
         "self",
         verbose_name="دسته‌بندی والد",
@@ -25,6 +32,10 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def active_product_count(self):
+        return self.products.filter(is_active=True).count()
 
 
 class Brand(models.Model):
@@ -69,6 +80,12 @@ class Product(models.Model):
     marketing/description content for the product as a whole.
     """
 
+    FORM_TYPE_CHOICES = [
+        ("powder", "پودر"),
+        ("tablets", "قرص / کپسول"),
+        ("liquid", "مایع / شات"),
+    ]
+
     category = models.ForeignKey(
         Category, verbose_name="دسته‌بندی", related_name="products", on_delete=models.PROTECT
     )
@@ -82,6 +99,10 @@ class Product(models.Model):
     )
     description = models.TextField("توضیحات کامل", blank=True)
     usage_instructions = models.TextField("نحوه مصرف", blank=True)
+    form_type = models.CharField(
+        "نوع/فرم مکمل", max_length=20, choices=FORM_TYPE_CHOICES, blank=True,
+        help_text="برای فیلتر «نوع مکمل» در صفحه‌ی محصولات استفاده می‌شود",
+    )
     is_active = models.BooleanField("فعال (قابل نمایش)", default=True)
     created_at = jmodels.jDateTimeField("تاریخ ایجاد", auto_now_add=True)
     updated_at = jmodels.jDateTimeField("تاریخ ویرایش", auto_now=True)
