@@ -322,6 +322,9 @@
                     class="w-full h-full object-cover"
                     src="{% if image %}{{ image.image.url }}{% endif %}"
                     alt="{{ p.name }}"
+                    {% if forloop.counter > 6 %}
+                    loading="lazy"
+                    {% endif %}
                   />
                   {% endwith %}
                 </a>
@@ -331,7 +334,7 @@
                   {% if variant.label %}
                   <span
                     class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md"
-                    >{{ variant.label }}</span
+                    >{{ variant.label }} گرمی</span
                   >
                   {% endif %}
                 </div>
