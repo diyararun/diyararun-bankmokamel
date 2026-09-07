@@ -2,7 +2,7 @@ from django.views.generic import DetailView, ListView
 
 from apps.reviews.forms import ReviewForm
 
-from .forms import ProductFilterForm
+from .forms import WEIGHT_RANGE_CHOICES, ProductFilterForm
 from .models import Brand, Category, Flavor, Product
 
 SORT_FIELD_MAP = {
@@ -29,21 +29,34 @@ class ProductListView(ListView):
             .prefetch_related("images", "variants")
         )
 
-        if self.filter_form.is_valid():
-            category = self.filter_form.cleaned_data.get("category")
-            brand = self.filter_form.cleaned_data.get("brand")
-            sort = self.filter_form.cleaned_data.get("sort") or "newest"
-            if category:
-                queryset = queryset.filter(category=category)
-            if brand:
-                queryset = queryset.filter(brand=brand)
-        else:
-            # An unrecognized ?sort=... or a slug that doesn't match any
-            # active category/brand just means "show everything" rather
-            # than a hard error — these are bookmarkable GET params, not
-            # a form a visitor fills in and must get exactly right.
-            sort = "newest"
+        if not self.filter_form.is_valid():
+            # An unrecognized value anywhere just means "show everything"
+            # rather than a hard error — these are bookmarkable GET
+            # params, not a form a visitor fills in and must get exactly
+            # right.
+            return queryset.order_by("-created_at").distinct()
 
+        data = self.filter_form.cleaned_data
+
+        if data.get("category"):
+            queryset = queryset.filter(category=data["category"])
+        if data.get("brand"):
+            queryset = queryset.filter(brand__in=data["brand"])
+        if data.get("form_type"):
+            queryset = queryset.filter(form_type__in=data["form_type"])
+        if data.get("price_max"):
+            queryset = queryset.filter(variants__price__lte=data["price_max"])
+        if data.get("weight_range"):
+            for value, _label, min_g, max_g in WEIGHT_RANGE_CHOICES:
+                if value == data["weight_range"]:
+                    queryset = queryset.filter(variants__weight_grams__gte=min_g)
+                    if max_g is not None:
+                        queryset = queryset.filter(variants__weight_grams__lt=max_g)
+                    break
+        if data.get("in_stock_only"):
+            queryset = queryset.filter(variants__stock__gt=0, variants__is_active=True)
+
+        sort = data.get("sort") or "newest"
         return queryset.order_by(SORT_FIELD_MAP.get(sort, "-created_at")).distinct()
 
     def get_context_data(self, **kwargs):
@@ -51,9 +64,30 @@ class ProductListView(ListView):
         context["active_nav"] = "products"
         context["categories"] = Category.objects.filter(is_active=True)
         context["brands"] = Brand.objects.filter(is_active=True)
-        context["current_sort"] = (
-            self.filter_form.cleaned_data.get("sort") or "newest" if self.filter_form.is_valid() else "newest"
-        )
+        context["weight_ranges"] = [(v, label) for v, label, _min, _max in WEIGHT_RANGE_CHOICES]
+        context["form_types"] = Product.FORM_TYPE_CHOICES
+
+        # Used by pagination links (?{{ querystring }}&page=N) so changing
+        # page never drops the current filters/sort.
+        querydict = self.request.GET.copy()
+        querydict.pop("page", None)
+        context["querystring"] = querydict.urlencode()
+
+        if self.filter_form.is_valid():
+            data = self.filter_form.cleaned_data
+            context["current_sort"] = data.get("sort") or "newest"
+            context["selected_brand_slugs"] = [b.slug for b in data.get("brand") or []]
+            context["selected_form_types"] = data.get("form_type") or []
+            context["selected_weight_range"] = data.get("weight_range") or ""
+            context["selected_price_max"] = data.get("price_max")
+            context["selected_in_stock_only"] = data.get("in_stock_only")
+        else:
+            context["current_sort"] = "newest"
+            context["selected_brand_slugs"] = []
+            context["selected_form_types"] = []
+            context["selected_weight_range"] = ""
+            context["selected_price_max"] = None
+            context["selected_in_stock_only"] = False
         return context
 
 
