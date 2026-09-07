@@ -225,6 +225,11 @@
                   >نام و نام خانوادگی <span class="text-red-600">*</span></label
                 >
                 <input
+                  id="fullName"
+                  autocomplete="name"
+                  required
+                  minlength="3"
+                  maxlength="100"
                   type="text"
                   required
                   placeholder="مثال: رضا محمدی"
@@ -237,11 +242,14 @@
                   >شماره تماس <span class="text-red-600">*</span></label
                 >
                 <input
+                  id="phone"
                   type="tel"
                   required
+                  maxlength="11"
+                  inputmode="numeric"
                   placeholder="۰۹۱۲۳۴۵۶۷۸۹"
                   pattern="09[0-9]{9}"
-                  class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-red-600 transition-all text-left placeholder:text-right"
+                  class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-red-600 transition-all text-left placeholder:text-left"
                   dir="ltr"
                 />
               </div>
@@ -253,10 +261,12 @@
                   >آدرس ایمیل <span class="text-red-600">*</span></label
                 >
                 <input
+                  id="email"
                   type="email"
+                  autocomplete="email"
                   required
                   placeholder="name@example.com"
-                  class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-red-600 transition-all text-left placeholder:text-right"
+                  class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-red-600 transition-all text-left placeholder:text-left"
                   dir="ltr"
                 />
               </div>
@@ -283,6 +293,12 @@
                 >متن پیام شما <span class="text-red-600">*</span></label
               >
               <textarea
+                id="message"
+                required
+                rows="3"
+                minlength="5"
+                maxlength="500"
+                autocomplete="street-address"
                 required
                 rows="5"
                 placeholder="جزئیات پیام خود را اینجا بنویسید..."
