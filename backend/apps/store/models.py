@@ -1,156 +1,226 @@
-from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django_jalali.db import models as jmodels
 
 
-class SiteSettings(models.Model):
-    """Site-wide content the store owner can edit from the admin panel —
-    everything that isn't a product: hero copy (per page), footer/contact
-    info, social links, and homepage stats.
+class Category(models.Model):
+    """Product category (e.g. 'پروتئین', 'کراتین'). Self-referential so
+    subcategories can be introduced later without a schema change."""
 
-    Singleton: only one row should ever exist (enforced in save(), since
-    Django has no built-in "at most one row" constraint). Always fetch it
-    through SiteSettings.load(), never SiteSettings.objects.get(...).
-    """
-
-    # ---- Homepage hero section ----
-    hero_title = models.CharField("عنوان هیرو", max_length=200, blank=True)
-    hero_subtitle = models.CharField("زیرعنوان هیرو", max_length=200, blank=True)
-    hero_description = models.TextField("توضیح هیرو", blank=True)
-
-    # ---- Shared description (footer, and available anywhere else too) ----
-    site_description = models.TextField(
-        "توضیح کوتاه درباره‌ی فروشگاه", blank=True, help_text="در فوتر و بخش‌های معرفی نمایش داده می‌شود"
+    name = models.CharField("نام دسته‌بندی", max_length=100)
+    slug = models.SlugField("اسلاگ", max_length=120, unique=True)
+    icon = models.ImageField(
+        "آیکون", upload_to="categories/", blank=True, null=True,
+        help_text="در کارت‌های دسته‌بندی صفحه‌ی اصلی نمایش داده می‌شود",
     )
-
-    # ---- About page ----
-    about_hero_title = models.CharField("عنوان هیرو صفحه‌ی درباره ما", max_length=200, blank=True)
-    about_hero_description = models.TextField("توضیح هیرو صفحه‌ی درباره ما", blank=True)
-    about_page_content = models.TextField(
-        "متن تکمیلی صفحه‌ی درباره ما (اختیاری)",
+    parent = models.ForeignKey(
+        "self",
+        verbose_name="دسته‌بندی والد",
+        null=True,
         blank=True,
-        help_text="در صورت پر بودن، زیر بخش آمار نمایش داده می‌شود. هر پاراگراف را با یک خط خالی جدا کنید.",
+        related_name="children",
+        on_delete=models.SET_NULL,
     )
-    # Four number+label stat cards under the about-page hero (e.g. "+۵۰,۰۰۰ / سفارش موفق")
-    stat1_number = models.CharField("آمار ۱ - عدد", max_length=30, blank=True)
-    stat1_label = models.CharField("آمار ۱ - برچسب", max_length=50, blank=True)
-    stat2_number = models.CharField("آمار ۲ - عدد", max_length=30, blank=True)
-    stat2_label = models.CharField("آمار ۲ - برچسب", max_length=50, blank=True)
-    stat3_number = models.CharField("آمار ۳ - عدد", max_length=30, blank=True)
-    stat3_label = models.CharField("آمار ۳ - برچسب", max_length=50, blank=True)
-    stat4_number = models.CharField("آمار ۴ - عدد", max_length=30, blank=True)
-    stat4_label = models.CharField("آمار ۴ - برچسب", max_length=50, blank=True)
-
-    # ---- Contact page hero ----
-    contact_hero_title = models.CharField("عنوان هیرو صفحه‌ی تماس با ما", max_length=200, blank=True)
-    contact_hero_description = models.TextField("توضیح هیرو صفحه‌ی تماس با ما", blank=True)
-
-    # ---- Contact info (footer + contact page) ----
-    address = models.CharField("آدرس", max_length=300, blank=True)
-    # Free-form lists (one per line) instead of a fixed number of fields,
-    # so the store owner can enter exactly as many phone numbers/emails
-    # as they actually have (one, two, three...) without us guessing a
-    # fixed count in the schema.
-    phones = models.TextField(
-        "شماره‌های تماس", blank=True, help_text="هر شماره را در یک خط جداگانه وارد کنید"
-    )
-    emails = models.TextField(
-        "ایمیل‌ها", blank=True, help_text="هر ایمیل را در یک خط جداگانه وارد کنید"
-    )
-    working_hours = models.CharField("ساعات پاسخگویی", max_length=100, blank=True)
-
-    # ---- Social links ----
-    instagram_url = models.URLField("لینک اینستاگرام", blank=True)
-    telegram_url = models.URLField("لینک تلگرام", blank=True)
-    whatsapp_url = models.URLField("لینک واتساپ", blank=True)
-
-    updated_at = jmodels.jDateTimeField("آخرین ویرایش", auto_now=True)
+    is_active = models.BooleanField("فعال", default=True)
 
     class Meta:
-        verbose_name = "تنظیمات محتوای سایت"
-        verbose_name_plural = "تنظیمات محتوای سایت"
+        verbose_name = "دسته‌بندی"
+        verbose_name_plural = "دسته‌بندی‌ها"
+        ordering = ["name"]
 
     def __str__(self):
-        return "تنظیمات محتوای سایت"
-
-    def save(self, *args, **kwargs):
-        # Force every save to overwrite the same single row, regardless
-        # of how the instance was constructed.
-        self.pk = 1
-        super().save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        # No-op: the singleton row must never be deletable from admin
-        # bulk actions (a missing row would break every page's context).
-        pass
-
-    @classmethod
-    def load(cls):
-        obj, _created = cls.objects.get_or_create(pk=1)
-        return obj
+        return self.name
 
     @property
-    def phone_list(self):
-        return [line.strip() for line in self.phones.splitlines() if line.strip()]
-
-    @property
-    def email_list(self):
-        return [line.strip() for line in self.emails.splitlines() if line.strip()]
+    def active_product_count(self):
+        return self.products.filter(is_active=True).count()
 
 
-class Testimonial(models.Model):
-    """A customer testimonial shown on the About page. Deliberately not
-    tied to a real Review/order — this is site-wide marketing content the
-    store owner curates directly, same spirit as SiteSettings.
+class Brand(models.Model):
+    """Product manufacturer/brand (e.g. 'اپتیموم نوتریشن')."""
+
+    name = models.CharField("نام برند", max_length=100)
+    slug = models.SlugField("اسلاگ", max_length=120, unique=True)
+    logo = models.ImageField("لوگو", upload_to="brands/", blank=True, null=True)
+    description = models.TextField("توضیحات", blank=True)
+    is_active = models.BooleanField("فعال", default=True)
+
+    class Meta:
+        verbose_name = "برند"
+        verbose_name_plural = "برندها"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class Flavor(models.Model):
+    """Reusable flavor option (e.g. 'شکلات دبل', 'وانیل بستنی').
+
+    A single lookup table so the same flavor name is reused consistently
+    across products instead of being retyped as free text every time.
     """
 
-    name = models.CharField("نام", max_length=100)
-    role_label = models.CharField(
-        "برچسب (اختیاری)", max_length=100, blank=True, help_text='مثال: "خریدار وی پروتئین"'
-    )
-    rating = models.PositiveSmallIntegerField("امتیاز", validators=[MinValueValidator(1), MaxValueValidator(5)])
-    comment = models.TextField("متن نظر")
-    display_date = models.CharField(
-        "تاریخ نمایشی", max_length=50, blank=True, help_text='مثال: "تیر ۱۴۰۵" — متن آزاد، برای نمایش'
-    )
-    is_active = models.BooleanField("فعال (نمایش داده شود)", default=True)
-    order = models.PositiveIntegerField("ترتیب نمایش", default=0)
+    name = models.CharField("نام طعم", max_length=50, unique=True)
 
     class Meta:
-        verbose_name = "نظر مشتری (صفحه درباره ما)"
-        verbose_name_plural = "نظرات مشتریان (صفحه درباره ما)"
-        ordering = ["order", "id"]
+        verbose_name = "طعم"
+        verbose_name_plural = "طعم‌ها"
+        ordering = ["name"]
 
     def __str__(self):
-        return f"{self.name} ({self.rating}★)"
-
-    @property
-    def stars_display(self):
-        return "★" * self.rating + "☆" * (5 - self.rating)
+        return self.name
 
 
-class ContactMessage(models.Model):
-    """A message submitted through the "تماس با ما" form."""
+class Product(models.Model):
+    """A sellable product. Price, stock and flavor/weight combinations
+    live on ProductVariant below — this model only holds the shared
+    marketing/description content for the product as a whole.
+    """
 
-    SUBJECT_CHOICES = [
-        ("support", "پشتیبانی و پیگیری سفارش"),
-        ("consult", "مشاوره خرید مکمل"),
-        ("complaint", "انتقاد یا شکایت"),
-        ("cooperation", "همکاری و مشاوره تجاری"),
+    FORM_TYPE_CHOICES = [
+        ("powder", "پودر"),
+        ("tablets", "قرص / کپسول"),
+        ("liquid", "مایع / شات"),
     ]
 
-    name = models.CharField("نام و نام خانوادگی", max_length=150)
-    phone = models.CharField("شماره تماس", max_length=11)
-    email = models.EmailField("آدرس ایمیل")
-    subject = models.CharField("موضوع پیام", max_length=20, choices=SUBJECT_CHOICES)
-    message = models.TextField("متن پیام")
-    is_read = models.BooleanField("خوانده‌شده", default=False)
-    created_at = jmodels.jDateTimeField("تاریخ ارسال", auto_now_add=True)
+    category = models.ForeignKey(
+        Category, verbose_name="دسته‌بندی", related_name="products", on_delete=models.PROTECT
+    )
+    brand = models.ForeignKey(
+        Brand, verbose_name="برند", related_name="products", on_delete=models.PROTECT
+    )
+    name = models.CharField("نام محصول", max_length=200)
+    slug = models.SlugField("اسلاگ", max_length=220, unique=True)
+    short_description = models.CharField(
+        "توضیح کوتاه", max_length=300, blank=True, help_text="در کارت محصولات نمایش داده می‌شود"
+    )
+    description = models.TextField("توضیحات کامل", blank=True)
+    usage_instructions = models.TextField("نحوه مصرف", blank=True)
+    form_type = models.CharField(
+        "نوع/فرم مکمل", max_length=20, choices=FORM_TYPE_CHOICES, blank=True,
+        help_text="برای فیلتر «نوع مکمل» در صفحه‌ی محصولات استفاده می‌شود",
+    )
+    is_active = models.BooleanField("فعال (قابل نمایش)", default=True)
+    created_at = jmodels.jDateTimeField("تاریخ ایجاد", auto_now_add=True)
+    updated_at = jmodels.jDateTimeField("تاریخ ویرایش", auto_now=True)
 
     class Meta:
-        verbose_name = "پیام تماس با ما"
-        verbose_name_plural = "پیام‌های تماس با ما"
+        verbose_name = "محصول"
+        verbose_name_plural = "محصولات"
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.name} - {self.get_subject_display()}"
+        return self.name
+
+    @property
+    def active_variants(self):
+        return self.variants.filter(is_active=True)
+
+    @property
+    def default_variant(self):
+        """The variant shown by default on the product card/detail page —
+        the cheapest active, in-stock variant, falling back to the
+        cheapest active variant if none are in stock."""
+        in_stock = self.active_variants.filter(stock__gt=0).order_by("price")
+        return in_stock.first() or self.active_variants.order_by("price").first()
+
+    @property
+    def average_rating(self):
+        approved = self.reviews.filter(is_approved=True)
+        return approved.aggregate(models.Avg("rating"))["rating__avg"]
+
+
+class ProductImage(models.Model):
+    """One image in a product's gallery. is_primary marks the image shown
+    on product cards and as the default detail-page image."""
+
+    product = models.ForeignKey(Product, verbose_name="محصول", related_name="images", on_delete=models.CASCADE)
+    image = models.ImageField("تصویر", upload_to="products/%Y/%m/")
+    alt_text = models.CharField("متن جایگزین", max_length=200, blank=True)
+    is_primary = models.BooleanField("تصویر اصلی", default=False)
+    order = models.PositiveIntegerField("ترتیب نمایش", default=0)
+
+    class Meta:
+        verbose_name = "تصویر محصول"
+        verbose_name_plural = "تصاویر محصول"
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"{self.product.name} - {self.order}"
+
+
+class ProductVariant(models.Model):
+    """A purchasable flavor + weight/serving combination of a product,
+    each with its own price and stock (e.g. 'شکلات دبل، 2270 گرم').
+
+    "label" is the exact text shown on the weight/serving selector button
+    in the UI (e.g. "2270 گرم (74 سروینگ)"); weight_grams/servings_count
+    are kept as separate numeric fields too so we can sort/filter variants
+    later without parsing that text.
+    """
+
+    product = models.ForeignKey(Product, verbose_name="محصول", related_name="variants", on_delete=models.CASCADE)
+    flavor = models.ForeignKey(
+        Flavor,
+        verbose_name="طعم",
+        related_name="variants",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        help_text="برای محصولاتی مثل کپسول که طعم ندارند خالی بگذارید",
+    )
+    label = models.CharField("برچسب وزن/سروینگ", max_length=100, help_text="مثال: ۲۲۷۰ گرم (۷۴ سروینگ)")
+    weight_grams = models.PositiveIntegerField("وزن (گرم)", null=True, blank=True)
+    servings_count = models.PositiveIntegerField("تعداد سروینگ", null=True, blank=True)
+    sku = models.CharField("کد کالا (SKU)", max_length=50, unique=True)
+    price = models.PositiveIntegerField("قیمت (تومان)")
+    compare_at_price = models.PositiveIntegerField(
+        "قیمت قبل از تخفیف (تومان)", null=True, blank=True, help_text="خالی بگذارید اگر تخفیف ندارد"
+    )
+    stock = models.PositiveIntegerField("موجودی", default=0)
+    is_active = models.BooleanField("فعال", default=True)
+
+    class Meta:
+        verbose_name = "تنوع محصول (Variant)"
+        verbose_name_plural = "تنوع‌های محصول (Variants)"
+        ordering = ["price"]
+
+    def __str__(self):
+        flavor_part = f"{self.flavor} - " if self.flavor else ""
+        return f"{self.product.name} ({flavor_part}{self.label})"
+
+    @property
+    def is_in_stock(self):
+        return self.is_active and self.stock > 0
+
+    @property
+    def discount_percent(self):
+        if self.compare_at_price and self.compare_at_price > self.price:
+            return round((self.compare_at_price - self.price) * 100 / self.compare_at_price)
+        return 0
+
+
+class ProductSpec(models.Model):
+    """A single key/value technical spec row shown in the product's
+    'مشخصات فنی' tab (e.g. key='وزن بسته‌بندی', value='2270 گرم').
+
+    Deliberately free-form (per-product key/value pairs) rather than a
+    category-level attribute-definition table — different product
+    categories can show completely different sets of specs without any
+    schema change. If we later need cross-product spec filtering (e.g.
+    "show all products with protein >= 20g"), that's the point to
+    introduce a proper AttributeDefinition model; not needed yet.
+    """
+
+    product = models.ForeignKey(Product, verbose_name="محصول", related_name="specs", on_delete=models.CASCADE)
+    key = models.CharField("عنوان مشخصه", max_length=100)
+    value = models.CharField("مقدار", max_length=200)
+    order = models.PositiveIntegerField("ترتیب نمایش", default=0)
+
+    class Meta:
+        verbose_name = "مشخصه فنی"
+        verbose_name_plural = "مشخصات فنی"
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"{self.product.name} - {self.key}"
