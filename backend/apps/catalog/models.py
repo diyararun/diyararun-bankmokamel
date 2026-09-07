@@ -12,9 +12,6 @@ class Category(models.Model):
         "آیکون", upload_to="categories/", blank=True, null=True,
         help_text="در کارت‌های دسته‌بندی صفحه‌ی اصلی نمایش داده می‌شود",
     )
-    icon = models.ImageField(
-        "آیکون", upload_to="categories/", blank=True, null=True, help_text="در کارت دسته‌بندی صفحه‌ی اصلی نمایش داده می‌شود"
-    )
     parent = models.ForeignKey(
         "self",
         verbose_name="دسته‌بندی والد",
