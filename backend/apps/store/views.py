@@ -1,6 +1,12 @@
-from django.views.generic import TemplateView
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.views.generic import TemplateView, View
+from django.shortcuts import render
 
 from apps.catalog.models import Brand, Category, Product
+
+from .forms import ContactForm
+from .models import Testimonial
 
 
 class IndexView(TemplateView):
@@ -38,11 +44,28 @@ class AboutView(TemplateView):
     template_name = "store/about.html"
 
     def get_context_data(self, **kwargs):
-        return {**super().get_context_data(**kwargs), "active_nav": "about"}
+        context = super().get_context_data(**kwargs)
+        context["active_nav"] = "about"
+        context["testimonials"] = Testimonial.objects.filter(is_active=True)
+        return context
 
 
-class ContactView(TemplateView):
+class ContactView(View):
+    """GET renders the contact page. POST validates and saves the message
+    (viewable/triage-able from the admin as ContactMessage) and redirects
+    back with a success message — this form has no email-sending backend
+    yet, it just persists messages for staff to review in the admin.
+    """
+
     template_name = "store/contact.html"
 
-    def get_context_data(self, **kwargs):
-        return {**super().get_context_data(**kwargs), "active_nav": "contact"}
+    def get(self, request):
+        return render(request, self.template_name, {"active_nav": "contact", "form": ContactForm()})
+
+    def post(self, request):
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "پیام شما با موفقیت ارسال شد. به‌زودی با شما تماس می‌گیریم.")
+            return redirect("store:contact")
+        return render(request, self.template_name, {"active_nav": "contact", "form": form})
