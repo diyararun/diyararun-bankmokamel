@@ -38,6 +38,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         ("صفحه‌ی تماس با ما", {"fields": ("contact_hero_title", "contact_hero_description")}),
         ("اطلاعات تماس", {"fields": ("address", "phones", "emails", "working_hours")}),
         ("شبکه‌های اجتماعی", {"fields": ("instagram_url", "telegram_url", "whatsapp_url")}),
+        ("ارسال", {"fields": ("express_shipping_cost",)}),
     )
     readonly_fields = ("updated_at",)
 

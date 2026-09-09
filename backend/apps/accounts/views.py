@@ -3,10 +3,13 @@ import json
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
+from django.db.models import Prefetch
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 from django_ratelimit.decorators import ratelimit
+
+from apps.orders.models import OrderItem
 
 from .forms import OtpVerifyForm, PhoneForm, ProfileForm
 from .models import PhoneOTP
@@ -101,3 +104,25 @@ def profile_view(request):
         form = ProfileForm(instance=request.user)
 
     return render(request, "accounts/profile.html", {"form": form})
+
+
+@login_required
+def order_list_view(request):
+    """صفحه‌ی «سفارش‌های من» - سفارش‌های واقعی کاربر جاری.
+
+    select_related/prefetch_related هر دو اینجا لازم‌اند: هر سفارش خودش
+    یک بار کوئری برای آیتم‌هاش می‌خورد (prefetch_related روی items) و هر
+    آیتم هم برای عکسش به variant/product نیاز دارد (select_related داخل
+    Prefetch) — بدون این‌ها، صفحه‌ای با ۱۰ سفارش دوتایی، ده‌ها کوئری
+    اضافه به دیتابیس می‌زد (N+1).
+    """
+    orders = (
+        request.user.orders.prefetch_related(
+            Prefetch(
+                "items",
+                queryset=OrderItem.objects.select_related("variant__product"),
+            )
+        )
+        .order_by("-created_at")
+    )
+    return render(request, "accounts/orders.html", {"orders": orders})

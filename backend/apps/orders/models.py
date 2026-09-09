@@ -35,14 +35,14 @@ class Order(models.Model):
     full_name = models.CharField("نام و نام خانوادگی", max_length=150)
     phone = models.CharField("شماره همراه", max_length=11)
     email = models.EmailField("آدرس ایمیل", blank=True)
-    national_code = models.CharField("کد ملی", max_length=10, blank=True)
+    national_code = models.CharField("کد ملی", max_length=10)
 
     # ---- Section 2 of checkout.html: آدرس دقیق محل تحویل ----
     province = models.CharField("استان", max_length=50)
     city = models.CharField("شهر", max_length=50)
-    full_address = models.TextField("آدرس کامل پستی")
+    address = models.TextField("آدرس کامل پستی")
     postal_code = models.CharField("کد پستی", max_length=10)
-    plaque = models.CharField("پلاک", max_length=20)
+    building_number = models.CharField("پلاک", max_length=20, blank=True)
     unit = models.CharField("واحد", max_length=20, blank=True)
 
     # ---- Section 4 of checkout.html: روش پرداخت ----

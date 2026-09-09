@@ -10,4 +10,5 @@ urlpatterns = [
     path("otp/verify/", views.verify_otp, name="otp_verify"),
     path("logout/", views.logout_view, name="logout"),
     path("profile/", views.profile_view, name="profile"),
+    path("orders/", views.order_list_view, name="orders"),
 ]
