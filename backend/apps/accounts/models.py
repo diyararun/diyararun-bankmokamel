@@ -50,7 +50,7 @@ class User(AbstractUser):
     username = None
 
     phone = models.CharField("شماره موبایل", max_length=11, unique=True)
-    national_code = models.CharField("کد ملی", max_length=10, blank=True)
+    national_code = models.CharField("کد ملی", max_length=10, unique=True)
     avatar_emoji = models.CharField("آیکون پروفایل", max_length=4, default="👤")
 
     USERNAME_FIELD = "phone"
