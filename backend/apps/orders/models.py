@@ -3,6 +3,35 @@ from django.db import models
 from django_jalali.db import models as jmodels
 
 
+class ShippingSettings(models.Model):
+    """Singleton, same pattern as store.SiteSettings — lets the store
+    owner change the flat shipping rate from admin instead of it being a
+    hardcoded constant in views.py.
+    """
+
+    flat_rate = models.PositiveIntegerField("هزینه ارسال (تومان)", default=49000)
+    updated_at = jmodels.jDateTimeField("آخرین ویرایش", auto_now=True)
+
+    class Meta:
+        verbose_name = "هزینه ارسال"
+        verbose_name_plural = "هزینه ارسال"
+
+    def __str__(self):
+        return "تنظیمات هزینه‌ی ارسال"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def load(cls):
+        obj, _created = cls.objects.get_or_create(pk=1)
+        return obj
+
+
 class Order(models.Model):
     """A placed order. Recipient info and address are flat fields here
     (matching checkout.html's form exactly) rather than a separate

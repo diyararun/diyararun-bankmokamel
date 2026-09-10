@@ -5,11 +5,13 @@ from django.contrib.auth import get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Prefetch
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 from django_ratelimit.decorators import ratelimit
 
-from apps.orders.models import OrderItem
+from apps.cart.services import merge_guest_cart_into_user
+from apps.orders.models import Order, OrderItem
 
 from .forms import OtpVerifyForm, PhoneForm, ProfileForm
 from .models import PhoneOTP
@@ -80,9 +82,28 @@ def verify_otp(request):
     otp.save(update_fields=["is_used"])
 
     user, _created = User.objects.get_or_create(phone=phone, defaults={"username": phone})
-    login(request, user)
 
-    return JsonResponse({"ok": True, "redirect_url": "/"})
+    # Must read the session key BEFORE login(): login() rotates it for
+    # session-fixation security, so it has to be captured while it still
+    # points at whatever guest cart this visitor built up before logging in.
+    guest_session_key = request.session.session_key
+    login(request, user)
+    merge_guest_cart_into_user(guest_session_key, user)
+
+    # "next" is what LoginRequiredMixin (e.g. on checkout) put in the URL
+    # when it redirected here — without honoring it, a customer sent to
+    # log in from checkout would land back on the homepage instead of
+    # picking up where they left off. url_has_allowed_host_and_scheme
+    # guards against an open-redirect (never trust a raw "next" value).
+    next_url = request.POST.get("next", "")
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        redirect_url = next_url
+    else:
+        redirect_url = "/"
+
+    return JsonResponse({"ok": True, "redirect_url": redirect_url})
 
 
 @login_required
@@ -126,3 +147,25 @@ def order_list_view(request):
         .order_by("-created_at")
     )
     return render(request, "accounts/orders.html", {"orders": orders})
+
+
+@login_required
+def order_detail_view(request, tracking_code):
+    """جزئیات کامل یک سفارش. عمداً با `tracking_code` واقعی پیدا می‌شود، نه
+    `pk` — همان دلیل امنیتی/طراحی که خودِ فیلد `tracking_code` را ساختیم:
+    یک شناسه‌ی ترتیبی نباید توی URL عمومی باشد. فیلتر `user=request.user`
+    هم تضمین می‌کند کاربر فقط بتواند سفارش خودش را ببیند، حتی اگر
+    tracking_code یک سفارش دیگر را حدس بزند (که عملاً غیرممکن است) یا
+    لینکش را از جایی دیگر پیدا کند.
+    """
+    order = get_object_or_404(
+        Order.objects.prefetch_related(
+            Prefetch(
+                "items",
+                queryset=OrderItem.objects.select_related("variant__product"),
+            )
+        ),
+        tracking_code=tracking_code,
+        user=request.user,
+    )
+    return render(request, "accounts/order_detail.html", {"order": order})

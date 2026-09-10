@@ -275,6 +275,12 @@
                 <span>قیمت محصولات:</span>
                 <span class="font-bold text-slate-800">{{ cart.total_price }} تومان</span>
               </div>
+              {% if product_discount_amount %}
+              <div class="flex items-center justify-between text-slate-600">
+                <span>تخفیف محصولات:</span>
+                <span class="font-bold text-emerald-600">{{ product_discount_amount }} تومان</span>
+              </div>
+              {% endif %}
               <div class="flex items-center justify-between text-slate-600">
                 <span>هزینه ارسال اکسپرس:</span>
                 <span class="font-bold text-slate-800">{{ shipping_cost }} تومان</span>

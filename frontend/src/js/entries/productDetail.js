@@ -1,7 +1,6 @@
 import "../../css/product-detail.css";
 
-import { addMultipleToCart } from "../cartDrawer.js";
-import { showToast } from "../toast.js";
+import { addToCart } from "../cartDrawer.js";
 
 let currentQuantity = 1;
 
@@ -10,6 +9,11 @@ let currentQuantity = 1;
 const productData = JSON.parse(
   document.getElementById("product-data").textContent,
 );
+
+// The weight/serving variant currently selected for "افزودن به سبد خرید" —
+// starts at the server-rendered default, changes when the customer clicks
+// a different weight pill (see selectVariant() below).
+let selectedVariantId = productData.defaultVariantId;
 
 const productImageHTML = (url) =>
   `<img class="w-full h-full object-cover" src="${url}" alt="${productData.name}" />`;
@@ -139,18 +143,46 @@ function adjustQuantity(delta) {
   document.getElementById("detailQuantity").innerText = currentQuantity;
 }
 
-function addCurrentProductToCart() {
-  const productName = productData.name;
-  const productPrice = productData.defaultVariantPrice;
+// Switches the selected weight/serving variant: updates the price/compare
+// price shown, which variant "افزودن به سبد خرید" will actually add, its
+// disabled/"ناموجود" state, and the pill buttons' active styling.
+// Deliberately NOT wired to the flavor pills yet — flavor→variant
+// filtering needs its own mapping the backend doesn't send today; adding
+// it here would be guessing at a UI, not fixing the reported bug, so it's
+// left as-is (decorative) for a follow-up.
+function selectVariant(variantId) {
+  const variant = productData.variants.find((v) => v.id === variantId);
+  if (!variant) return;
+  selectedVariantId = variant.id;
 
-  // NOTE: still calls the current cartDrawer.js API (name/price/html),
-  // not variant_id — that switch happens together with the cartDrawer.js
-  // → /cart/ API rewrite tracked separately (see the frontend handoff doc).
-  addMultipleToCart(productName, productPrice, galleryImages[0], currentQuantity);
-  showToast(
-    "افزوده شد به سبد",
-    `${currentQuantity} عدد «${productName}» به سبد اضافه شد.`,
-  );
+  document.getElementById("productPrice").innerText = variant.price;
+  const compareEl = document.getElementById("productComparePrice");
+  if (variant.compareAtPrice) {
+    compareEl.innerText = variant.compareAtPrice;
+    compareEl.classList.remove("hidden");
+  } else {
+    compareEl.classList.add("hidden");
+  }
+
+  document.querySelectorAll(".js-variant-option").forEach((btn) => {
+    const isSelected = Number(btn.dataset.variantId) === variant.id;
+    btn.className = `js-variant-option px-3 py-1.5 border-2 ${
+      isSelected
+        ? "border-red-600 text-red-600 font-bold bg-red-50"
+        : "border-slate-200 text-slate-600 hover:border-slate-300"
+    } rounded-lg text-xs`;
+  });
+
+  const addBtn = document.getElementById("mainAddToCartBtn");
+  addBtn.dataset.variantId = variant.id;
+  addBtn.disabled = !variant.inStock;
+  document.getElementById("mainAddToCartLabel").innerText = variant.inStock
+    ? "افزودن به سبد خرید"
+    : "ناموجود";
+}
+
+function addCurrentProductToCart() {
+  addToCart(selectedVariantId, currentQuantity);
 }
 
 window.selectImage = selectImage;
@@ -164,6 +196,12 @@ window.addCurrentProductToCart = addCurrentProductToCart;
 
 document.addEventListener("DOMContentLoaded", () => {
   renderThumbnails();
+
+  document.querySelectorAll(".js-variant-option").forEach((btn) => {
+    btn.addEventListener("click", () =>
+      selectVariant(Number(btn.dataset.variantId)),
+    );
+  });
 
   const relatedSlider = document.getElementById("relatedSlider");
   if (relatedSlider) {

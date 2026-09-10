@@ -1,6 +1,21 @@
 from django.contrib import admin
+from django.shortcuts import redirect
+from django.urls import reverse
 
-from .models import Order, OrderItem
+from .models import Order, OrderItem, ShippingSettings
+
+
+@admin.register(ShippingSettings)
+class ShippingSettingsAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return not ShippingSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        obj = ShippingSettings.load()
+        return redirect(reverse("admin:orders_shippingsettings_change", args=[obj.pk]))
 
 
 class OrderItemInline(admin.TabularInline):

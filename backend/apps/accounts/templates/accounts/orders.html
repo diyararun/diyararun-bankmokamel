@@ -4,133 +4,61 @@
 {% block title %}سفارش‌های من | بانک مکمل{% endblock %}
 
 {% block content %}
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    <!-- مسیر (Breadcrumb) -->
-    <nav class="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-6">
-      <a href="{% url 'store:index' %}" class="hover:text-red-600 transition-colors">خانه</a>
-      <span class="text-slate-300">/</span>
-      <a href="{% url 'accounts:profile' %}" class="hover:text-red-600 transition-colors">پروفایل من</a>
-      <span class="text-slate-300">/</span>
-      <span class="text-red-600">سفارش‌های من</span>
-    </nav>
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <h1 class="text-xl font-black text-slate-900 mb-6">سفارش‌های من</h1>
 
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-      <!-- ==================== سایدبار حساب کاربری ==================== -->
-      {% include "partials/profile_aside.html" %}
-
-      <section class="lg:col-span-3">
-        <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8">
-          <div class="mb-6 space-y-1">
-            <h1 class="text-xl font-black text-slate-900">سفارش‌های من</h1>
-            <p class="text-xs text-slate-400">
-              تاریخچه و وضعیت سفارش‌های ثبت‌شده‌ی شما.
-            </p>
-          </div>
-
-          {% if orders %}
-          <!-- ==================== حالت ۱: لیست سفارش‌ها ==================== -->
-          <div class="space-y-4">
-            {% for order in orders %}
-            <div class="order-card border border-slate-200/80 rounded-2xl p-4 sm:p-5 hover:border-red-200 transition-colors">
-              <div class="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100">
-                <div class="flex items-center gap-4">
-                  <div>
-                    <span class="block text-[10px] text-slate-400">شماره سفارش</span>
-                    <!-- Order has no separate tracking_code field yet — the
-                         order's own primary key IS the honest identifier
-                         today, so we show that instead of inventing a fake
-                         "BM-XXXXXX" format that isn't backed by real data. -->
-                    <span class="font-bold text-sm text-slate-800" dir="ltr">#{{ order.pk }}</span>
-                  </div>
-                  <div>
-                    <span class="block text-[10px] text-slate-400">تاریخ ثبت</span>
-                    <span class="font-bold text-sm text-slate-800">{{ order.created_at }}</span>
-                  </div>
-                </div>
-
-                <div class="flex items-center gap-3">
-                  {% if order.status == "delivered" or order.status == "paid" %}
-                  <span class="text-[11px] font-bold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600">
-                    {{ order.get_status_display }}
-                  </span>
-                  {% elif order.status == "cancelled" %}
-                  <span class="text-[11px] font-bold px-3 py-1.5 rounded-full bg-red-50 text-red-600">
-                    {{ order.get_status_display }}
-                  </span>
-                  {% else %}
-                  <span class="text-[11px] font-bold px-3 py-1.5 rounded-full bg-amber-50 text-amber-600">
-                    {{ order.get_status_display }}
-                  </span>
-                  {% endif %}
-                  <span class="font-black text-sm text-slate-900">{{ order.total_price }} تومان</span>
-                </div>
-              </div>
-
-              <!-- ردیف پایین کارت: دکمه‌های عملیات (سمت راست) + پیش‌نمایش آیتم‌ها (سمت چپ) -->
-              <div class="flex items-center justify-between gap-3 flex-wrap">
-                <!-- پیش‌نمایش گروهی آیتم‌های سفارش: حداکثر ۲ تصویر واقعی، و اگر
-                     بیش از ۲ قلم کالا بود، سومین دایره تعداد باقی‌مانده را نشان می‌دهد. -->
-                <div class="flex items-center">
-                  {% for item in order.items.all|slice:":2" %}
-                  <div class="order-item-thumb relative {% if forloop.first %}z-30{% else %}z-20 -ms-3{% endif %} w-11 h-11 bg-slate-50 border-2 border-white ring-1 ring-slate-100 rounded-xl overflow-hidden shrink-0" title="{{ item.product_name }} × {{ item.quantity }}">
-                    {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.product_name }}" class="w-full h-full object-cover" />{% endif %}
-                  </div>
-                  {% endfor %}
-                  {% if order.items.all|length > 2 %}
-                  <div class="relative z-10 -ms-3 w-11 h-11 bg-slate-800 text-white text-xs font-bold rounded-xl border-2 border-white flex items-center justify-center shrink-0">
-                    +{{ order.items.all|length|add:"-2" }}
-                  </div>
-                  {% endif %}
-                  <span class="text-xs text-slate-400 font-semibold ms-3">{{ order.items.all|length }} قلم کالا</span>
-                </div>
-
-                <!-- دکمه‌های «نمایش» و «دریافت فاکتور» عمداً غیرفعال‌اند: صفحه‌ی
-                     جزئیات سفارش و تولید فاکتور فازهای بعدی نقشه راه‌اند، هنوز
-                     ساخته نشده‌اند — به یک لینک شکسته (href="#") وصلشان نکردیم. -->
-                <div class="flex items-center gap-2">
-                  <button
-                    type="button"
-                    disabled
-                    title="به‌زودی"
-                    class="bg-slate-200 text-slate-400 text-xs font-bold px-4 py-2 rounded-xl cursor-not-allowed"
-                  >
-                    نمایش
-                  </button>
-                  <button
-                    type="button"
-                    disabled
-                    title="به‌زودی"
-                    class="bg-white text-slate-300 text-xs font-bold px-4 py-2 rounded-xl border border-slate-200 cursor-not-allowed"
-                  >
-                    دریافت فاکتور
-                  </button>
-                </div>
-              </div>
-            </div>
-            {% endfor %}
-          </div>
-          {% else %}
-          <!-- ==================== حالت ۲: بدون سفارش ==================== -->
-          <div class="flex flex-col items-center justify-center text-center py-16">
-            <div class="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mb-5 text-4xl">
-              📦
-            </div>
-            <h3 class="font-black text-slate-800 text-base">
-              سفارشی جهت نمایش وجود ندارد
-            </h3>
-            <p class="text-xs text-slate-400 mt-2 max-w-xs leading-relaxed">
-              هر زمان سفارشی ثبت کنید، در همین‌جا می‌توانید وضعیت و تاریخچه‌ی آن را پیگیری کنید.
-            </p>
-            <a
-              href="{% url 'store:products' %}"
-              class="mt-6 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-6 py-3 rounded-xl transition-colors shadow-lg shadow-red-600/20"
-            >
-              مشاهده محصولات
-            </a>
-          </div>
-          {% endif %}
+  {% if orders %}
+  <div class="space-y-4">
+    {% for order in orders %}
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
+        <div>
+          <span class="font-bold text-xs text-slate-900">سفارش #{{ order.pk }}</span>
+          <span class="block text-[11px] text-slate-400 mt-0.5">{{ order.created_at }}</span>
         </div>
-      </section>
+        <span class="text-xs font-bold px-3 py-1 rounded-lg
+          {% if order.status == 'paid' or order.status == 'delivered' %}bg-emerald-50 text-emerald-700
+          {% elif order.status == 'cancelled' %}bg-red-50 text-red-600
+          {% else %}bg-amber-50 text-amber-700{% endif %}"
+        >
+          {{ order.get_status_display }}
+        </span>
+      </div>
+
+      <div class="space-y-1.5">
+        {% for item in order.items.all %}
+        <div class="flex items-center justify-between text-xs text-slate-600">
+          <span>{{ item.product_name }} ({{ item.variant_label }}) × {{ item.quantity }}</span>
+          <span class="font-bold text-slate-800">{{ item.total_price }} تومان</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="flex items-center justify-between border-t border-slate-100 mt-3 pt-3">
+        <span class="text-xs text-slate-500">مبلغ نهایی</span>
+        <span class="font-black text-red-600 text-sm">{{ order.total_price }} تومان</span>
+      </div>
     </div>
-  </main>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.has_other_pages %}
+  <div class="flex items-center justify-center gap-2 mt-6">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1.5 text-xs font-bold border border-slate-200 rounded-lg hover:border-red-600 hover:text-red-600">قبلی</a>
+    {% endif %}
+    <span class="text-xs text-slate-500">صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1.5 text-xs font-bold border border-slate-200 rounded-lg hover:border-red-600 hover:text-red-600">بعدی</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="bg-white rounded-2xl border border-slate-200/80 p-10 text-center">
+    <p class="text-sm text-slate-500">هنوز سفارشی ثبت نکرده‌اید.</p>
+    <a href="{% url 'store:products' %}" class="inline-block mt-4 text-xs font-bold text-red-600 hover:underline">مشاهده محصولات</a>
+  </div>
+  {% endif %}
+</div>
 {% endblock %}

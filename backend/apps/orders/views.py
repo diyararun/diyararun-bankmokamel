@@ -5,7 +5,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.generic import View
 
-from apps.cart.services import get_cart, serialize_cart
+from apps.cart.services import get_cart, product_discount_total, serialize_cart
 from apps.store.models import SiteSettings
 
 from .forms import CheckoutForm
@@ -47,7 +47,7 @@ class CheckoutView(LoginRequiredMixin, View):
 
         subtotal = cart_data["total_price"]
         shipping_cost = SiteSettings.load().express_shipping_cost
-        discount_amount = 0  # real coupon validation is the future "coupons" app's job
+        discount_amount = 0  # real coupon/campaign validation is the future "coupons" app's job
 
         # Order creation, the profile update, and clearing the cart must
         # all succeed together or not at all — an order that exists
@@ -57,6 +57,7 @@ class CheckoutView(LoginRequiredMixin, View):
             order = Order.objects.create(
                 user=request.user,
                 subtotal_price=subtotal,
+                product_discount_amount=product_discount_total(cart_data),
                 discount_amount=discount_amount,
                 shipping_cost=shipping_cost,
                 total_price=subtotal - discount_amount + shipping_cost,
@@ -84,19 +85,21 @@ class CheckoutView(LoginRequiredMixin, View):
             user.national_code = form.cleaned_data["national_code"] or user.national_code
             user.save(update_fields=["email", "national_code"])
 
-        messages.success(request, f"سفارش شما با شماره #{order.pk} با موفقیت ثبت شد.")
+        messages.success(request, f"سفارش شما با کد پیگیری {order.tracking_code} با موفقیت ثبت شد.")
         return redirect(reverse("accounts:orders"))
 
     def _context(self, form, cart):
-        # The sidebar order summary shows the shipping cost and final total
-        # *before* the order actually exists, so they're computed here from
-        # the live cart + current SiteSettings, the same way post() computes
-        # them for the real Order — kept in sync deliberately, not copied.
+        # The sidebar order summary shows the shipping cost, product
+        # discount, and final total *before* the order actually exists, so
+        # they're computed here from the live cart + current SiteSettings,
+        # the same way post() computes them for the real Order — kept in
+        # sync deliberately, not copied.
         cart_data = serialize_cart(cart)
         shipping_cost = SiteSettings.load().express_shipping_cost
         return {
             "form": form,
             "cart": cart_data,
+            "product_discount_amount": product_discount_total(cart_data),
             "shipping_cost": shipping_cost,
             "final_total_price": cart_data["total_price"] + shipping_cost,
             "active_nav": "checkout",

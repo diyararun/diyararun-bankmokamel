@@ -10,9 +10,9 @@ class Cart(models.Model):
     since a CHECK constraint on "exactly one of two nullable FKs" needs
     raw SQL and isn't worth it for a table this small).
 
-    Guest carts (session_key set, user NULL) are not yet merged into the
-    user's cart on login — that merge logic is a follow-up, not part of
-    this pass.
+    Guest carts (session_key set, user NULL) get folded into the user's
+    cart on login — see services.merge_guest_cart_into_user(), called
+    from accounts.views.verify_otp.
     """
 
     user = models.ForeignKey(

@@ -50,8 +50,12 @@ class User(AbstractUser):
     username = None
 
     phone = models.CharField("شماره موبایل", max_length=11, unique=True)
-    national_code = models.CharField("کد ملی", max_length=10, unique=True)
+    national_code = models.CharField("کد ملی", max_length=10, blank=True)
     avatar_emoji = models.CharField("آیکون پروفایل", max_length=4, default="👤")
+    # Temporary single-address convenience field, filled automatically from
+    # checkout — superseded once the real "آدرس‌های من" address book (with
+    # multiple saved addresses) is built.
+    address = models.TextField("آدرس", blank=True)
 
     USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = []
@@ -82,8 +86,7 @@ class PhoneOTP(models.Model):
         # در محیط توسعه کد ثابت ۱۱۱۱۱ صادر می‌شود تا نیاز به سرویس پیامک نباشد.
         # برای اتصال به سرویس پیامک واقعی (کاوه‌نگار/ملی‌پیامک و ...) این متد را
         # جایگزین کنید و ارسال پیامک را در همینجا انجام دهید.
-        code = "11111"
-        # if True else f"{random.randint(10000, 99999)}" this code for top
+        code = "11111" if True else f"{random.randint(10000, 99999)}"
         return cls.objects.create(phone=phone, code=code)
 
     def is_expired(self) -> bool:

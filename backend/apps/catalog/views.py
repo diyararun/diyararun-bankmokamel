@@ -127,5 +127,19 @@ class ProductDetailView(DetailView):
             "images": [img.image.url for img in product.images.all()],
             "defaultVariantId": default_variant.id if default_variant else None,
             "defaultVariantPrice": default_variant.price if default_variant else 0,
+            # Full variant list so the weight/serving picker can switch the
+            # selected variant (and its price/stock) on the client without
+            # a page reload — matching the flavor-picker's own docstring
+            # above: "the backend just provides all the raw data."
+            "variants": [
+                {
+                    "id": v.id,
+                    "label": v.label,
+                    "price": v.price,
+                    "compareAtPrice": v.compare_at_price,
+                    "inStock": v.is_in_stock,
+                }
+                for v in product.active_variants
+            ],
         }
         return context

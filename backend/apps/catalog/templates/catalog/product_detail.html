@@ -146,11 +146,12 @@
                 <span class="text-xs font-bold text-slate-700 block mb-2"
                   >وزن / سروینگ:</span
                 >
-                <div class="flex flex-wrap gap-2">
+                <div class="flex flex-wrap gap-2" id="variantOptions">
                   {% for variant in product.active_variants %}
                   <button
+                    type="button"
                     data-variant-id="{{ variant.id }}"
-                    class="px-3 py-1.5 border-2 {% if forloop.first %}border-red-600 text-red-600 font-bold bg-red-50{% else %}border-slate-200 text-slate-600 hover:border-slate-300{% endif %} rounded-lg text-xs"
+                    class="js-variant-option px-3 py-1.5 border-2 {% if forloop.first %}border-red-600 text-red-600 font-bold bg-red-50{% else %}border-slate-200 text-slate-600 hover:border-slate-300{% endif %} rounded-lg text-xs"
                   >
                     {{ variant.label }}
                   </button>
@@ -165,11 +166,11 @@
           >
             {% with variant=product.default_variant %}
             <div>
-              {% if variant.compare_at_price %}
-              <span class="block text-xs text-slate-400 line-through"
-                >{{ variant.compare_at_price }}</span
+              <span
+                id="productComparePrice"
+                class="block text-xs text-slate-400 line-through {% if not variant.compare_at_price %}hidden{% endif %}"
+                >{{ variant.compare_at_price|default:"" }}</span
               >
-              {% endif %}
               <div class="flex items-baseline gap-1">
                 <span class="text-2xl font-black text-red-600" id="productPrice"
                   >{{ variant.price|default:"—" }}</span
@@ -202,6 +203,7 @@
               </div>
 
               <button
+                id="mainAddToCartBtn"
                 onclick="addCurrentProductToCart()"
                 data-variant-id="{{ variant.id }}"
                 {% if not variant.is_in_stock %}disabled{% endif %}
@@ -220,7 +222,7 @@
                     d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                   />
                 </svg>
-                {% if variant.is_in_stock %}افزودن به سبد خرید{% else %}ناموجود{% endif %}
+                <span id="mainAddToCartLabel">{% if variant.is_in_stock %}افزودن به سبد خرید{% else %}ناموجود{% endif %}</span>
               </button>
             </div>
             {% endwith %}
@@ -510,7 +512,7 @@
               <button
                 data-variant-id="{{ variant.id }}"
                 {% if not variant.is_in_stock %}disabled{% endif %}
-                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                class="js-add-to-cart bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <svg
                   class="w-4 h-4"
