@@ -116,59 +116,6 @@ function renderCheckoutSummary() {
   });
 }
 
-function buildDeliveryCalendar() {
-  const container = document.getElementById("deliveryCalendar");
-  if (!container) return;
-  container.innerHTML = "";
-
-  // تاریخ‌های نمونه ۶ روز کاری متوالی
-  const days = [
-    { dayName: "امروز", dateNum: "۲۳", month: "مرداد" },
-    { dayName: "فردا", dateNum: "۲۴", month: "مرداد" },
-    { dayName: "شنبه", dateNum: "۲۵", month: "مرداد" },
-    { dayName: "یکشنبه", dateNum: "۲۶", month: "مرداد" },
-    { dayName: "دوشنبه", dateNum: "۲۷", month: "مرداد" },
-    { dayName: "سه‌شنبه", dateNum: "۲۸", month: "مرداد" },
-  ];
-
-  days.forEach((day, index) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    const isSelected = index === 0;
-
-    btn.className = `p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 ${
-      isSelected
-        ? "border-2 border-red-600 bg-red-50 text-red-600 font-bold shadow-sm"
-        : "border-slate-200 bg-slate-50/50 hover:border-slate-300 text-slate-700"
-    }`;
-
-    btn.innerHTML = `
-      <span class="text-[10px] opacity-75">${day.dayName}</span>
-      <span class="text-sm font-black">${day.dateNum} ${day.month}</span>
-    `;
-
-    btn.onclick = () => {
-      document.querySelectorAll("#deliveryCalendar button").forEach((b) => {
-        b.className =
-          "p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center gap-1 border-slate-200 bg-slate-50/50 hover:border-slate-300 text-slate-700";
-      });
-      btn.className =
-        "p-3 rounded-2xl border-2 border-red-600 bg-red-50 text-red-600 font-bold shadow-sm text-center flex flex-col items-center justify-center gap-1";
-      selectedDeliveryDate = `${day.dayName} (${day.dateNum} ${day.month})`;
-      document.getElementById("selectedDateBadge").innerText =
-        selectedDeliveryDate;
-      showToast(
-        "تاریخ ارسال انتخاب شد",
-        `تحویل برای روز ${selectedDeliveryDate} تنظیم شد.`,
-      );
-    };
-
-    container.appendChild(btn);
-  });
-
-  selectedDeliveryDate = "امروز (۲۳ مرداد)";
-}
-
 function applyCoupon() {
   const code = document.getElementById("couponCode").value.trim();
   if (code) {
@@ -181,7 +128,12 @@ function applyCoupon() {
   } else {
     showToast("خطا", "لطفاً کد تخفیف را وارد کنید.");
   }
+}
 
+function handleFinalSubmit(event) {
+  event.preventDefault();
+  showToast("در حال انتقال...", "سفارش شما ثبت شد. انتقال به درگاه پرداخت...");
+  // TODO: اتصال به view واقعی جنگو برای ثبت سفارش (مدل Order) و اتصال به درگاه بانکی
   const fullNameValue = fullName.value.trim();
 
   if (!fullNameValue) {
@@ -312,19 +264,9 @@ function applyCoupon() {
   // }
 }
 
-function handleFinalSubmit(event) {
-  event.preventDefault();
-  showToast("در حال انتقال...", "سفارش شما ثبت شد. انتقال به درگاه پرداخت...");
-  // TODO: اتصال به view واقعی جنگو برای ثبت سفارش (مدل Order) و اتصال به درگاه بانکی
-  setTimeout(() => {
-    alert("سفارش شما با موفقیت ثبت شد! شماره پیگیری: BM-98241");
-  }, 1500);
-}
-
 window.applyCoupon = applyCoupon;
 window.handleFinalSubmit = handleFinalSubmit;
 
 document.addEventListener("DOMContentLoaded", () => {
   renderCheckoutSummary();
-  buildDeliveryCalendar();
 });
