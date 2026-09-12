@@ -1,6 +1,14 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["../backend/templates/**/*.html", "./src/**/*.js"],
+  content: [
+    "../backend/templates/**/*.html",
+    // Page templates now live inside each app (apps/catalog/templates/,
+    // apps/store/templates/, apps/accounts/templates/, apps/orders/templates/...)
+    // instead of the single shared backend/templates/ folder — this glob
+    // covers all of them.
+    "../backend/apps/*/templates/**/*.html",
+    "./src/**/*.js",
+  ],
   theme: {
     extend: {
       fontFamily: {

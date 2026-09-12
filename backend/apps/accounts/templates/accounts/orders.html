@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load django_vite %}
+
+{% block title %}سفارش‌های من | بانک مکمل{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <h1 class="text-xl font-black text-slate-900 mb-6">سفارش‌های من</h1>
+
+  {% if orders %}
+  <div class="space-y-4">
+    {% for order in orders %}
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
+        <div>
+          <span class="font-bold text-xs text-slate-900">سفارش #{{ order.pk }}</span>
+          <span class="block text-[11px] text-slate-400 mt-0.5">{{ order.created_at }}</span>
+        </div>
+        <span class="text-xs font-bold px-3 py-1 rounded-lg
+          {% if order.status == 'paid' or order.status == 'delivered' %}bg-emerald-50 text-emerald-700
+          {% elif order.status == 'cancelled' %}bg-red-50 text-red-600
+          {% else %}bg-amber-50 text-amber-700{% endif %}"
+        >
+          {{ order.get_status_display }}
+        </span>
+      </div>
+
+      <div class="space-y-1.5">
+        {% for item in order.items.all %}
+        <div class="flex items-center justify-between text-xs text-slate-600">
+          <span>{{ item.product_name }} ({{ item.variant_label }}) × {{ item.quantity }}</span>
+          <span class="font-bold text-slate-800">{{ item.total_price }} تومان</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="flex items-center justify-between border-t border-slate-100 mt-3 pt-3">
+        <span class="text-xs text-slate-500">مبلغ نهایی</span>
+        <span class="font-black text-red-600 text-sm">{{ order.total_price }} تومان</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if page_obj.has_other_pages %}
+  <div class="flex items-center justify-center gap-2 mt-6">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-1.5 text-xs font-bold border border-slate-200 rounded-lg hover:border-red-600 hover:text-red-600">قبلی</a>
+    {% endif %}
+    <span class="text-xs text-slate-500">صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-1.5 text-xs font-bold border border-slate-200 rounded-lg hover:border-red-600 hover:text-red-600">بعدی</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="bg-white rounded-2xl border border-slate-200/80 p-10 text-center">
+    <p class="text-sm text-slate-500">هنوز سفارشی ثبت نکرده‌اید.</p>
+    <a href="{% url 'store:products' %}" class="inline-block mt-4 text-xs font-bold text-red-600 hover:underline">مشاهده محصولات</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

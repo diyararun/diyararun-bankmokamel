@@ -1,57 +1,64 @@
 import { showToast } from "./toast.js";
+import { postForm } from "./csrf.js";
 
-// مدیریت حالت سبد خرید (سمت کلاینت)
-// توجه: در حال حاضر سبد خرید فقط در حافظه‌ی مرورگر نگه‌داری می‌شود و با
-// رفتن به صفحه‌ی دیگر خالی می‌شود (رفتار اصلی پروژه‌ی اولیه حفظ شده است).
-// برای پایدارسازی سبد خرید بین صفحات/رفرش، این ماژول باید به یک API جنگو
-// (مثلاً /api/cart/) یا localStorage وصل شود.
-let cart = [];
+// مدیریت حالت سبد خرید — حالا واقعاً به بک‌اند (apps.cart) وصل است.
+// این ماژول دیگر خودش منبع حقیقت نیست؛ فقط آخرین پاسخ سرور را کش می‌کند
+// و بعد از هر تغییر، دوباره از سرور می‌خواند تا UI و دیتابیس هیچ‌وقت از
+// هم عقب نیفتند.
+let cart = { items: [], total_quantity: 0, total_price: 0 };
 
-export function addToCart(name, price, emoji) {
-  const existingItem = cart.find((item) => item.name === name);
-  if (existingItem) {
-    existingItem.quantity += 1;
-  } else {
-    cart.push({ name, price, emoji, quantity: 1 });
+async function loadCartFromServer() {
+  try {
+    const response = await fetch("/cart/", {
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    });
+    cart = await response.json();
+  } catch (err) {
+    console.error("بارگذاری سبد خرید ناموفق بود:", err);
   }
-
-  updateCartUI();
-  showToast("افزوده شد به سبد خرید", `«${name}» با موفقیت به سبد اضافه شد.`);
+  renderCartUI();
 }
 
-// افزودن چند عدد از یک محصول در یک عملیات، بدون نمایش Toast تکراری
-// (برای صفحه‌ی جزئیات محصول که خودش پیام تجمیعی نمایش می‌دهد)
-export function addMultipleToCart(name, price, emoji, quantity) {
-  const existingItem = cart.find((item) => item.name === name);
-  if (existingItem) {
-    existingItem.quantity += quantity;
-  } else {
-    cart.push({ name, price, emoji, quantity });
+export async function addToCart(variantId, quantity = 1) {
+  try {
+    cart = await postForm("/cart/add/", { variant_id: variantId, quantity });
+  } catch (err) {
+    console.error("افزودن به سبد خرید ناموفق بود:", err);
+    showToast("خطا", "افزودن به سبد خرید ناموفق بود. دوباره تلاش کنید.");
+    return;
   }
-  updateCartUI();
+  renderCartUI();
+  showToast("افزوده شد به سبد خرید", "محصول با موفقیت به سبد اضافه شد.");
 }
 
-export function updateQuantity(name, delta) {
-  const item = cart.find((i) => i.name === name);
-  if (item) {
-    item.quantity += delta;
-    if (item.quantity <= 0) {
-      cart = cart.filter((i) => i.name !== name);
-    }
+export async function updateQuantity(variantId, delta) {
+  try {
+    cart = await postForm("/cart/update/", { variant_id: variantId, delta });
+  } catch (err) {
+    console.error("به‌روزرسانی سبد خرید ناموفق بود:", err);
+    showToast("خطا", "به‌روزرسانی سبد خرید ناموفق بود.");
+    return;
   }
-  updateCartUI();
+  renderCartUI();
 }
 
-export function updateCartUI() {
+export async function removeFromCart(variantId) {
+  try {
+    cart = await postForm("/cart/remove/", { variant_id: variantId });
+  } catch (err) {
+    console.error("حذف از سبد خرید ناموفق بود:", err);
+    return;
+  }
+  renderCartUI();
+}
+
+function renderCartUI() {
   const badge = document.getElementById("cartBadge");
-  if (!badge) return;
-
-  const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  badge.innerText = totalCount;
-
-  badge.classList.add("animate-bounce-short");
-  setTimeout(() => badge.classList.remove("animate-bounce-short"), 300);
-
+  if (badge) {
+    badge.innerText = cart.total_quantity;
+    badge.classList.add("animate-bounce-short");
+    setTimeout(() => badge.classList.remove("animate-bounce-short"), 300);
+  }
   renderCartDrawer();
 }
 
@@ -60,7 +67,7 @@ export function renderCartDrawer() {
   const cartFooter = document.getElementById("cartFooter");
   if (!cartContent || !cartFooter) return;
 
-  if (cart.length === 0) {
+  if (cart.items.length === 0) {
     cartContent.innerHTML = `
       <div class="h-full flex flex-col items-center justify-center text-center my-auto py-12">
         <div class="w-20 h-20 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mb-4 text-3xl">
@@ -80,26 +87,27 @@ export function renderCartDrawer() {
   }
 
   let itemsHtml = '<div class="space-y-4">';
-  let totalPrice = 0;
 
-  cart.forEach((item) => {
-    const itemTotal = item.price * item.quantity;
-    totalPrice += itemTotal;
+  cart.items.forEach((item) => {
+    const thumb = item.image_url
+      ? `<img src="${item.image_url}" alt="${item.product_name}" class="w-full h-full object-cover" />`
+      : "";
     itemsHtml += `
       <div class="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-2xl">
         <div class="flex items-center gap-3">
-          <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-2xl shadow-sm shrink-0">
-            ${item.emoji}
+          <div class="w-12 h-12 bg-white rounded-xl overflow-hidden shrink-0">
+            ${thumb}
           </div>
           <div>
-            <h4 class="font-bold text-xs text-slate-900 line-clamp-1">${item.name}</h4>
+            <h4 class="font-bold text-xs text-slate-900 line-clamp-1">${item.product_name}</h4>
+            ${item.variant_label ? `<span class="text-[10px] text-slate-400 block mt-0.5">${item.variant_label}</span>` : ""}
             <span class="text-[11px] text-red-600 font-bold mt-1 block">${item.price.toLocaleString()} تومان</span>
           </div>
         </div>
         <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 py-1">
-          <button onclick="updateQuantity('${item.name}', 1)" class="text-slate-600 hover:text-red-600 font-bold text-sm">+</button>
+          <button onclick="updateQuantity(${item.variant_id}, 1)" class="text-slate-600 hover:text-red-600 font-bold text-sm">+</button>
           <span class="text-xs font-bold text-slate-800 w-4 text-center">${item.quantity}</span>
-          <button onclick="updateQuantity('${item.name}', -1)" class="text-slate-600 hover:text-red-600 font-bold text-sm">-</button>
+          <button onclick="updateQuantity(${item.variant_id}, -1)" class="text-slate-600 hover:text-red-600 font-bold text-sm">-</button>
         </div>
       </div>
     `;
@@ -108,7 +116,7 @@ export function renderCartDrawer() {
   itemsHtml += "</div>";
   cartContent.innerHTML = itemsHtml;
   document.getElementById("cartTotalPrice").innerText =
-    `${totalPrice.toLocaleString()} تومان`;
+    `${cart.total_price.toLocaleString()} تومان`;
   cartFooter.classList.remove("hidden");
 }
 
@@ -135,8 +143,21 @@ export function closeCartDrawer() {
   modal.classList.add("opacity-0", "pointer-events-none");
 }
 
-// در دسترس بودن سراسری برای onclick های داخل HTML
+// در دسترس بودن سراسری برای onclick های داخل HTML (تولیدشده توسط جنگو)
 window.addToCart = addToCart;
 window.updateQuantity = updateQuantity;
+window.removeFromCart = removeFromCart;
 window.openCartDrawer = openCartDrawer;
 window.closeCartDrawer = closeCartDrawer;
+
+// هر دکمه‌ی «افزودن به سبد» ساده (کارت محصول در لیست/محصولات مرتبط) با
+// کلاس مشترک js-add-to-cart علامت‌گذاری شده — به‌جای بستن onclick جدا
+// روی هر کارت، یک شنونده‌ی واحد و سراسری (event delegation) همه‌شان را
+// پوشش می‌دهد، even برای کارت‌هایی که بعداً/داینامیک اضافه شوند.
+document.addEventListener("click", (event) => {
+  const btn = event.target.closest(".js-add-to-cart");
+  if (!btn || btn.disabled) return;
+  addToCart(btn.dataset.variantId, 1);
+});
+
+document.addEventListener("DOMContentLoaded", loadCartFromServer);

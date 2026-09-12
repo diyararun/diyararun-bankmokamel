@@ -4,7 +4,9 @@ import sys
 
 
 def main():
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
+    # Defaults to dev so a bare "python manage.py ..." on a developer's
+    # machine never accidentally behaves like production.
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

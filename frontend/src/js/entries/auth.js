@@ -123,6 +123,10 @@ async function handleVerifyOtp(e) {
   const result = await postForm("/accounts/otp/verify/", {
     phone: currentPhone,
     code,
+    // Passed through from LoginRequiredMixin's own redirect (?next=...)
+    // when the user was sent here from a page like checkout — without
+    // this, verify_otp has no way to know where to send them back.
+    next: new URLSearchParams(window.location.search).get("next") || "",
   });
 
   if (!result.ok) {
