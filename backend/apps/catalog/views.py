@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Max, Min, Q
 from django.http import JsonResponse
 from django.urls import reverse
 from django.views import View
@@ -7,7 +7,14 @@ from django.views.generic import DetailView, ListView
 from apps.reviews.forms import ReviewForm
 
 from .forms import WEIGHT_RANGE_CHOICES, ProductFilterForm
-from .models import Brand, Category, Flavor, Product
+from .models import Brand, Category, Flavor, Product, ProductVariant
+
+# Fallback price-slider bounds (تومان) for the rare case where there are no
+# active variants at all yet (a brand-new store with an empty catalog) — a
+# hardcoded range that only ever gets *used* when there's no real data to
+# derive one from, unlike the old always-hardcoded 500,000–6,000,000.
+FALLBACK_PRICE_MIN = 0
+FALLBACK_PRICE_MAX = 10_000_000
 
 # Max number of live-search suggestions returned by ProductSearchSuggestView
 # — a dropdown, not a results page, so this stays intentionally small.
@@ -91,6 +98,29 @@ class ProductListView(ListView):
         context["brands"] = Brand.objects.filter(is_active=True)
         context["weight_ranges"] = [(v, label) for v, label, _min, _max in WEIGHT_RANGE_CHOICES]
         context["form_types"] = Product.FORM_TYPE_CHOICES
+
+        # Price-slider bounds, computed from real data instead of a
+        # hardcoded 500,000–6,000,000: otherwise a new product priced
+        # above whatever number was hardcoded couldn't be reached by the
+        # slider at all, and — worse — its default position would submit
+        # that stale max as price_max on every filter submit, silently
+        # hiding any product above it even when the seller never touched
+        # the price filter.
+        active_variant_prices = ProductVariant.objects.filter(is_active=True).aggregate(
+            min_price=Min("price"), max_price=Max("price")
+        )
+        context["price_min"] = active_variant_prices["min_price"] or FALLBACK_PRICE_MIN
+        context["price_max_bound"] = active_variant_prices["max_price"] or FALLBACK_PRICE_MAX
+
+        # These two filter sections are only worth showing if the current
+        # catalog actually varies along that dimension — a fixed set of
+        # weight buckets or form-type checkboxes is confusing/useless if
+        # every product (or none) has a value for it. See the template
+        # for the {% if %} that uses these.
+        context["show_weight_filter"] = ProductVariant.objects.filter(
+            is_active=True, weight_grams__isnull=False
+        ).exists()
+        context["show_form_type_filter"] = Product.objects.filter(is_active=True).exclude(form_type="").exists()
 
         # Used by pagination links (?{{ querystring }}&page=N) so changing
         # page never drops the current filters/sort.
