@@ -1,6 +1,7 @@
 import "../../css/product-detail.css";
 
 import { addToCart } from "../cartDrawer.js";
+import { formatToman } from "../formatToman.js";
 
 let currentQuantity = 1;
 
@@ -151,10 +152,10 @@ function selectVariant(variantId) {
   if (!variant) return;
   selectedVariantId = variant.id;
 
-  document.getElementById("productPrice").innerText = variant.price;
+  document.getElementById("productPrice").innerText = formatToman(variant.price);
   const compareEl = document.getElementById("productComparePrice");
   if (variant.compareAtPrice) {
-    compareEl.innerText = variant.compareAtPrice;
+    compareEl.innerText = formatToman(variant.compareAtPrice);
     compareEl.classList.remove("hidden");
   } else {
     compareEl.classList.add("hidden");

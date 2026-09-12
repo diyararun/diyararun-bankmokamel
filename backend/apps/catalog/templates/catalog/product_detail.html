@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load django_vite %}
+{% load toman %}
 
 {% block title %}{{ product.name }} | بانک مکمل{% endblock %}
 
@@ -172,11 +173,11 @@
               <span
                 id="productComparePrice"
                 class="block text-xs text-slate-400 line-through {% if not variant.compare_at_price %}hidden{% endif %}"
-                >{{ variant.compare_at_price|default:"" }}</span
+                >{{ variant.compare_at_price|default:""|toman }}</span
               >
               <div class="flex items-baseline gap-1">
                 <span class="text-2xl font-black text-red-600" id="productPrice"
-                  >{{ variant.price|default:"—" }}</span
+                  >{{ variant.price|default:"—"|toman }}</span
                 >
                 <span class="text-xs font-bold text-slate-600">تومان</span>
               </div>
@@ -507,7 +508,7 @@
             >
               {% with variant=p.default_variant %}
               <span class="font-black text-slate-900 text-sm"
-                >{{ variant.price|default:"—" }}
+                >{{ variant.price|default:"—"|toman }}
                 <span class="text-[10px] font-normal text-slate-500"
                   >تومان</span
                 ></span

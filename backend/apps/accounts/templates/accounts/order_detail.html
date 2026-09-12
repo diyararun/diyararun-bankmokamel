@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load django_vite %}
+{% load toman %}
 
 {% block title %}جزئیات سفارش {{ order.tracking_code }} | بانک مکمل{% endblock %}
 
@@ -82,8 +83,8 @@
                 <p class="text-xs text-slate-400 mt-0.5">{{ item.variant_label }} · {{ item.quantity }} عدد</p>
               </div>
               <div class="text-left shrink-0">
-                <span class="block font-bold text-sm text-slate-900">{{ item.total_price }} تومان</span>
-                <span class="block text-[11px] text-slate-400">{{ item.unit_price }} تومان / عدد</span>
+                <span class="block font-bold text-sm text-slate-900">{{ item.total_price|toman }} تومان</span>
+                <span class="block text-[11px] text-slate-400">{{ item.unit_price|toman }} تومان / عدد</span>
               </div>
             </div>
             {% endfor %}
@@ -131,27 +132,27 @@
             </h2>
             <div class="flex items-center justify-between text-xs text-slate-600">
               <span>جمع قیمت محصولات</span>
-              <span class="font-bold text-slate-800">{{ order.subtotal_price }} تومان</span>
+              <span class="font-bold text-slate-800">{{ order.subtotal_price|toman }} تومان</span>
             </div>
             {% if order.product_discount_amount %}
             <div class="flex items-center justify-between text-xs text-slate-600">
               <span>تخفیف محصولات</span>
-              <span class="font-bold text-emerald-600">{{ order.product_discount_amount }} تومان</span>
+              <span class="font-bold text-emerald-600">{{ order.product_discount_amount|toman }} تومان</span>
             </div>
             {% endif %}
             {% if order.discount_amount %}
             <div class="flex items-center justify-between text-xs text-slate-600">
               <span>تخفیف کد تخفیف/کمپین</span>
-              <span class="font-bold text-emerald-600">{{ order.discount_amount }} تومان</span>
+              <span class="font-bold text-emerald-600">{{ order.discount_amount|toman }} تومان</span>
             </div>
             {% endif %}
             <div class="flex items-center justify-between text-xs text-slate-600">
               <span>هزینه ارسال</span>
-              <span class="font-bold text-slate-800">{{ order.shipping_cost }} تومان</span>
+              <span class="font-bold text-slate-800">{{ order.shipping_cost|toman }} تومان</span>
             </div>
             <div class="flex items-center justify-between text-sm font-black pt-3 border-t border-slate-100">
               <span class="text-slate-900">مبلغ نهایی</span>
-              <span class="text-red-600 text-lg">{{ order.total_price }} تومان</span>
+              <span class="text-red-600 text-lg">{{ order.total_price|toman }} تومان</span>
             </div>
             <p class="text-[11px] text-slate-400 pt-2 border-t border-slate-100">
               روش پرداخت: {{ order.get_payment_method_display }}

@@ -1,5 +1,6 @@
 import { showToast } from "./toast.js";
 import { postForm } from "./csrf.js";
+import { formatToman } from "./formatToman.js";
 
 // مدیریت حالت سبد خرید — حالا واقعاً به بک‌اند (apps.cart) وصل است.
 // این ماژول دیگر خودش منبع حقیقت نیست؛ فقط آخرین پاسخ سرور را کش می‌کند
@@ -101,7 +102,7 @@ export function renderCartDrawer() {
           <div>
             <h4 class="font-bold text-xs text-slate-900 line-clamp-1">${item.product_name}</h4>
             ${item.variant_label ? `<span class="text-[10px] text-slate-400 block mt-0.5">${item.variant_label}</span>` : ""}
-            <span class="text-[11px] text-red-600 font-bold mt-1 block">${item.price.toLocaleString()} تومان</span>
+            <span class="text-[11px] text-red-600 font-bold mt-1 block">${formatToman(item.price)} تومان</span>
           </div>
         </div>
         <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 py-1">
@@ -116,7 +117,7 @@ export function renderCartDrawer() {
   itemsHtml += "</div>";
   cartContent.innerHTML = itemsHtml;
   document.getElementById("cartTotalPrice").innerText =
-    `${cart.total_price.toLocaleString()} تومان`;
+    `${formatToman(cart.total_price)} تومان`;
   cartFooter.classList.remove("hidden");
 }
 

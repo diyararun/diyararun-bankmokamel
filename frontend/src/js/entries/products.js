@@ -1,5 +1,6 @@
 import { addToCart } from "../cartDrawer.js";
 import { showToast } from "../toast.js";
+import { formatToman } from "../formatToman.js";
 
 let currentModalProduct = null;
 
@@ -39,7 +40,7 @@ function initFilters() {
   const priceRangeValue = document.getElementById("priceRangeValue");
   if (priceRange && priceRangeValue) {
     priceRange.addEventListener("input", (e) => {
-      priceRangeValue.innerText = `تا ${Number(e.target.value).toLocaleString()} تومان`;
+      priceRangeValue.innerText = `تا ${formatToman(e.target.value)} تومان`;
     });
   }
 

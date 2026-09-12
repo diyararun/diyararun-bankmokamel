@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load django_vite %}
+{% load toman %}
 
 {% block title %}سفارش‌های من | بانک مکمل{% endblock %}
 
@@ -29,14 +30,14 @@
         {% for item in order.items.all %}
         <div class="flex items-center justify-between text-xs text-slate-600">
           <span>{{ item.product_name }} ({{ item.variant_label }}) × {{ item.quantity }}</span>
-          <span class="font-bold text-slate-800">{{ item.total_price }} تومان</span>
+          <span class="font-bold text-slate-800">{{ item.total_price|toman }} تومان</span>
         </div>
         {% endfor %}
       </div>
 
       <div class="flex items-center justify-between border-t border-slate-100 mt-3 pt-3">
         <span class="text-xs text-slate-500">مبلغ نهایی</span>
-        <span class="font-black text-red-600 text-sm">{{ order.total_price }} تومان</span>
+        <span class="font-black text-red-600 text-sm">{{ order.total_price|toman }} تومان</span>
       </div>
     </div>
     {% endfor %}

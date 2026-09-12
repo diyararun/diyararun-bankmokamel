@@ -8,6 +8,8 @@
 // صفحه‌ی /products/?q=... می‌برد که همان متن را روی کل محصولات فیلتر می‌کند
 // (ProductListView در همان ویو).
 
+import { formatToman } from "./formatToman.js";
+
 const SEARCH_ENDPOINT = "/products/search/";
 const PRODUCTS_URL = "/products/";
 const DEBOUNCE_MS = 300;
@@ -196,5 +198,10 @@ function escapeHtml(str) {
 }
 
 function formatPrice(value) {
-  return Number(value).toLocaleString("fa-IR");
+  // Delegates to the site-wide formatToman() (comma-grouped, Persian
+  // digits) instead of toLocaleString("fa-IR") — the built-in locale
+  // formatting uses "٬" (the Arabic thousands separator) rather than a
+  // plain comma, which didn't match how prices are formatted everywhere
+  // else on the site.
+  return formatToman(value);
 }

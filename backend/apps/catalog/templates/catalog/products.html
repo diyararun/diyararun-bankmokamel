@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load django_vite %}
+{% load toman %}
 
 {% block title %}محصولات | بانک مکمل - مرجع تخصصی مکمل‌های ورزشی و غذایی{% endblock %}
 
@@ -226,9 +227,9 @@
                         <div
                           class="flex items-center justify-between text-xs font-bold text-slate-600"
                         >
-                          <span>از {{ price_min }}</span>
+                          <span>از {{ price_min|toman }}</span>
                           <span class="text-red-600" id="priceRangeValue"
-                            >تا {{ selected_price_max|default:price_max_bound }} تومان</span
+                            >تا {{ selected_price_max|default:price_max_bound|toman }} تومان</span
                           >
                         </div>
                       </div>
@@ -423,11 +424,11 @@
                 <div>
                   {% if variant.compare_at_price %}
                   <span class="block text-xs text-slate-400 line-through"
-                    >{{ variant.compare_at_price }}</span
+                    >{{ variant.compare_at_price|toman }}</span
                   >
                   {% endif %}
                   <span class="font-black text-red-600 text-base"
-                    >{{ variant.price|default:"—" }}
+                    >{{ variant.price|default:"—"|toman }}
                     <span class="text-xs font-normal text-slate-500"
                       >تومان</span
                     ></span

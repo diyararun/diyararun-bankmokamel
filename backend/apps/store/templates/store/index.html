@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load django_vite %}
+{% load toman %}
 
 {% block title %}بانک مکمل | مرجع تخصصی مکمل‌های ورزشی و غذایی{% endblock %}
 
@@ -194,7 +195,7 @@
                   >قیمت ویژه:</span
                 >
                 <span class="text-red-600 font-black text-2xl tracking-tight"
-                  >{{ variant.price|default:"—" }}
+                  >{{ variant.price|default:"—"|toman }}
                   <span class="text-xs text-slate-500 font-normal"
                     >تومان</span
                   ></span
@@ -397,7 +398,7 @@
               class="mt-6 flex items-center justify-between border-t pt-4 border-slate-100"
             >
               <span class="font-black text-slate-900 text-base"
-                >{{ variant.price|default:"—" }}
+                >{{ variant.price|default:"—"|toman }}
                 <span class="text-xs font-normal text-slate-500"
                   >تومان</span
                 ></span
@@ -660,11 +661,11 @@
               <div>
                 {% if variant.compare_at_price %}
                 <span class="block text-xs text-slate-400 line-through"
-                  >{{ variant.compare_at_price }}</span
+                  >{{ variant.compare_at_price|toman }}</span
                 >
                 {% endif %}
                 <span class="font-black text-red-600 text-base"
-                  >{{ variant.price|default:"—" }}
+                  >{{ variant.price|default:"—"|toman }}
                   <span class="text-xs font-normal">تومان</span></span
                 >
               </div>
