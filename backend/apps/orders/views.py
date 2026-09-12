@@ -1,11 +1,14 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
+from django.db.models import F
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.generic import View
 
 from apps.cart.services import get_cart, product_discount_total, serialize_cart
+from apps.coupons.models import Coupon, CouponRedemption
+from apps.coupons.services import validate_coupon
 
 from .forms import CheckoutForm
 from .models import Order, OrderItem, ShippingSettings
@@ -46,13 +49,29 @@ class CheckoutView(LoginRequiredMixin, View):
 
         subtotal = cart_data["total_price"]
         shipping_cost = ShippingSettings.load().flat_rate
-        discount_amount = 0  # real coupon/campaign validation is the future "coupons" app's job
+        coupon_code = form.cleaned_data.get("coupon_code")
 
-        # Order creation, the profile update, and clearing the cart must
-        # all succeed together or not at all — an order that exists
-        # without its items (or a half-cleared cart) would corrupt the
-        # customer's next visit.
+        # Order creation, the coupon redemption, the profile update, and
+        # clearing the cart must all succeed together or not at all — an
+        # order that exists without its items (or a half-cleared cart, or
+        # a coupon marked used without an order to show for it) would
+        # corrupt the customer's next visit.
         with transaction.atomic():
+            coupon = None
+            discount_amount = 0
+            if coupon_code:
+                # lock=True takes a row lock on this Coupon for the rest of
+                # the transaction — without it, two customers racing for
+                # the last unit of a usage-limited code could both pass
+                # the used_count check before either commits, handing out
+                # one more redemption than the limit allows.
+                coupon, discount_amount, error = validate_coupon(
+                    coupon_code, request.user, subtotal, lock=True
+                )
+                if error:
+                    form.add_error("coupon_code", error)
+                    return render(request, self.template_name, self._context(form, cart))
+
             order = Order.objects.create(
                 user=request.user,
                 subtotal_price=subtotal,
@@ -72,6 +91,14 @@ class CheckoutView(LoginRequiredMixin, View):
                     quantity=item.quantity,
                 )
             cart.items.all().delete()
+
+            if coupon:
+                CouponRedemption.objects.create(coupon=coupon, user=request.user, order=order)
+                # F() so this is an atomic "used_count = used_count + 1" at
+                # the database level — reading, incrementing, and saving
+                # the Python int back would race with the lock above doing
+                # nothing to protect it.
+                Coupon.objects.filter(pk=coupon.pk).update(used_count=F("used_count") + 1)
 
             # The checkout form is also the first place the user ever
             # types their email/national code, so save it straight to
@@ -95,11 +122,27 @@ class CheckoutView(LoginRequiredMixin, View):
         # sync deliberately, not copied.
         cart_data = serialize_cart(cart)
         shipping_cost = ShippingSettings.load().flat_rate
+        subtotal = cart_data["total_price"]
+
+        # If a coupon is already sitting in the (possibly re-rendered
+        # after some other field's error) form, keep showing its discount
+        # instead of silently dropping it just because this is a
+        # re-render rather than the customer's first look at the page.
+        # No lock here — this is read-only display, not a reservation.
+        coupon_discount_amount = 0
+        if form.is_bound:
+            coupon_code = form.data.get("coupon_code", "")
+            if coupon_code:
+                _coupon, coupon_discount_amount, _error = validate_coupon(
+                    coupon_code, self.request.user, subtotal
+                )
+
         return {
             "form": form,
             "cart": cart_data,
             "product_discount_amount": product_discount_total(cart_data),
+            "coupon_discount_amount": coupon_discount_amount,
             "shipping_cost": shipping_cost,
-            "final_total_price": cart_data["total_price"] + shipping_cost,
+            "final_total_price": subtotal - coupon_discount_amount + shipping_cost,
             "active_nav": "checkout",
         }

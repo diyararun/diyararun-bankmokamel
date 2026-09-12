@@ -252,25 +252,32 @@
               {% endfor %}
             </div>
 
-            <!-- کد تخفیف: غیرفعال - فاز کد تخفیف هنوز پیاده نشده -->
+            <!-- کد تخفیف -->
             <div class="pt-3 border-t border-slate-100">
               <label class="block text-xs font-bold text-slate-700 mb-1.5"
-                >کد تخفیف دارید؟ <span class="text-slate-400 font-normal">(به‌زودی)</span></label
+                >کد تخفیف دارید؟</label
               >
               <div class="flex gap-2">
                 {{ form.coupon_code }}
                 <button
                   type="button"
-                  disabled
-                  class="bg-slate-200 text-slate-400 font-bold text-xs px-4 rounded-xl cursor-not-allowed"
+                  id="couponApplyBtn"
+                  class="bg-slate-900 hover:bg-red-600 text-white font-bold text-xs px-4 rounded-xl transition-colors"
                 >
                   اعمال
                 </button>
               </div>
+              <p id="couponMessage" class="hidden"></p>
+              {% if form.coupon_code.errors %}<span class="text-[10px] text-red-600 mt-1 block">{{ form.coupon_code.errors.0 }}</span>{% endif %}
             </div>
 
             <!-- محاسبه قیمت -->
-            <div class="space-y-2.5 pt-4 border-t border-slate-100 text-xs">
+            <div
+              class="space-y-2.5 pt-4 border-t border-slate-100 text-xs"
+              id="priceBreakdown"
+              data-subtotal="{{ cart.total_price }}"
+              data-shipping-cost="{{ shipping_cost }}"
+            >
               <div class="flex items-center justify-between text-slate-600">
                 <span>قیمت محصولات:</span>
                 <span class="font-bold text-slate-800">{{ cart.total_price }} تومان</span>
@@ -281,6 +288,10 @@
                 <span class="font-bold text-emerald-600">{{ product_discount_amount }} تومان</span>
               </div>
               {% endif %}
+              <div class="flex items-center justify-between text-slate-600 {% if not coupon_discount_amount %}hidden{% endif %}" id="couponDiscountRow">
+                <span>تخفیف کد تخفیف:</span>
+                <span class="font-bold text-emerald-600" id="couponDiscountAmount">{{ coupon_discount_amount }} تومان</span>
+              </div>
               <div class="flex items-center justify-between text-slate-600">
                 <span>هزینه ارسال اکسپرس:</span>
                 <span class="font-bold text-slate-800">{{ shipping_cost }} تومان</span>
@@ -289,7 +300,7 @@
                 class="flex items-center justify-between text-slate-900 font-black text-sm pt-3 border-t border-slate-100"
               >
                 <span>مبلغ قابل پرداخت:</span>
-                <span class="text-red-600 text-lg">{{ final_total_price }} تومان</span>
+                <span class="text-red-600 text-lg" id="finalTotalPrice">{{ final_total_price }} تومان</span>
               </div>
             </div>
 

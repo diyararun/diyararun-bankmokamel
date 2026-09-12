@@ -91,13 +91,21 @@ class CheckoutForm(forms.Form):
     )
 
     # ---- Sidebar: کد تخفیف ----
-    # Not wired to real validation yet — deferred on purpose to the future
-    # "coupons" app (see decision in orders/models.py). The input is
-    # rendered disabled in checkout.html, so it always submits empty and
-    # discount_amount stays 0 in the view.
+    # Real, server-validated coupon codes now (apps.coupons) — see
+    # orders/views.py::CheckoutView for where this is actually checked.
+    # dir="ltr" + uppercase because coupon codes are conventionally typed
+    # in Latin letters; Coupon.save() also normalizes to uppercase, so a
+    # customer typing lowercase still matches.
     coupon_code = forms.CharField(
         label="کد تخفیف",
         max_length=50,
         required=False,
-        widget=forms.TextInput(attrs={"placeholder": "به‌زودی...", "disabled": True, "class": ""}),
+        widget=forms.TextInput(
+            attrs={
+                "id": "couponCodeInput",
+                "placeholder": "کد تخفیف را وارد کنید",
+                "dir": "ltr",
+                "class": INPUT_CLASS.replace("w-full ", "flex-1 ") + " uppercase placeholder:normal-case",
+            }
+        ),
     )
