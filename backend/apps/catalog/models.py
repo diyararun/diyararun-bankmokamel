@@ -1,5 +1,10 @@
+import io
+import os
+
+from django.core.files.base import ContentFile
 from django.db import models
 from django_jalali.db import models as jmodels
+from PIL import Image, ImageOps
 
 
 class Category(models.Model):
@@ -130,9 +135,33 @@ class Product(models.Model):
         return approved.aggregate(models.Avg("rating"))["rating__avg"]
 
 
+# Every product image is normalized to a square canvas of this size (px)
+# before it's ever saved to disk — see ProductImage.save() below. Chosen
+# to be large enough to still look sharp on a product-detail zoom, small
+# enough that the resulting JPEG stays tiny (a few hundred KB at most,
+# usually well under 100KB — see the docstring on save() for why this
+# matters for page speed, not just layout consistency).
+PRODUCT_IMAGE_CANVAS_SIZE = 1000
+PRODUCT_IMAGE_JPEG_QUALITY = 85
+
+
 class ProductImage(models.Model):
     """One image in a product's gallery. is_primary marks the image shown
-    on product cards and as the default detail-page image."""
+    on product cards and as the default detail-page image.
+
+    Whatever the seller uploads — any resolution, any aspect ratio, with
+    or without transparency — save() below normalizes it to a fixed
+    PRODUCT_IMAGE_CANVAS_SIZE x PRODUCT_IMAGE_CANVAS_SIZE white-padded
+    square before it's written to disk. This is what makes every product
+    card look consistent (see نشست ۲۱ in the progress log): the
+    templates already show these images in a fixed-size box with
+    object-contain (never cropped), but object-contain alone still let a
+    tightly-framed photo look "bigger" than a loosely-framed one in the
+    exact same box. Normalizing the stored file itself — instead of
+    relying on every seller to crop/pad their photos consistently by hand
+    — fixes that at the source, for every place this image is used
+    (product cards, hero, the detail-page gallery), not just one section.
+    """
 
     product = models.ForeignKey(Product, verbose_name="محصول", related_name="images", on_delete=models.CASCADE)
     image = models.ImageField("تصویر", upload_to="products/%Y/%m/")
@@ -147,6 +176,54 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.order}"
+
+    def save(self, *args, **kwargs):
+        # `_committed` is False exactly when a NEW file was just assigned
+        # to this field (an upload happening right now) — as opposed to
+        # re-saving an existing row without touching the image (e.g.
+        # editing alt_text). Without this check, every admin save would
+        # re-process (and re-compress) an already-normalized image.
+        if self.image and not self.image._committed:
+            self.image = self.normalize_image(self.image)
+        super().save(*args, **kwargs)
+
+    @staticmethod
+    def normalize_image(uploaded_file):
+        """Returns a ContentFile: the uploaded image resized to fit within
+        PRODUCT_IMAGE_CANVAS_SIZE (never upscaled — a source image smaller
+        than the canvas is centered as-is, since enlarging it would only
+        blur it; ask sellers to upload at least ~800x800px), centered on a
+        white square of exactly that size, re-encoded as JPEG.
+
+        exif_transpose fixes the sideways/upside-down photos phone
+        cameras commonly save (orientation stored as EXIF metadata,
+        ignored by naive resizing). Transparent PNGs are flattened onto
+        white rather than dropped (which would default to black).
+        """
+        image = Image.open(uploaded_file)
+        image = ImageOps.exif_transpose(image)
+
+        if image.mode in ("RGBA", "LA") or (image.mode == "P" and "transparency" in image.info):
+            image = image.convert("RGBA")
+            white_background = Image.new("RGBA", image.size, (255, 255, 255, 255))
+            image = Image.alpha_composite(white_background, image).convert("RGB")
+        else:
+            image = image.convert("RGB")
+
+        image.thumbnail((PRODUCT_IMAGE_CANVAS_SIZE, PRODUCT_IMAGE_CANVAS_SIZE), Image.LANCZOS)
+
+        canvas = Image.new("RGB", (PRODUCT_IMAGE_CANVAS_SIZE, PRODUCT_IMAGE_CANVAS_SIZE), (255, 255, 255))
+        offset = (
+            (PRODUCT_IMAGE_CANVAS_SIZE - image.width) // 2,
+            (PRODUCT_IMAGE_CANVAS_SIZE - image.height) // 2,
+        )
+        canvas.paste(image, offset)
+
+        buffer = io.BytesIO()
+        canvas.save(buffer, format="JPEG", quality=PRODUCT_IMAGE_JPEG_QUALITY, optimize=True)
+
+        original_name = os.path.splitext(os.path.basename(uploaded_file.name))[0]
+        return ContentFile(buffer.getvalue(), name=f"{original_name}.jpg")
 
 
 class ProductVariant(models.Model):
