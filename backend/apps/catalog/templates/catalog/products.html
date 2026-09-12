@@ -102,17 +102,16 @@
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         <!-- ==================== SIDEBAR FILTERS ( سمت راست ) ==================== -->
         <aside class="lg:col-span-1 space-y-6">
-          <div
-            class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm sticky top-24"
-          >
-            <form method="get" id="filtersForm">
-            {% if request.GET.category %}<input type="hidden" name="category" value="{{ request.GET.category }}">{% endif %}
-            <div
-              class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6"
+          <!-- باکس اصلی فیلتر -->
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm lg:sticky lg:top-24 overflow-hidden">
+            
+            <!-- هدر آکاردئون (فقط در موبایل و تبلت دکمه است، در دسکتاپ ساده نمایش داده می‌شود) -->
+            <button
+              type="button"
+              onclick="toggleMobileFilters()"
+              class="w-full p-5 flex items-center justify-between bg-white lg:pointer-events-none border-b border-slate-100 lg:border-b-0"
             >
-              <h3
-                class="font-extrabold text-slate-900 text-base flex items-center gap-2"
-              >
+              <div class="flex items-center gap-2">
                 <svg
                   class="w-5 h-5 text-red-600"
                   fill="none"
@@ -126,90 +125,120 @@
                     d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
                   />
                 </svg>
-                فیلترهای پیشرفته
+                <span class="font-extrabold text-slate-900 text-base">فیلترهای پیشرفته</span>
                 <span
                   id="activeFilterCount"
                   class="hidden bg-red-600 text-white text-[10px] font-bold w-5 h-5 rounded-full items-center justify-center"
                   >۰</span
                 >
-              </h3>
-              <a
-                href="{% url 'store:products' %}"
-                class="text-xs text-red-600 hover:text-red-700 font-bold"
-              >
-                حذف همه
-              </a>
-            </div>
-
-            <!-- فیلتر ۱: برندها -->
-            <div class="mb-6 border-b border-slate-100 pb-5">
-              <h4 class="font-bold text-slate-900 text-sm mb-3">برند سازنده</h4>
-              <div
-                class="space-y-1 max-h-48 overflow-y-auto pr-1 -mr-1 no-scrollbar"
-              >
-                {% for brand in brands %}
-                <label
-                  class="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer rounded-lg px-2 py-1.5 -mx-2 hover:bg-red-50/70 transition-colors group"
-                >
-                  <span class="relative w-[18px] h-[18px] shrink-0">
-                    <input
-                      type="checkbox"
-                      name="brand"
-                      value="{{ brand.slug }}"
-                      {% if brand.slug in selected_brand_slugs %}checked{% endif %}
-                      class="filter-checkbox peer appearance-none absolute inset-0 w-full h-full m-0 cursor-pointer z-10"
-                    />
-                    <span
-                      class="absolute inset-0 rounded-md border-2 border-slate-300 bg-white peer-checked:bg-red-600 peer-checked:border-red-600 peer-focus-visible:ring-2 peer-focus-visible:ring-red-200 transition-colors duration-200 pointer-events-none"
-                    ></span>
-                    <svg
-                      class="absolute inset-0 m-auto w-2.5 h-2.5 text-white opacity-0 scale-50 peer-checked:opacity-100 peer-checked:scale-100 transition-all duration-200 pointer-events-none"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="3.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <path d="M5 13l4 4L19 7" />
-                    </svg>
-                  </span>
-                  <span class="group-hover:text-red-600 transition-colors"
-                    >{{ brand.name }}</span
-                  >
-                </label>
-                {% endfor %}
               </div>
-            </div>
 
-            <!-- فیلتر ۲: محدوده قیمت -->
-            <div class="mb-6 border-b border-slate-100 pb-5">
-              <h4 class="font-bold text-slate-900 text-sm mb-3">
-                محدوده قیمت (تومان)
-              </h4>
-              <div class="space-y-3">
-                <input
-                  type="range"
-                  min="500000"
-                  max="6000000"
-                  step="100000"
-                  name="price_max"
-                  value="{{ selected_price_max|default:6000000 }}"
-                  id="priceRange"
-                  class="w-full accent-red-600 cursor-pointer"
-                />
-                <div
-                  class="flex items-center justify-between text-xs font-bold text-slate-600"
+              <!-- فلش باز/بسته شدن (فقط در زیر 1024px نمایش داده می‌شود) -->
+              <div class="flex items-center gap-2 lg:hidden">
+                <svg
+                  id="mobileFilterArrow"
+                  class="w-5 h-5 text-slate-500 transition-transform duration-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <span>از ۵۰۰,۰۰۰</span>
-                  <span class="text-red-600" id="priceRangeValue"
-                    >تا {{ selected_price_max|default:"۶,۰۰۰,۰۰۰" }} تومان</span
-                  >
-                </div>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
               </div>
-            </div>
+            </button>
+
+            <!-- کانتینر محتوای فیلترها (زیر 1024px آکاردئونی روان است و در دسکتاپ همیشه باز است) -->
+            <div
+              id="mobileFilterContainer"
+              class="grid grid-rows-[0fr] lg:grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-in-out"
+            >
+              <div class="overflow-hidden">
+                <div class="p-6 pt-2 lg:pt-0">
+                  <form method="get" id="filtersForm">
+                    {% if request.GET.category %}<input type="hidden" name="category" value="{{ request.GET.category }}">{% endif %}
+                    
+                    <div class="flex items-center justify-end pb-4 border-b border-slate-100 mb-6">
+                      <a
+                        href="{% url 'store:products' %}"
+                        class="text-xs text-red-600 hover:text-red-700 font-bold"
+                      >
+                        حذف همه فیلترها
+                      </a>
+                    </div>
+
+                    <!-- فیلتر ۱: برندها -->
+                    <div class="mb-6 border-b border-slate-100 pb-5">
+                      <h4 class="font-bold text-slate-900 text-sm mb-3">برند سازنده</h4>
+                      <div
+                        class="space-y-1 max-h-48 overflow-y-auto pr-1 -mr-1 no-scrollbar"
+                      >
+                        {% for brand in brands %}
+                        <label
+                          class="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer rounded-lg px-2 py-1.5 -mx-2 hover:bg-red-50/70 transition-colors group"
+                        >
+                          <span class="relative w-[18px] h-[18px] shrink-0">
+                            <input
+                              type="checkbox"
+                              name="brand"
+                              value="{{ brand.slug }}"
+                              {% if brand.slug in selected_brand_slugs %}checked{% endif %}
+                              class="filter-checkbox peer appearance-none absolute inset-0 w-full h-full m-0 cursor-pointer z-10"
+                            />
+                            <span
+                              class="absolute inset-0 rounded-md border-2 border-slate-300 bg-white peer-checked:bg-red-600 peer-checked:border-red-600 peer-focus-visible:ring-2 peer-focus-visible:ring-red-200 transition-colors duration-200 pointer-events-none"
+                            ></span>
+                            <svg
+                              class="absolute inset-0 m-auto w-2.5 h-2.5 text-white opacity-0 scale-50 peer-checked:opacity-100 peer-checked:scale-100 transition-all duration-200 pointer-events-none"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="3.5"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
+                              <path d="M5 13l4 4L19 7" />
+                            </svg>
+                          </span>
+                          <span class="group-hover:text-red-600 transition-colors"
+                            >{{ brand.name }}</span
+                          >
+                        </label>
+                        {% endfor %}
+                      </div>
+                    </div>
+
+                    <!-- فیلتر ۲: محدوده قیمت -->
+                    <div class="mb-6 border-b border-slate-100 pb-5">
+                      <h4 class="font-bold text-slate-900 text-sm mb-3">
+                        محدوده قیمت (تومان)
+                      </h4>
+                      <div class="space-y-3">
+                        <input
+                          type="range"
+                          min="{{ price_min }}"
+                          max="{{ price_max_bound }}"
+                          step="10000"
+                          name="price_max"
+                          value="{{ selected_price_max|default:price_max_bound }}"
+                          id="priceRange"
+                          class="w-full accent-red-600 cursor-pointer"
+                        />
+                        <div
+                          class="flex items-center justify-between text-xs font-bold text-slate-600"
+                        >
+                          <span>از {{ price_min }}</span>
+                          <span class="text-red-600" id="priceRangeValue"
+                            >تا {{ selected_price_max|default:price_max_bound }} تومان</span
+                          >
+                        </div>
+                      </div>
+                    </div>
 
                     <!-- فیلتر ۳: وزن / حجم -->
+                    <!-- فقط وقتی نمایش داده می‌شود که حداقل یک تنوع فعال، وزن مشخصی داشته باشد
+                         (show_weight_filter در ProductListView.get_context_data محاسبه می‌شود) —
+                         اگر فروشنده اصلاً از فیلد وزن استفاده نکند، این بخش کاملاً حذف می‌شود. -->
+                    {% if show_weight_filter %}
                     <div class="mb-6 border-b border-slate-100 pb-5">
                       <h4 class="font-bold text-slate-900 text-sm mb-3">
                         وزن / حجم محصول
@@ -217,7 +246,7 @@
                       <div class="grid grid-cols-2 gap-2 text-xs">
                         {% for value, label in weight_ranges %}
                         <label
-                          class="p-2 border {% if value == selected_weight_range %}border-red-600 bg-red-50 text-red-600 font-bold{% else %}border-slate-200 hover:border-red-300 hover:bg-red-50/40 hover:text-red-600 text-slate-700 font-medium transition-colors{% endif %} rounded-xl text-center cursor-pointer"
+                          class="p-2 border {% if value == selected_weight_range %}border-red-600 bg-red-50 text-red-600 font-bold{% else %}border-slate-200 hover:border-slate-300 text-slate-700 font-medium{% endif %} rounded-xl text-center cursor-pointer"
                         >
                           <input type="radio" name="weight_range" value="{{ value }}" {% if value == selected_weight_range %}checked{% endif %} class="hidden">
                           {{ label }}
@@ -225,83 +254,115 @@
                         {% endfor %}
                       </div>
                     </div>
+                    {% endif %}
 
-            <!-- فیلتر ۴: شکل دارویی / نوع مصرف (ویژه مکمل‌ها) -->
-            <div class="mb-6 border-b border-slate-100 pb-5">
-              <h4 class="font-bold text-slate-900 text-sm mb-3">
-                نوع مکمل (فرم)
-              </h4>
-              <div class="space-y-1 text-xs">
-                {% for value, label in form_types %}
-                <label
-                  class="flex items-center gap-2.5 text-slate-700 cursor-pointer rounded-lg px-2 py-1.5 -mx-2 hover:bg-red-50/70 transition-colors group"
-                >
-                  <span class="relative w-[18px] h-[18px] shrink-0">
-                    <input
-                      type="checkbox"
-                      name="form_type"
-                      value="{{ value }}"
-                      {% if value in selected_form_types %}checked{% endif %}
-                      class="filter-checkbox peer appearance-none absolute inset-0 w-full h-full m-0 cursor-pointer z-10"
-                    />
-                    <span
-                      class="absolute inset-0 rounded-md border-2 border-slate-300 bg-white peer-checked:bg-red-600 peer-checked:border-red-600 peer-focus-visible:ring-2 peer-focus-visible:ring-red-200 transition-colors duration-200 pointer-events-none"
-                    ></span>
-                    <svg
-                      class="absolute inset-0 m-auto w-2.5 h-2.5 text-white opacity-0 scale-50 peer-checked:opacity-100 peer-checked:scale-100 transition-all duration-200 pointer-events-none"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="3.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                    <!-- فیلتر ۴: نوع مکمل (فرم) -->
+                    <!-- فقط وقتی نمایش داده می‌شود که حداقل یک محصول فعال، نوع/فرم مشخصی داشته باشد
+                         (show_form_type_filter) — اگر هیچ محصولی form_type نداشته باشد، این بخش
+                         حذف می‌شود تا خریدار با فیلتری که هیچ نتیجه‌ای فیلتر نمی‌کند گیج نشود. -->
+                    {% if show_form_type_filter %}
+                    <div class="mb-6 border-b border-slate-100 pb-5">
+                      <h4 class="font-bold text-slate-900 text-sm mb-3">
+                        نوع مکمل (فرم)
+                      </h4>
+                      <div class="space-y-1 text-xs">
+                        {% for value, label in form_types %}
+                        <label
+                          class="flex items-center gap-2.5 text-slate-700 cursor-pointer rounded-lg px-2 py-1.5 -mx-2 hover:bg-red-50/70 transition-colors group"
+                        >
+                          <span class="relative w-[18px] h-[18px] shrink-0">
+                            <input
+                              type="checkbox"
+                              name="form_type"
+                              value="{{ value }}"
+                              {% if value in selected_form_types %}checked{% endif %}
+                              class="filter-checkbox peer appearance-none absolute inset-0 w-full h-full m-0 cursor-pointer z-10"
+                            />
+                            <span
+                              class="absolute inset-0 rounded-md border-2 border-slate-300 bg-white peer-checked:bg-red-600 peer-checked:border-red-600 peer-focus-visible:ring-2 peer-focus-visible:ring-red-200 transition-colors duration-200 pointer-events-none"
+                            ></span>
+                            <svg
+                              class="absolute inset-0 m-auto w-2.5 h-2.5 text-white opacity-0 scale-50 peer-checked:opacity-100 peer-checked:scale-100 transition-all duration-200 pointer-events-none"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="3.5"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
+                              <path d="M5 13l4 4L19 7" />
+                            </svg>
+                          </span>
+                          <span class="group-hover:text-red-600 transition-colors"
+                            >{{ label }}</span
+                          >
+                        </label>
+                        {% endfor %}
+                      </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- فیلتر ۵: فقط کالاهای موجود -->
+                    <div>
+                      <label
+                        class="flex items-center justify-between text-xs font-bold text-slate-800 cursor-pointer rounded-xl px-2 py-1.5 -mx-2 hover:bg-red-50/70 transition-colors"
+                      >
+                        <span>فقط کالاهای موجود</span>
+                        <span class="relative inline-flex h-6 w-11 shrink-0">
+                          <input
+                            type="checkbox"
+                            name="in_stock_only"
+                            value="on"
+                            {% if selected_in_stock_only %}checked{% endif %}
+                            id="availabilityToggle"
+                            class="peer appearance-none absolute inset-0 w-full h-full m-0 cursor-pointer z-10"
+                          />
+                          <span
+                            class="absolute inset-0 rounded-full bg-slate-300 peer-checked:bg-red-600 peer-focus-visible:ring-2 peer-focus-visible:ring-red-200 transition-colors duration-200 pointer-events-none"
+                          ></span>
+                          <span
+                            class="absolute top-1 right-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 peer-checked:-translate-x-5 pointer-events-none"
+                          ></span>
+                        </span>
+                      </label>
+                    </div>
+
+                    <!-- دکمه اعمال فیلتر -->
+                    <button
+                      type="submit"
+                      class="w-full mt-6 bg-slate-900 hover:bg-red-600 text-white font-bold text-xs py-3 rounded-xl transition-colors shadow-md"
                     >
-                      <path d="M5 13l4 4L19 7" />
-                    </svg>
-                  </span>
-                  <span class="group-hover:text-red-600 transition-colors"
-                    >{{ label }}</span
-                  >
-                </label>
-                {% endfor %}
+                      اعمال فیلترها
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
 
-            <!-- فیلتر ۵: آماده تحویل و موجود بودن -->
-            <div>
-              <label
-                class="flex items-center justify-between text-xs font-bold text-slate-800 cursor-pointer rounded-xl px-2 py-1.5 -mx-2 hover:bg-red-50/70 transition-colors"
-              >
-                <span>فقط کالاهای موجود</span>
-                <span class="relative inline-flex h-6 w-11 shrink-0">
-                  <input
-                    type="checkbox"
-                    name="in_stock_only"
-                    value="on"
-                    {% if selected_in_stock_only %}checked{% endif %}
-                    id="availabilityToggle"
-                    class="peer appearance-none absolute inset-0 w-full h-full m-0 cursor-pointer z-10"
-                  />
-                  <span
-                    class="absolute inset-0 rounded-full bg-slate-300 peer-checked:bg-red-600 peer-focus-visible:ring-2 peer-focus-visible:ring-red-200 transition-colors duration-200 pointer-events-none"
-                  ></span>
-                  <span
-                    class="absolute top-1 right-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 peer-checked:-translate-x-5 pointer-events-none"
-                  ></span>
-                </span>
-              </label>
-            </div>
-
-            <!-- دکمه اعمال فیلتر -->
-            <button
-              type="submit"
-              class="w-full mt-6 bg-slate-900 hover:bg-red-600 text-white font-bold text-xs py-3 rounded-xl transition-colors shadow-md"
-            >
-              اعمال فیلترها
-            </button>
-            </form>
           </div>
         </aside>
+
+        <!-- تابعی برای سوئیچ نرم حالت آکاردئونی در نمایشگرهای زیر 1024px -->
+        <script>
+          function toggleMobileFilters() {
+            if (window.innerWidth >= 1024) return;
+
+            const container = document.getElementById("mobileFilterContainer");
+            const arrow = document.getElementById("mobileFilterArrow");
+
+            const isOpen = container.classList.contains("grid-rows-[1fr]");
+
+            if (isOpen) {
+              container.classList.remove("grid-rows-[1fr]");
+              container.classList.add("grid-rows-[0fr]");
+              if (arrow) arrow.classList.remove("rotate-180");
+            } else {
+              container.classList.remove("grid-rows-[0fr]");
+              container.classList.add("grid-rows-[1fr]");
+              if (arrow) arrow.classList.add("rotate-180");
+            }
+          }
+        </script>
 
         <!-- ==================== PRODUCTS GRID ( سمت چپ ) ==================== -->
         <section class="lg:col-span-3">
@@ -331,6 +392,9 @@
                     class="w-full h-full object-cover"
                     src="{% if image %}{{ image.image.url }}{% endif %}"
                     alt="{{ p.name }}"
+                    {% if forloop.counter > 6 %}
+                    loading="lazy"
+                    {% endif %}
                   />
                   {% endwith %}
                 </a>
@@ -340,7 +404,7 @@
                   {% if variant.label %}
                   <span
                     class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md"
-                    >{{ variant.label }}</span
+                    >{{ variant.label }} گرمی</span
                   >
                   {% endif %}
                 </div>
