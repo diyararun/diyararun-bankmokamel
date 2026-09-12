@@ -64,6 +64,38 @@ function initFilters() {
   );
   updateActiveFilterCount();
 
+  // Weight-range radios: give them the same instant, JS-driven highlight
+  // that flavor/weight selection has on the product-detail page — no
+  // waiting for "اعمال فیلترها" + a page reload to see which one is
+  // active. Native <input type="radio"> already handles the actual
+  // checked/unchecked state and keyboard access; this just keeps each
+  // <label>'s Tailwind classes in sync with it on every change.
+  const weightRadios = document.querySelectorAll('input[name="weight_range"]');
+  if (weightRadios.length > 0) {
+    const applyWeightStyles = () => {
+      weightRadios.forEach((radio) => {
+        const label = radio.closest("label");
+        if (!label) return;
+        label.className = `p-2 border ${
+          radio.checked
+            ? "border-red-600 bg-red-50 text-red-600 font-bold"
+            : "border-slate-200 hover:border-red-300 hover:bg-red-50/40 hover:text-red-600 text-slate-700 font-medium transition-colors"
+        } rounded-xl text-center cursor-pointer`;
+      });
+    };
+
+    // A fresh visit (no ?weight_range= in the URL yet) shouldn't leave
+    // every option looking unselected — default to the first one, same
+    // as product-detail always having a real default variant selected.
+    const alreadyChecked = Array.from(weightRadios).some((r) => r.checked);
+    if (!alreadyChecked) weightRadios[0].checked = true;
+
+    weightRadios.forEach((radio) =>
+      radio.addEventListener("change", applyWeightStyles),
+    );
+    applyWeightStyles();
+  }
+
   window.resetFilters = function resetFilters() {
     if (priceRange) {
       priceRange.value = 4500000;
