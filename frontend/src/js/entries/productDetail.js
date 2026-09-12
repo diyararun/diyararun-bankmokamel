@@ -146,10 +146,6 @@ function adjustQuantity(delta) {
 // Switches the selected weight/serving variant: updates the price/compare
 // price shown, which variant "افزودن به سبد خرید" will actually add, its
 // disabled/"ناموجود" state, and the pill buttons' active styling.
-// Deliberately NOT wired to the flavor pills yet — flavor→variant
-// filtering needs its own mapping the backend doesn't send today; adding
-// it here would be guessing at a UI, not fixing the reported bug, so it's
-// left as-is (decorative) for a follow-up.
 function selectVariant(variantId) {
   const variant = productData.variants.find((v) => v.id === variantId);
   if (!variant) return;
@@ -166,11 +162,15 @@ function selectVariant(variantId) {
 
   document.querySelectorAll(".js-variant-option").forEach((btn) => {
     const isSelected = Number(btn.dataset.variantId) === variant.id;
+    // Rebuilding className wholesale would silently undo the "hidden"
+    // class selectFlavor() just set on buttons that don't match the
+    // chosen flavor — carry it forward instead of wiping it.
+    const wasHidden = btn.classList.contains("hidden");
     btn.className = `js-variant-option px-3 py-1.5 border-2 ${
       isSelected
         ? "border-red-600 text-red-600 font-bold bg-red-50"
-        : "border-slate-200 text-slate-600 hover:border-slate-300"
-    } rounded-lg text-xs`;
+        : "border-slate-200 text-slate-600 hover:border-red-300 hover:text-red-600"
+    } rounded-lg text-xs transition-colors${wasHidden ? " hidden" : ""}`;
   });
 
   const addBtn = document.getElementById("mainAddToCartBtn");
@@ -179,6 +179,42 @@ function selectVariant(variantId) {
   document.getElementById("mainAddToCartLabel").innerText = variant.inStock
     ? "افزودن به سبد خرید"
     : "ناموجود";
+}
+
+// Selecting a flavor doesn't buy anything by itself — a flavor is one half
+// of which ProductVariant actually gets added to the cart, the weight/
+// serving pill is the other half. So this: (1) highlights the chosen
+// flavor pill, (2) shows only the weight pills that exist for THAT flavor
+// (a variant's flavorId either matches or it doesn't — hiding the rest
+// stops the customer from picking a weight/flavor combination that was
+// never a real product variant), and (3) auto-selects the first in-stock
+// variant among what's left, via selectVariant() above.
+function selectFlavor(flavorId) {
+  document.querySelectorAll(".js-flavor-option").forEach((btn) => {
+    const isSelected = Number(btn.dataset.flavorId) === flavorId;
+    btn.className = `js-flavor-option px-3 py-1.5 border-2 ${
+      isSelected
+        ? "border-red-600 text-red-600 font-bold bg-red-50"
+        : "border-slate-200 text-slate-600 hover:border-red-300 hover:text-red-600"
+    } rounded-lg text-xs transition-colors`;
+  });
+
+  let firstMatch = null;
+  let firstInStockMatch = null;
+  document.querySelectorAll(".js-variant-option").forEach((btn) => {
+    const variant = productData.variants.find(
+      (v) => v.id === Number(btn.dataset.variantId),
+    );
+    const matches = !!variant && variant.flavorId === flavorId;
+    btn.classList.toggle("hidden", !matches);
+    if (matches) {
+      firstMatch = firstMatch || variant;
+      if (variant.inStock) firstInStockMatch = firstInStockMatch || variant;
+    }
+  });
+
+  const target = firstInStockMatch || firstMatch;
+  if (target) selectVariant(target.id);
 }
 
 function addCurrentProductToCart() {
@@ -202,6 +238,24 @@ document.addEventListener("DOMContentLoaded", () => {
       selectVariant(Number(btn.dataset.variantId)),
     );
   });
+
+  const flavorButtons = document.querySelectorAll(".js-flavor-option");
+  flavorButtons.forEach((btn) => {
+    btn.addEventListener("click", () =>
+      selectFlavor(Number(btn.dataset.flavorId)),
+    );
+  });
+  // Apply the server-highlighted default flavor's filtering on load, so
+  // the weight pills shown at first paint already match it instead of
+  // listing every flavor's weights until the first click.
+  if (flavorButtons.length > 0) {
+    const defaultVariant = productData.variants.find(
+      (v) => v.id === productData.defaultVariantId,
+    );
+    if (defaultVariant && defaultVariant.flavorId != null) {
+      selectFlavor(defaultVariant.flavorId);
+    }
+  }
 
   const relatedSlider = document.getElementById("relatedSlider");
   if (relatedSlider) {

@@ -208,7 +208,7 @@
               <div class="grid grid-cols-2 gap-2 text-xs">
                 {% for value, label in weight_ranges %}
                 <label
-                  class="p-2 border {% if value == selected_weight_range %}border-red-600 bg-red-50 text-red-600 font-bold{% else %}border-slate-200 hover:border-slate-300 text-slate-700 font-medium{% endif %} rounded-xl text-center cursor-pointer"
+                  class="p-2 border {% if value == selected_weight_range %}border-red-600 bg-red-50 text-red-600 font-bold{% else %}border-slate-200 hover:border-red-300 hover:bg-red-50/40 hover:text-red-600 text-slate-700 font-medium transition-colors{% endif %} rounded-xl text-center cursor-pointer"
                 >
                   <input type="radio" name="weight_range" value="{{ value }}" {% if value == selected_weight_range %}checked{% endif %} class="hidden">
                   {{ label }}

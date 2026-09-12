@@ -138,6 +138,11 @@ class ProductDetailView(DetailView):
                     "price": v.price,
                     "compareAtPrice": v.compare_at_price,
                     "inStock": v.is_in_stock,
+                    # None for variants with no flavor set — the flavor
+                    # picker only renders when a product HAS flavors at
+                    # all, but not every variant of a flavored product is
+                    # guaranteed to have one assigned.
+                    "flavorId": v.flavor_id,
                 }
                 for v in product.active_variants
             ],
