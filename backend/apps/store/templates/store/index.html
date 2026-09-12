@@ -368,12 +368,12 @@
           >
             <div>
               <div
-                class="h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group"
+                class="h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group p-4"
               >
-                <a href="{% url 'store:product_detail' slug=p.slug %}">
+                <a href="{% url 'store:product_detail' slug=p.slug %}" class="w-full h-full flex items-center justify-center">
                   {% with image=p.images.first %}
                   <img
-                    class="w-full h-full object-cover"
+                    class="max-w-full max-h-full w-auto h-auto object-contain"
                     src="{% if image %}{{ image.image.url }}{% endif %}"
                     alt="{{ p.name }}"
                   />
@@ -634,12 +634,12 @@
             {% endif %}
             <div>
               <div
-                class="h-44 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl overflow-hidden"
+                class="h-44 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl overflow-hidden p-4"
               >
-                <a href="{% url 'store:product_detail' slug=p.slug %}">
+                <a href="{% url 'store:product_detail' slug=p.slug %}" class="w-full h-full flex items-center justify-center">
                   {% with image=p.images.first %}
                   <img
-                    class="w-full h-full object-cover"
+                    class="max-w-full max-h-full w-auto h-auto object-contain"
                     src="{% if image %}{{ image.image.url }}{% endif %}"
                     alt="{{ p.name }}"
                   />
