@@ -84,12 +84,15 @@ function initFilters() {
       });
     };
 
-    // A fresh visit (no ?weight_range= in the URL yet) shouldn't leave
-    // every option looking unselected — default to the first one, same
-    // as product-detail always having a real default variant selected.
-    const alreadyChecked = Array.from(weightRadios).some((r) => r.checked);
-    if (!alreadyChecked) weightRadios[0].checked = true;
-
+    // Deliberately no "default to the first option" here (there used to
+    // be one): weight is an opt-in filter, not something every visitor
+    // wants applied. Forcing "زیر ۱ کیلوگرم" to look selected on a fresh
+    // visit meant "اعمال فیلترها" silently submitted weight_range=under_1kg
+    // even for someone who never touched this filter — narrowing their
+    // results without them asking for it. So: stay in sync with whatever
+    // is actually checked (nothing, unless the URL already had a
+    // weight_range=... that the server marked with `checked`), and leave
+    // it unchecked otherwise until the visitor picks one themselves.
     weightRadios.forEach((radio) =>
       radio.addEventListener("change", applyWeightStyles),
     );
