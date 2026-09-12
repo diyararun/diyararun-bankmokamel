@@ -48,11 +48,12 @@
 
     <!-- چپ: سرچ + سبد خرید + لاگین/پروفایل -->
     <div class="flex items-center gap-3">
-      <!-- اینپوت سرچ بازشونده -->
-      <div class="relative flex items-center">
+      <!-- اینپوت سرچ بازشونده (Live Search) -->
+      <div id="searchWrapper" class="relative flex items-center">
         <input
           id="searchInput"
           type="text"
+          autocomplete="off"
           placeholder="جستجوی مکمل، برند..."
           class="w-0 opacity-0 transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-red-600 bg-slate-100 text-sm rounded-full py-2 px-4 text-slate-800 border border-slate-200"
         />
@@ -75,6 +76,12 @@
             />
           </svg>
         </button>
+
+        <!-- نتایج زنده جستجو؛ با JS پر و نمایش داده می‌شود (headerSearch.js) -->
+        <div
+          id="searchResults"
+          class="hidden absolute top-full end-0 mt-2 w-72 sm:w-80 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden max-h-[70vh] overflow-y-auto custom-scrollbar"
+        ></div>
       </div>
 
       <!-- سبد خرید -->

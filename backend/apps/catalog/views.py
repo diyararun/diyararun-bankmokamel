@@ -1,9 +1,32 @@
+from django.db.models import Q
+from django.http import JsonResponse
+from django.urls import reverse
+from django.views import View
 from django.views.generic import DetailView, ListView
 
 from apps.reviews.forms import ReviewForm
 
 from .forms import WEIGHT_RANGE_CHOICES, ProductFilterForm
 from .models import Brand, Category, Flavor, Product
+
+# Max number of live-search suggestions returned by ProductSearchSuggestView
+# — a dropdown, not a results page, so this stays intentionally small.
+SEARCH_SUGGESTION_LIMIT = 6
+
+
+def _search_filter(q):
+    """Shared "does this product match the search text" condition, used by
+    both the live-search dropdown (ProductSearchSuggestView) and the full
+    product list page's ?q= filter (ProductListView) — so typing the same
+    text into either one finds the same products.
+    """
+    return (
+        Q(name__icontains=q)
+        | Q(short_description__icontains=q)
+        | Q(brand__name__icontains=q)
+        | Q(category__name__icontains=q)
+    )
+
 
 SORT_FIELD_MAP = {
     "newest": "-created_at",
@@ -38,6 +61,8 @@ class ProductListView(ListView):
 
         data = self.filter_form.cleaned_data
 
+        if data.get("q"):
+            queryset = queryset.filter(_search_filter(data["q"]))
         if data.get("category"):
             queryset = queryset.filter(category=data["category"])
         if data.get("brand"):
@@ -81,6 +106,7 @@ class ProductListView(ListView):
             context["selected_weight_range"] = data.get("weight_range") or ""
             context["selected_price_max"] = data.get("price_max")
             context["selected_in_stock_only"] = data.get("in_stock_only")
+            context["search_query"] = data.get("q") or ""
         else:
             context["current_sort"] = "newest"
             context["selected_brand_slugs"] = []
@@ -88,7 +114,50 @@ class ProductListView(ListView):
             context["selected_weight_range"] = ""
             context["selected_price_max"] = None
             context["selected_in_stock_only"] = False
+            context["search_query"] = ""
         return context
+
+
+class ProductSearchSuggestView(View):
+    """Backs the header's live-search box: GET /products/search/?q=...
+    returns a small JSON list of matching products (name, url, image,
+    brand, price) for the dropdown that appears while typing.
+
+    Deliberately a plain View (not DRF) — same choice already made for the
+    rest of this project (see the session log: "no DRF"). A handful of
+    fields as JsonResponse doesn't need a serializer framework.
+    """
+
+    def get(self, request):
+        q = request.GET.get("q", "").strip()
+        if len(q) < 2:
+            # Avoid a near-full-table scan on a single stray keystroke —
+            # the frontend also debounces, this is the backend's own floor.
+            return JsonResponse({"results": []})
+
+        products = (
+            Product.objects.filter(is_active=True, variants__is_active=True)
+            .filter(_search_filter(q))
+            .select_related("brand")
+            .prefetch_related("images", "variants")
+            .distinct()
+            .order_by("-created_at")[:SEARCH_SUGGESTION_LIMIT]
+        )
+
+        results = []
+        for product in products:
+            image = product.images.first()
+            variant = product.default_variant
+            results.append(
+                {
+                    "name": product.name,
+                    "brand": product.brand.name if product.brand_id else "",
+                    "url": reverse("store:product_detail", kwargs={"slug": product.slug}),
+                    "image": image.image.url if image else "",
+                    "price": variant.price if variant else None,
+                }
+            )
+        return JsonResponse({"results": results})
 
 
 class ProductDetailView(DetailView):

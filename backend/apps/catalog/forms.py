@@ -27,6 +27,10 @@ class ProductFilterForm(forms.Form):
     submit and must get exactly right.
     """
 
+    # Free-text search coming from the header's live-search box (?q=...).
+    # Matched against product/brand/category name — see
+    # ProductListView.get_queryset for how it's applied.
+    q = forms.CharField(required=False, max_length=200)
     category = forms.ModelChoiceField(
         queryset=Category.objects.filter(is_active=True), to_field_name="slug", required=False
     )
@@ -46,3 +50,6 @@ class ProductFilterForm(forms.Form):
 
     def clean_sort(self):
         return self.cleaned_data.get("sort") or "newest"
+
+    def clean_q(self):
+        return self.cleaned_data.get("q", "").strip()
