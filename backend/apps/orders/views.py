@@ -6,10 +6,9 @@ from django.urls import reverse
 from django.views.generic import View
 
 from apps.cart.services import get_cart, product_discount_total, serialize_cart
-from apps.store.models import SiteSettings
 
 from .forms import CheckoutForm
-from .models import Order, OrderItem
+from .models import Order, OrderItem, ShippingSettings
 
 
 class CheckoutView(LoginRequiredMixin, View):
@@ -46,7 +45,7 @@ class CheckoutView(LoginRequiredMixin, View):
             return render(request, self.template_name, self._context(form, cart))
 
         subtotal = cart_data["total_price"]
-        shipping_cost = SiteSettings.load().express_shipping_cost
+        shipping_cost = ShippingSettings.load().flat_rate
         discount_amount = 0  # real coupon/campaign validation is the future "coupons" app's job
 
         # Order creation, the profile update, and clearing the cart must
@@ -91,11 +90,11 @@ class CheckoutView(LoginRequiredMixin, View):
     def _context(self, form, cart):
         # The sidebar order summary shows the shipping cost, product
         # discount, and final total *before* the order actually exists, so
-        # they're computed here from the live cart + current SiteSettings,
+        # they're computed here from the live cart + current ShippingSettings,
         # the same way post() computes them for the real Order — kept in
         # sync deliberately, not copied.
         cart_data = serialize_cart(cart)
-        shipping_cost = SiteSettings.load().express_shipping_cost
+        shipping_cost = ShippingSettings.load().flat_rate
         return {
             "form": form,
             "cart": cart_data,

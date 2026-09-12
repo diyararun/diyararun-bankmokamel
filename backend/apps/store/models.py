@@ -64,17 +64,6 @@ class SiteSettings(models.Model):
     telegram_url = models.URLField("لینک تلگرام", blank=True)
     whatsapp_url = models.URLField("لینک واتساپ", blank=True)
 
-    # ---- Shipping ----
-    # A single flat rate, editable from the admin panel without a redeploy.
-    # Per-method/per-region shipping rates are future work — this is the
-    # honest match for what checkout.html actually offers today (one
-    # express-delivery option, no method choice).
-    express_shipping_cost = models.PositiveIntegerField(
-        "هزینه ارسال اکسپرس (تومان)",
-        default=49000,
-        help_text="این مبلغ در صفحه‌ی تسویه‌حساب به‌عنوان هزینه‌ی ارسال به مشتری نمایش داده می‌شود.",
-    )
-
     updated_at = jmodels.jDateTimeField("آخرین ویرایش", auto_now=True)
 
     class Meta:

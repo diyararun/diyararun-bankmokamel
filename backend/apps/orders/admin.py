@@ -27,8 +27,15 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("id", "full_name", "phone", "status", "total_price", "created_at")
+    list_display = ("tracking_code", "user", "full_name", "phone", "status", "total_price", "created_at")
     list_filter = ("status", "payment_method", "created_at")
-    search_fields = ("full_name", "phone", "user__phone", "postal_code")
-    readonly_fields = ("subtotal_price", "discount_amount", "shipping_cost", "total_price")
+    search_fields = ("tracking_code", "full_name", "phone", "user__phone", "postal_code")
+    readonly_fields = (
+        "tracking_code",
+        "subtotal_price",
+        "product_discount_amount",
+        "discount_amount",
+        "shipping_cost",
+        "total_price",
+    )
     inlines = [OrderItemInline]
