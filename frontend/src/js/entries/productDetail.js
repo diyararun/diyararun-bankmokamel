@@ -222,6 +222,43 @@ function addCurrentProductToCart() {
   addToCart(selectedVariantId, currentQuantity);
 }
 
+// Star rating picker for "دیدگاه خود را بنویسید" (see the ratingStars
+// markup in product_detail.html): clicking a star's native <label>
+// checks the matching hidden radio, this just keeps the ★ colors in
+// sync with whichever one is checked, plus a live hover preview —
+// same "radios drive real state, JS keeps the visual in sync" pattern
+// already used for the weight-range filter (see products.js).
+function initRatingStars() {
+  const stars = document.querySelectorAll(".js-rating-star");
+  if (stars.length === 0) return;
+
+  const container = document.getElementById("ratingStars");
+
+  function paint(uptoValue) {
+    stars.forEach((star) => {
+      const filled = Number(star.dataset.value) <= uptoValue;
+      star.classList.toggle("text-amber-400", filled);
+      star.classList.toggle("text-slate-300", !filled);
+    });
+  }
+
+  function checkedValue() {
+    const checked = container.querySelector(".js-rating-radio:checked");
+    return checked ? Number(checked.value) : 0;
+  }
+
+  container.querySelectorAll(".js-rating-radio").forEach((radio) => {
+    radio.addEventListener("change", () => paint(Number(radio.value)));
+  });
+
+  stars.forEach((star) => {
+    star.addEventListener("mouseenter", () => paint(Number(star.dataset.value)));
+  });
+  container.addEventListener("mouseleave", () => paint(checkedValue()));
+
+  paint(checkedValue());
+}
+
 window.selectImage = selectImage;
 window.openGalleryModal = openGalleryModal;
 window.closeGalleryModal = closeGalleryModal;
@@ -233,6 +270,7 @@ window.addCurrentProductToCart = addCurrentProductToCart;
 
 document.addEventListener("DOMContentLoaded", () => {
   renderThumbnails();
+  initRatingStars();
 
   document.querySelectorAll(".js-variant-option").forEach((btn) => {
     btn.addEventListener("click", () =>
