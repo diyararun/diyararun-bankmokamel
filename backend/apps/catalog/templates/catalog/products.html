@@ -200,22 +200,22 @@
               </div>
             </div>
 
-            <!-- فیلتر ۳: وزن / حجم -->
-            <div class="mb-6 border-b border-slate-100 pb-5">
-              <h4 class="font-bold text-slate-900 text-sm mb-3">
-                وزن / حجم محصول
-              </h4>
-              <div class="grid grid-cols-2 gap-2 text-xs">
-                {% for value, label in weight_ranges %}
-                <label
-                  class="p-2 border {% if value == selected_weight_range %}border-red-600 bg-red-50 text-red-600 font-bold{% else %}border-slate-200 hover:border-red-300 hover:bg-red-50/40 hover:text-red-600 text-slate-700 font-medium transition-colors{% endif %} rounded-xl text-center cursor-pointer"
-                >
-                  <input type="radio" name="weight_range" value="{{ value }}" {% if value == selected_weight_range %}checked{% endif %} class="hidden">
-                  {{ label }}
-                </label>
-                {% endfor %}
-              </div>
-            </div>
+                    <!-- فیلتر ۳: وزن / حجم -->
+                    <div class="mb-6 border-b border-slate-100 pb-5">
+                      <h4 class="font-bold text-slate-900 text-sm mb-3">
+                        وزن / حجم محصول
+                      </h4>
+                      <div class="grid grid-cols-2 gap-2 text-xs">
+                        {% for value, label in weight_ranges %}
+                        <label
+                          class="p-2 border {% if value == selected_weight_range %}border-red-600 bg-red-50 text-red-600 font-bold{% else %}border-slate-200 hover:border-red-300 hover:bg-red-50/40 hover:text-red-600 text-slate-700 font-medium transition-colors{% endif %} rounded-xl text-center cursor-pointer"
+                        >
+                          <input type="radio" name="weight_range" value="{{ value }}" {% if value == selected_weight_range %}checked{% endif %} class="hidden">
+                          {{ label }}
+                        </label>
+                        {% endfor %}
+                      </div>
+                    </div>
 
             <!-- فیلتر ۴: شکل دارویی / نوع مصرف (ویژه مکمل‌ها) -->
             <div class="mb-6 border-b border-slate-100 pb-5">
@@ -363,7 +363,7 @@
                 <button
                   data-variant-id="{{ variant.id }}"
                   {% if not variant.is_in_stock %}disabled{% endif %}
-                  class="js-add-to-cart bg-red-600 hover:bg-red-700 text-white p-2.5 rounded-xl transition-colors shadow-md shadow-red-600/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                  class="bg-red-600 hover:bg-red-700 text-white p-2.5 rounded-xl transition-colors shadow-md shadow-red-600/20 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <svg
                     class="w-5 h-5"

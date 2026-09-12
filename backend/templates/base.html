@@ -22,12 +22,13 @@
     {% block extra_head %}{% endblock %}
   </head>
   <body
-    class="{% block body_class %}font-sans bg-white text-slate-800 antialiased selection:bg-red-600 selection:text-white relative{% endblock %}"
+    class="{% block body_class %}font-sans pb-[55px] md:pb-0 bg-white text-slate-800 antialiased selection:bg-red-600 selection:text-white relative{% endblock %}"
   >
     {% include "partials/toast.html" %}
 
     {% block cart_drawer %}
       {% include "partials/cart_drawer.html" %}
+      {% include "partials/category_drawer.html" %}
     {% endblock %}
 
     {% block header %}
