@@ -214,12 +214,7 @@ class ProductDetailView(DetailView):
         context["flavors"] = Flavor.objects.filter(
             variants__product=product, variants__is_active=True
         ).distinct()
-        context["related_products"] = (
-            Product.objects.filter(is_active=True, category=product.category)
-            .exclude(pk=product.pk)
-            .select_related("brand")
-            .prefetch_related("images", "variants")[:4]
-        )
+        context["related_products"] = self._related_products(product)
         default_variant = product.default_variant
         context["product_json"] = {
             "name": product.name,
@@ -247,3 +242,68 @@ class ProductDetailView(DetailView):
             ],
         }
         return context
+
+    # Pool size for _related_products below: how many same-category
+    # candidates get pulled from the DB before ranking narrows them down
+    # to RELATED_PRODUCTS_LIMIT. Bounded on purpose — ranking the entire
+    # category in Python instead of a fixed-size pool would turn a big
+    # category into an unbounded amount of work per page view.
+    RELATED_PRODUCTS_POOL_SIZE = 20
+    RELATED_PRODUCTS_LIMIT = 4
+
+    def _related_products(self, product):
+        """Same-category products, ranked by how close a fit they are to
+        the one being viewed — previously this was just "same category,
+        newest first," which could easily surface something only
+        superficially related (different brand, wildly different price)
+        ahead of a genuinely comparable alternative.
+
+        Ranking, most to least important:
+        1. Same brand first — a shopper looking at one برند's product is
+           plausibly shopping that brand's other products too.
+        2. Closest price to the current product's — something priced
+           nothing like what they're looking at isn't a realistic
+           swap-in alternative, whichever brand it's from.
+        3. Newest first, as a final tiebreaker (the previous behavior),
+           preserved implicitly: `sorted()` is stable, and the pool
+           below is already fetched in that order.
+
+        Ranked in Python rather than a single `.order_by()` because a
+        product's effective price (`default_variant.price`) isn't a
+        plain DB column — it's "cheapest in-stock variant, or cheapest
+        overall" (see Product.default_variant) — so comparing prices
+        directly in the database would mean duplicating that logic as
+        raw SQL. Ranking a bounded pool of RELATED_PRODUCTS_POOL_SIZE
+        candidates in Python instead keeps this simple at the cost of
+        one query per candidate for its default_variant (acceptable at
+        this pool size; the same trade-off products.html and index.html
+        already make calling p.default_variant per card in a loop).
+
+        Returns an empty list/queryset if the product's category has no
+        other active products at all — the template hides the whole
+        "محصولات مرتبط" section in that case rather than showing it
+        with nothing (or a placeholder) inside.
+        """
+        current_variant = product.default_variant
+        current_price = current_variant.price if current_variant else None
+
+        candidates = (
+            Product.objects.filter(is_active=True, category=product.category)
+            .exclude(pk=product.pk)
+            .select_related("brand")
+            .prefetch_related("images", "variants")
+            .order_by("-created_at")[: self.RELATED_PRODUCTS_POOL_SIZE]
+        )
+
+        def rank_key(candidate):
+            same_brand = candidate.brand_id == product.brand_id
+            candidate_variant = candidate.default_variant
+            if current_price is not None and candidate_variant is not None:
+                price_gap = abs(candidate_variant.price - current_price)
+            else:
+                # Nothing to compare prices against — don't let this
+                # axis arbitrarily favor one candidate over another.
+                price_gap = 0
+            return (not same_brand, price_gap)
+
+        return sorted(candidates, key=rank_key)[: self.RELATED_PRODUCTS_LIMIT]

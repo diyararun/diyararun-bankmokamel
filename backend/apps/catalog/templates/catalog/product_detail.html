@@ -451,6 +451,11 @@
       </div>
 
       <!-- ==================== RELATED PRODUCTS SLIDER ( داخل کادر اختصاصی هماهنگ ) ==================== -->
+      <!-- کل بخش (نه فقط اسلایدر داخلش) وابسته به related_products است —
+           اگر این محصول در دسته‌بندی‌اش هیچ محصول فعال دیگری نداشته باشد
+           (related_products خالی)، عنوان/دکمه‌های اسلایدر بی‌فایده هم
+           نمایش داده نمی‌شوند. -->
+      {% if related_products %}
       <section
         class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm"
       >
@@ -561,11 +566,10 @@
               {% endwith %}
             </div>
           </div>
-          {% empty %}
-          <p class="text-slate-400 text-xs py-6">محصول مرتبطی یافت نشد.</p>
           {% endfor %}
         </div>
       </section>
+      {% endif %}
     </main>
 
     <!-- ==================== GALLERY LIGHTBOX MODAL ==================== -->
