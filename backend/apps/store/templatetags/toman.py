@@ -1,13 +1,8 @@
 from django import template
 
-register = template.Library()
+from apps.store.persian_numerals import to_persian_digits
 
-# Used to turn ASCII digits (what Python's int/str formatting always
-# produces, regardless of LANGUAGE_CODE) into Persian ones for display.
-# Django's own number formatting (USE_THOUSAND_SEPARATOR + the fa-ir
-# locale) already groups digits into thousands, but it never changes the
-# glyphs themselves — that's a separate, deliberate step we do here.
-_PERSIAN_DIGITS = str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹")
+register = template.Library()
 
 
 @register.filter(name="toman")
@@ -28,4 +23,4 @@ def toman(value):
         number = int(value)
     except (TypeError, ValueError):
         return value
-    return f"{number:,}".translate(_PERSIAN_DIGITS)
+    return to_persian_digits(f"{number:,}")

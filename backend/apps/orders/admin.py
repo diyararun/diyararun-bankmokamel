@@ -2,6 +2,11 @@ from django.contrib import admin
 from django.shortcuts import redirect
 from django.urls import reverse
 
+# Patches Django admin so every plain number field (e.g.
+# ShippingSettings.flat_rate) accepts Persian/Arabic-indic digits — see
+# the module docstring in apps/store/admin_persian_numbers.py.
+import apps.store.admin_persian_numbers  # noqa: F401
+
 from .models import Order, OrderItem, ShippingSettings
 
 

@@ -5,6 +5,13 @@ from django.contrib import admin
 # every ModelAdmin — no mixin class needed in this version of django-jalali.
 import django_jalali.admin  # noqa: F401
 
+# Same idea as the django_jalali.admin import above, but for plain
+# number fields (price, weight, stock, ...) instead of Jalali dates —
+# see the module docstring for why a seller typing Persian digits needs
+# this. Importing it is enough; it patches Django admin's
+# FORMFIELD_FOR_DBFIELD_DEFAULTS for every ModelAdmin in the project.
+import apps.store.admin_persian_numbers  # noqa: F401
+
 from .models import Brand, Category, Flavor, Product, ProductImage, ProductSpec, ProductVariant
 
 

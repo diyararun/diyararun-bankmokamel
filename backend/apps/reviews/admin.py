@@ -1,5 +1,10 @@
 from django.contrib import admin
 
+# Patches Django admin so every plain number field (e.g. Review.rating,
+# if a moderator ever edits it directly) accepts Persian/Arabic-indic
+# digits — see the module docstring in apps/store/admin_persian_numbers.py.
+import apps.store.admin_persian_numbers  # noqa: F401
+
 from .models import Review
 
 

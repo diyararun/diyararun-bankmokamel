@@ -2,6 +2,11 @@ from django.contrib import admin
 
 import django_jalali.admin  # noqa: F401  (Jalali widget for date fields)
 
+# Patches Django admin so every plain number field (value, min/max
+# order amount, usage limit, ...) accepts Persian/Arabic-indic digits —
+# see the module docstring in apps/store/admin_persian_numbers.py.
+import apps.store.admin_persian_numbers  # noqa: F401
+
 from .models import Coupon, CouponRedemption
 
 

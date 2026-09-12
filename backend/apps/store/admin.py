@@ -4,6 +4,11 @@ from django.urls import reverse
 
 import django_jalali.admin  # noqa: F401  (Jalali widget for date fields)
 
+# Patches Django admin so every plain number field (price, weight,
+# stock, order, ...) accepts Persian/Arabic-indic digits — see the
+# module docstring in admin_persian_numbers.py.
+from . import admin_persian_numbers  # noqa: F401
+
 from .models import FAQ, ContactMessage, SiteSettings, Testimonial
 
 
