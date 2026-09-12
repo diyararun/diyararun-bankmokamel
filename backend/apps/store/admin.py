@@ -4,7 +4,7 @@ from django.urls import reverse
 
 import django_jalali.admin  # noqa: F401  (Jalali widget for date fields)
 
-from .models import ContactMessage, SiteSettings, Testimonial
+from .models import FAQ, ContactMessage, SiteSettings, Testimonial
 
 
 @admin.register(SiteSettings)
@@ -64,6 +64,14 @@ class TestimonialAdmin(admin.ModelAdmin):
     list_display = ("name", "rating", "is_active", "order")
     list_filter = ("is_active", "rating")
     search_fields = ("name", "comment")
+    list_editable = ("order", "is_active")
+
+
+@admin.register(FAQ)
+class FAQAdmin(admin.ModelAdmin):
+    list_display = ("question", "is_active", "order")
+    list_filter = ("is_active",)
+    search_fields = ("question", "answer")
     list_editable = ("order", "is_active")
 
 

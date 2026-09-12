@@ -746,7 +746,7 @@
         </div>
 
         <div class="space-y-4">
-          <!-- آیتم ۱ -->
+          {% for faq in faqs %}
           <div
             class="bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all shadow-sm"
           >
@@ -754,7 +754,7 @@
               onclick="toggleFaq(this)"
               class="w-full p-5 text-right font-bold text-slate-900 flex items-center justify-between gap-4"
             >
-              <span>چگونه از اصالت مکمل‌های بانک مکمل مطمئن شوم؟</span>
+              <span>{{ faq.question }}</span>
               <svg
                 class="w-5 h-5 text-slate-400 transition-transform duration-300 shrink-0"
                 fill="none"
@@ -774,154 +774,14 @@
             >
               <p
                 class="p-5 pt-3 text-slate-600 text-sm leading-relaxed border-t border-slate-100 mt-2"
-              >
-                تمامی مکمل‌های موجود دارای لیبل استعلام اصالت سازمان غذا و دارو
-                (سیب سلامت) و کد IRC هستند. شما می‌توانید کد پیگیری روی محصول را
-                به سامانه ۲۰۰۰۸۸۲۲ پیامک کنید.
-              </ح>
+              >{{ faq.answer|linebreaksbr }}</p>
             </div>
           </div>
-
-          <!-- آیتم ۲ -->
-          <div
-            class="bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all shadow-sm"
-          >
-            <button
-              onclick="toggleFaq(this)"
-              class="w-full p-5 text-right font-bold text-slate-900 flex items-center justify-between gap-4"
-            >
-              <span>ارسال سفارش‌ها چقدر زمان می‌برد؟</span>
-              <svg
-                class="w-5 h-5 text-slate-400 transition-transform duration-300 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            <div
-              class="faq-content max-h-0 overflow-hidden transition-all duration-300 ease-in-out"
-            >
-              <p
-                class="p-5 pt-3 text-slate-600 text-sm leading-relaxed border-t border-slate-100 mt-2"
-              >
-                سفارش‌های شهر تهران از طریق پیک اختصاصی ظرف مدت ۲ الی ۴ ساعت
-                تحویل می‌شوند. سفارش‌های سایر نقاط کشور از طریق پست پیشتاز یا
-                تیپاکس بین ۲ تا ۴ روز کاری ارسال می‌گردند.
-              </p>
-            </div>
-          </div>
-
-          <div
-            class="bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all shadow-sm"
-          >
-            <button
-              onclick="toggleFaq(this)"
-              class="w-full p-5 text-right font-bold text-slate-900 flex items-center justify-between gap-4"
-            >
-              <span>ارسال سفارش‌ها چقدر زمان می‌برد؟</span>
-              <svg
-                class="w-5 h-5 text-slate-400 transition-transform duration-300 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            <div
-              class="faq-content max-h-0 overflow-hidden transition-all duration-300 ease-in-out"
-            >
-              <p
-                class="p-5 pt-3 text-slate-600 text-sm leading-relaxed border-t border-slate-100 mt-2"
-              >
-                سفارش‌های شهر تهران از طریق پیک اختصاصی ظرف مدت ۲ الی ۴ ساعت
-                تحویل می‌شوند. سفارش‌های سایر نقاط کشور از طریق پست پیشتاز یا
-                تیپاکس بین ۲ تا ۴ روز کاری ارسال می‌گردند.
-              </p>
-            </div>
-          </div>
-
-          <div
-            class="bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all shadow-sm"
-          >
-            <button
-              onclick="toggleFaq(this)"
-              class="w-full p-5 text-right font-bold text-slate-900 flex items-center justify-between gap-4"
-            >
-              <span>ارسال سفارش‌ها چقدر زمان می‌برد؟</span>
-              <svg
-                class="w-5 h-5 text-slate-400 transition-transform duration-300 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            <div
-              class="faq-content max-h-0 overflow-hidden transition-all duration-300 ease-in-out"
-            >
-              <p
-                class="p-5 pt-3 text-slate-600 text-sm leading-relaxed border-t border-slate-100 mt-2"
-              >
-                سفارش‌های شهر تهران از طریق پیک اختصاصی ظرف مدت ۲ الی ۴ ساعت
-                تحویل می‌شوند. سفارش‌های سایر نقاط کشور از طریق پست پیشتاز یا
-                تیپاکس بین ۲ تا ۴ روز کاری ارسال می‌گردند.
-              </p>
-            </div>
-          </div>
-
-          <div
-            class="bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all shadow-sm"
-          >
-            <button
-              onclick="toggleFaq(this)"
-              class="w-full p-5 text-right font-bold text-slate-900 flex items-center justify-between gap-4"
-            >
-              <span>ارسال سفارش‌ها چقدر زمان می‌برد؟</span>
-              <svg
-                class="w-5 h-5 text-slate-400 transition-transform duration-300 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            <div
-              class="faq-content max-h-0 overflow-hidden transition-all duration-300 ease-in-out"
-            >
-              <p
-                class="p-5 pt-3 text-slate-600 text-sm leading-relaxed border-t border-slate-100 mt-2"
-              >
-                سفارش‌های شهر تهران از طریق پیک اختصاصی ظرف مدت ۲ الی ۴ ساعت
-                تحویل می‌شوند. سفارش‌های سایر نقاط کشور از طریق پست پیشتاز یا
-                تیپاکس بین ۲ تا ۴ روز کاری ارسال می‌گردند.
-              </p>
-            </div>
-          </div>
+          {% empty %}
+          <p class="text-slate-400 text-sm text-center py-10">
+            هنوز سوال متداولی ثبت نشده است.
+          </p>
+          {% endfor %}
         </div>
       </div>
     </section> 

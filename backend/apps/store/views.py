@@ -6,7 +6,7 @@ from django.shortcuts import render
 from apps.catalog.models import Brand, Category, Product
 
 from .forms import ContactForm
-from .models import SiteSettings, Testimonial
+from .models import FAQ, SiteSettings, Testimonial
 
 
 class IndexView(TemplateView):
@@ -38,6 +38,7 @@ class IndexView(TemplateView):
             .order_by("-created_at")[:8]
         )
         context["hero_product"] = self._resolve_hero_product(context["featured_products"])
+        context["faqs"] = FAQ.objects.filter(is_active=True)
         return context
 
     def _resolve_hero_product(self, featured_products):

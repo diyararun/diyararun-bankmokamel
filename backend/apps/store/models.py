@@ -119,6 +119,27 @@ class SiteSettings(models.Model):
         return [line.strip() for line in self.emails.splitlines() if line.strip()]
 
 
+class FAQ(models.Model):
+    """One question/answer entry in the homepage's "سوالات متداول" section.
+    Previously five hardcoded <div> blocks straight in index.html (four of
+    them literally the same duplicated question); now store-owner-editable
+    content, same singleton-free, ordered pattern as Testimonial above.
+    """
+
+    question = models.CharField("سوال", max_length=300)
+    answer = models.TextField("پاسخ")
+    is_active = models.BooleanField("فعال (نمایش داده شود)", default=True)
+    order = models.PositiveIntegerField("ترتیب نمایش", default=0)
+
+    class Meta:
+        verbose_name = "سوال متداول"
+        verbose_name_plural = "سوالات متداول"
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return self.question
+
+
 class Testimonial(models.Model):
     """A customer testimonial shown on the About page. Deliberately not
     tied to a real Review/order — this is site-wide marketing content the
