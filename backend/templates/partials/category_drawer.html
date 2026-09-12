@@ -53,26 +53,34 @@
       </button>
     </div>
 
-    <!-- Content Area (لیست دسته‌بندی‌ها) -->
+    <!-- Content Area (لیست دسته‌بندی‌ها) — از drawer_categories پر می‌شود
+         (apps/store/context_processors.py: category_drawer)، هر دسته‌ی
+         اصلی همراه با زیردسته‌بندی‌های فعالش (.active_children). -->
     <div class="p-5 flex-1 overflow-y-auto space-y-3">
-      <!-- نمونه دسته اصلی اول (دارای زیرمجموعه) -->
-      <!-- نمونه دسته اصلی با انیمیشن نرم -->
+      {% for cat in drawer_categories %}
+      {% if cat.active_children %}
+      <!-- دسته‌ی اصلی دارای زیرمجموعه: آکاردئون -->
       <div
         class="border border-slate-100 rounded-2xl overflow-hidden bg-slate-50/50"
       >
         <button
-          onclick="toggleSubCategory('sub-protien')"
+          onclick="toggleSubCategory('sub-cat-{{ cat.id }}')"
           class="w-full p-4 flex items-center justify-between font-bold text-slate-800 hover:text-red-600 transition-colors text-right"
         >
           <div class="flex items-center gap-3">
             <span
-              class="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center text-lg"
-              >🧪</span
+              class="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center text-lg overflow-hidden"
             >
-            <span class="text-sm">پروتئین‌ها</span>
+              {% if cat.icon %}
+              <img src="{{ cat.icon.url }}" alt="{{ cat.name }}" class="w-full h-full object-cover" />
+              {% else %}
+              🏷️
+              {% endif %}
+            </span>
+            <span class="text-sm">{{ cat.name }}</span>
           </div>
           <svg
-            id="arrow-sub-protien"
+            id="arrow-sub-cat-{{ cat.id }}"
             class="w-4 h-4 text-slate-400 transition-transform duration-300"
             fill="none"
             stroke="currentColor"
@@ -89,95 +97,43 @@
 
         <!-- کانتینر آکاردئون با انیمیشن Smooth Grid -->
         <div
-          id="sub-protien"
+          id="sub-cat-{{ cat.id }}"
           class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in-out"
         >
           <div class="overflow-hidden bg-white border-t border-slate-100">
             <div class="px-4 py-2 space-y-1">
+              {% for sub in cat.active_children %}
               <a
-                href="{% url 'store:products' %}?category=whey"
+                href="{% url 'store:products' %}?category={{ sub.slug }}"
                 class="block py-2 px-3 text-xs font-semibold text-slate-600 hover:text-red-600 rounded-lg hover:bg-slate-50 transition-colors"
-                >پروتئین وی (Whey)</a
+                >{{ sub.name }}</a
               >
-              <a
-                href="{% url 'store:products' %}?category=iso"
-                class="block py-2 px-3 text-xs font-semibold text-slate-600 hover:text-red-600 rounded-lg hover:bg-slate-50 transition-colors"
-                >پروتئین ایزوله</a
-              >
-              <a
-                href="{% url 'store:products' %}?category=casein"
-                class="block py-2 px-3 text-xs font-semibold text-slate-600 hover:text-red-600 rounded-lg hover:bg-slate-50 transition-colors"
-                >پروتئین کازئین</a
-              >
+              {% endfor %}
             </div>
           </div>
         </div>
       </div>
-
-      <!-- نمونه دسته اصلی دوم (دارای زیرمجموعه) -->
-      <div
-        class="border border-slate-100 rounded-2xl overflow-hidden bg-slate-50/50"
-      >
-        <button
-          onclick="toggleSubCategory('sub-amino')"
-          class="w-full p-4 flex items-center justify-between font-bold text-slate-800 hover:text-red-600 transition-colors text-right"
-        >
-          <div class="flex items-center gap-3">
-            <span
-              class="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center text-lg"
-              >⚡</span
-            >
-            <span class="text-sm">آمینو اسید و BCAA</span>
-          </div>
-          <svg
-            id="arrow-sub-amino"
-            class="w-4 h-4 text-slate-400 transition-transform duration-200"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </button>
-        <div
-          id="sub-amino"
-          class="hidden bg-white border-t border-slate-100 px-4 py-2 space-y-1"
-        >
-          <a
-            href="{% url 'store:products' %}?category=bcaa"
-            class="block py-2 px-3 text-xs font-semibold text-slate-600 hover:text-red-600 rounded-lg hover:bg-slate-50"
-            >BCAA پودری و قرصی</a
-          >
-          <a
-            href="{% url 'store:products' %}?category=eaa"
-            class="block py-2 px-3 text-xs font-semibold text-slate-600 hover:text-red-600 rounded-lg hover:bg-slate-50"
-            >آمینو اسید EAA</a
-          >
-        </div>
-      </div>
-
-      <!-- نمونه دسته بدون زیرمجموعه -->
+      {% else %}
+      <!-- دسته‌ی اصلی بدون زیرمجموعه: لینک مستقیم -->
       <a
-        href="{% url 'store:products' %}?category=creatine"
-        class="p-4 flex items-center justify-between font-bold text-slate-800 hover:text-red-600 border border-slate-100 rounded-2xl bg-slate-50/50 transition-colors"
+        href="{% url 'store:products' %}?category={{ cat.slug }}"
+        class="p-4 flex items-center gap-3 font-bold text-slate-800 hover:text-red-600 border border-slate-100 rounded-2xl bg-slate-50/50 transition-colors"
       >
-        <div class="flex items-center gap-3">
-          <span
-            class="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center text-lg"
-            >💥</span
-          >
-          <span class="text-sm">کراتین</span>
-        </div>
         <span
-          class="text-xs font-semibold text-red-600 bg-red-50 px-2.5 py-1 rounded-full"
-          >ویژه</span
+          class="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center text-lg overflow-hidden shrink-0"
         >
+          {% if cat.icon %}
+          <img src="{{ cat.icon.url }}" alt="{{ cat.name }}" class="w-full h-full object-cover" />
+          {% else %}
+          🏷️
+          {% endif %}
+        </span>
+        <span class="text-sm">{{ cat.name }}</span>
       </a>
+      {% endif %}
+      {% empty %}
+      <p class="text-sm text-slate-400 text-center py-8">هنوز دسته‌بندی‌ای ثبت نشده است.</p>
+      {% endfor %}
     </div>
 
     <!-- Footer -->

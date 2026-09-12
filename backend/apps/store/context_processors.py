@@ -1,4 +1,7 @@
+from django.db.models import Prefetch
+
 from apps.cart.services import get_cart
+from apps.catalog.models import Category
 
 from .models import SiteSettings
 
@@ -23,3 +26,30 @@ def site_settings(request):
     it without each view fetching it manually.
     """
     return {"site_settings": SiteSettings.load()}
+
+
+def category_drawer(request):
+    """Feeds the "همه دسته‌بندی‌ها" drawer (partials/category_drawer.html,
+    included from base.html on every page) with real data instead of the
+    handful of hardcoded example categories it used to have.
+
+    Only top-level categories are queried directly; each one's active
+    subcategories are attached as `.active_children` via Prefetch so the
+    template can loop over them without a second query per category
+    (Category.parent/children already existed on the model — this is the
+    first place that actually uses it). Subcategories intentionally carry
+    no image here — only the parent category's `icon` is shown, per how
+    this section was scoped.
+    """
+    top_level_categories = (
+        Category.objects.filter(is_active=True, parent__isnull=True)
+        .prefetch_related(
+            Prefetch(
+                "children",
+                queryset=Category.objects.filter(is_active=True).order_by("name"),
+                to_attr="active_children",
+            )
+        )
+        .order_by("name")
+    )
+    return {"drawer_categories": top_level_categories}
