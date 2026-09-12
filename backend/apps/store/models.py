@@ -17,6 +17,27 @@ class SiteSettings(models.Model):
     hero_title = models.CharField("عنوان هیرو", max_length=200, blank=True)
     hero_subtitle = models.CharField("زیرعنوان هیرو", max_length=200, blank=True)
     hero_description = models.TextField("توضیح هیرو", blank=True)
+    # The single product shown in the hero's product card. A plain
+    # ForeignKey here (instead of a checkbox on Product, or a separate
+    # "create product" flow just for this) is deliberate: the store owner
+    # picks it through Django admin's autocomplete widget (see
+    # SiteSettingsAdmin.autocomplete_fields), which is a type-to-search
+    # box backed by Product's own search_fields — not a scroll-through
+    # dropdown of every product, and it doesn't touch product management
+    # at all, so there's no conflict with how products are created/edited.
+    # related_name="+" because nothing ever needs to query "the
+    # SiteSettings this product is featured in" from the Product side.
+    hero_product = models.ForeignKey(
+        "catalog.Product",
+        verbose_name="محصول ویژه‌ی هیرو",
+        related_name="+",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        help_text="محصولی که در کارت سمت راست هیروی صفحه‌ی اصلی نمایش داده می‌شود. "
+        "اگر خالی بماند یا محصول انتخاب‌شده غیرفعال/بدون تنوع فعال باشد، "
+        "به‌طور خودکار جدیدترین محصول فعال جایگزین می‌شود.",
+    )
 
     # ---- Shared description (footer, and available anywhere else too) ----
     site_description = models.TextField(

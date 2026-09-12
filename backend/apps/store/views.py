@@ -6,7 +6,7 @@ from django.shortcuts import render
 from apps.catalog.models import Brand, Category, Product
 
 from .forms import ContactForm
-from .models import Testimonial
+from .models import SiteSettings, Testimonial
 
 
 class IndexView(TemplateView):
@@ -37,7 +37,20 @@ class IndexView(TemplateView):
             .distinct()
             .order_by("-created_at")[:8]
         )
+        context["hero_product"] = self._resolve_hero_product(context["featured_products"])
         return context
+
+    def _resolve_hero_product(self, featured_products):
+        """The hero card's product: whatever the store owner picked in
+        SiteSettings.hero_product (see apps/store/models.py), as long as
+        it's still active and actually purchasable — otherwise fall back
+        to the newest featured product, same as before this field
+        existed, so an unset/stale pick never breaks the homepage.
+        """
+        hero_product = SiteSettings.load().hero_product
+        if hero_product and hero_product.is_active and hero_product.default_variant:
+            return hero_product
+        return featured_products[0] if featured_products else None
 
 
 class AboutView(TemplateView):

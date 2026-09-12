@@ -15,7 +15,10 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     """
 
     fieldsets = (
-        ("هیرو صفحه‌ی اصلی", {"fields": ("hero_title", "hero_subtitle", "hero_description")}),
+        (
+            "هیرو صفحه‌ی اصلی",
+            {"fields": ("hero_title", "hero_subtitle", "hero_description", "hero_product")},
+        ),
         ("معرفی فروشگاه", {"fields": ("site_description",)}),
         (
             "صفحه‌ی درباره ما",
@@ -40,6 +43,10 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         ("شبکه‌های اجتماعی", {"fields": ("instagram_url", "telegram_url", "whatsapp_url")}),
     )
     readonly_fields = ("updated_at",)
+    # Renders hero_product as a type-to-search box (AJAX-backed by
+    # ProductAdmin.search_fields in apps/catalog/admin.py) instead of a
+    # <select> with every product in it — the whole point of this field.
+    autocomplete_fields = ("hero_product",)
 
     def has_add_permission(self, request):
         return not SiteSettings.objects.exists()
