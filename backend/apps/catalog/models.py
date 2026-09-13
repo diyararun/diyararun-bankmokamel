@@ -1,10 +1,20 @@
 import io
 import os
 
+from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import models
 from django_jalali.db import models as jmodels
 from PIL import Image, ImageOps
+
+# Rendered as an admin radio widget (two options) instead of the default
+# checkbox for is_main_category/is_popular below — see
+# CategoryAdmin.radio_fields in apps/catalog/admin.py. Django admin only
+# switches a field to a radio widget when the field has `choices` *and*
+# its name is listed in radio_fields, so a plain BooleanField (no
+# choices) needs this explicit choice list even though both options are
+# still just True/False.
+BOOLEAN_RADIO_CHOICES = ((True, "بله"), (False, "خیر"))
 
 
 class Category(models.Model):
@@ -26,6 +36,25 @@ class Category(models.Model):
         on_delete=models.SET_NULL,
     )
     is_active = models.BooleanField("فعال", default=True)
+    # "دسته‌بندی اصلی" — یک برچسب مستقل از parent، تا فروشنده خودش تعیین
+    # کند کدام دسته‌بندی‌های سطح‌بالا واقعاً در سایدبار «همه‌ی دسته‌بندی‌ها»
+    # نمایش داده شوند (به‌جای این‌که هر دسته‌ی بدون والد به‌طور خودکار
+    # آن‌جا ظاهر شود). فقط دسته‌بندی‌های بدون والد می‌توانند این برچسب را
+    # داشته باشند — clean() پایین همین را بررسی می‌کند.
+    is_main_category = models.BooleanField(
+        "دسته‌بندی اصلی",
+        default=False,
+        choices=BOOLEAN_RADIO_CHOICES,
+        help_text="فقط دسته‌بندی‌های بدون والد قابل انتخاب به‌عنوان دسته‌بندی اصلی هستند.",
+    )
+    # زیرمجموعه‌ی «دسته‌بندی اصلی»: تا ۸ تای این‌ها در صفحه‌ی اصلی، بخش
+    # «دسته‌بندی‌های محبوب» نمایش داده می‌شوند (store/views.py::IndexView).
+    is_popular = models.BooleanField(
+        "دسته‌بندی محبوب",
+        default=False,
+        choices=BOOLEAN_RADIO_CHOICES,
+        help_text="حداکثر ۸ دسته‌بندی محبوب در صفحه‌ی اصلی نمایش داده می‌شود؛ فقط برای دسته‌بندی‌های اصلی قابل انتخاب است.",
+    )
 
     class Meta:
         verbose_name = "دسته‌بندی"
@@ -34,6 +63,20 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+    def clean(self):
+        super().clean()
+        # این دو قانون عمداً این‌جا (روی مدل) هستند نه فقط در ادمین، تا هر
+        # مسیر دیگری که بعداً Category را می‌سازد/ویرایش می‌کند (مثلاً یک
+        # اسکریپت import) هم همین قاعده را رعایت کند.
+        if self.is_main_category and self.parent_id:
+            raise ValidationError(
+                {"is_main_category": "فقط دسته‌بندی‌های بدون والد می‌توانند دسته‌بندی اصلی باشند."}
+            )
+        if self.is_popular and not self.is_main_category:
+            raise ValidationError(
+                {"is_popular": "دسته‌بندی محبوب فقط برای دسته‌بندی‌های اصلی قابل انتخاب است."}
+            )
 
     @property
     def active_product_count(self):

@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load django_vite %}
 {% load toman %}
+{% load jalali_datetime %}
+{% load persian_digits %}
 
 {% block title %}{{ product.name }} | بانک مکمل{% endblock %}
 
@@ -113,8 +115,8 @@
                 >
               </div>
               <div class="flex items-center gap-1 text-xs">
-                <span class="text-amber-400 font-bold">★ {{ product.average_rating|floatformat:1|default:"—" }}</span>
-                <span class="text-slate-400 text-[11px]">({{ reviews.count }} نظر)</span>
+                <span class="text-amber-400 font-bold">★ {{ product.average_rating|floatformat:1|default:"—"|persian_digits }}</span>
+                <span class="text-slate-400 text-[11px]">({{ reviews.count|persian_digits }} نظر)</span>
               </div>
             </div>
 
@@ -260,7 +262,7 @@
             id="tabBtn-reviews"
             class="tab-btn px-6 py-4 font-bold text-sm text-slate-500 border-b-2 border-transparent hover:text-slate-800 transition-colors whitespace-nowrap"
           >
-            نظرات کاربران ({{ reviews.count }})
+            نظرات کاربران ({{ reviews.count|persian_digits }})
           </button>
         </div>
 
@@ -406,7 +408,7 @@
                   >
                   <span
                     class="text-xs font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-lg"
-                    >امتیاز {{ product.average_rating|floatformat:1|default:"—" }} از ۵</span
+                    >امتیاز {{ product.average_rating|floatformat:1|default:"—"|persian_digits }} از ۵</span
                   >
                 </div>
 
@@ -433,7 +435,7 @@
                       </div>
                     </div>
                     <span class="text-[10px] text-slate-400"
-                      >{{ review.created_at }}</span
+                      >{{ review.created_at|jdatetime }}</span
                     >
                   </div>
                   <div class="text-amber-400 text-xs">{{ review.stars_display }}</div>

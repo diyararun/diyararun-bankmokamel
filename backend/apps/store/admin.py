@@ -9,6 +9,12 @@ import django_jalali.admin  # noqa: F401  (Jalali widget for date fields)
 # module docstring in admin_persian_numbers.py.
 from . import admin_persian_numbers  # noqa: F401
 
+# Adds the "keep native browser validation errors from popping up in
+# English" and "don't wipe already-chosen files on a validation error"
+# fixes to every ModelAdmin — see the module docstring in admin_ux_fixes.py.
+from . import admin_ux_fixes  # noqa: F401
+from .persian_numerals import format_jalali_datetime
+
 from .models import FAQ, ContactMessage, SiteSettings, Testimonial
 
 
@@ -82,11 +88,15 @@ class FAQAdmin(admin.ModelAdmin):
 
 @admin.register(ContactMessage)
 class ContactMessageAdmin(admin.ModelAdmin):
-    list_display = ("name", "phone", "subject", "is_read", "created_at")
+    list_display = ("name", "phone", "subject", "is_read", "created_at_display")
     list_filter = ("is_read", "subject", "created_at")
     search_fields = ("name", "phone", "email", "message")
-    readonly_fields = ("name", "phone", "email", "subject", "message", "created_at")
+    readonly_fields = ("name", "phone", "email", "subject", "message", "created_at_display")
     actions = ["mark_as_read"]
+
+    @admin.display(description="تاریخ ارسال", ordering="created_at")
+    def created_at_display(self, obj):
+        return format_jalali_datetime(obj.created_at)
 
     @admin.action(description="علامت‌گذاری به‌عنوان خوانده‌شده")
     def mark_as_read(self, request, queryset):

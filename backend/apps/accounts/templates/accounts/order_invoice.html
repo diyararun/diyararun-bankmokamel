@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load toman %}
+{% load jalali_datetime %}
 
 {% block title %}فاکتور سفارش {{ order.tracking_code }} | بانک مکمل{% endblock %}
 
@@ -46,7 +47,7 @@
         </div>
         <div class="text-left text-xs">
           <p class="font-bold text-slate-800" dir="ltr">{{ order.tracking_code }}</p>
-          <p class="text-slate-400 mt-0.5">{{ order.created_at }}</p>
+          <p class="text-slate-400 mt-0.5">{{ order.created_at|jdatetime }}</p>
         </div>
       </div>
 
@@ -54,7 +55,7 @@
         <div>
           <p class="text-slate-400 mb-1">خریدار</p>
           <p class="font-bold text-slate-800">{{ order.full_name }}</p>
-          <p class="text-slate-500 mt-0.5" dir="ltr">{{ order.phone }}</p>
+          <p class="text-slate-500 mt-0.5">شماره تماس: {{ order.phone }}</p>
           {% if order.national_code %}<p class="text-slate-500 mt-0.5">کد ملی: {{ order.national_code }}</p>{% endif %}
         </div>
         <div>

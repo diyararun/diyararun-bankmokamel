@@ -1,33 +1,14 @@
-import re
-
 from django import forms
 from django.core.validators import RegexValidator
 
+from apps.store.validators import (
+    validate_digits_only,
+    validate_national_code,
+    validate_persian_letters,
+    validate_postal_code,
+)
+
 phone_validator = RegexValidator(r"^09\d{9}$", "شماره موبایل معتبر نیست (مثال: 09123456789)")
-
-# ‌ = نیم‌فاصله (ZWNJ) — بدونش نوشتن کلماتی مثل «می‌خواهم» با فاصله‌ی
-# معمولی رد می‌شود که برای فیلد نام/شهر/استان اذیت‌کننده است. خط تیره هم
-# مجاز است (مثل نام‌های ترکیبی)، دقیقاً همان کاراکترهایی که نسخه‌ی قبلی
-# (و ناقص) اعتبارسنجی سمت فرانت‌اند در checkout.js مجاز می‌شمرد.
-PERSIAN_LETTERS_RE = re.compile(r"^[آ-ی\s‌-]+$")
-
-
-def _is_valid_iranian_national_code(code):
-    """همان الگوریتم چک‌سام استاندارد کد ملی ایران که سمت فرانت‌اند
-    (checkout.js، تابع isValidIranianNationalCode) هم پیاده‌سازی شده —
-    اینجا دوباره (و این‌بار واقعاً) روی سرور اجرا می‌شود، چون اعتبارسنجی
-    جاوااسکریپت به‌تنهایی هیچ تضمینی نمی‌دهد (کاربر می‌تواند جاوااسکریپت را
-    غیرفعال کند یا مستقیم POST بزند).
-    """
-    if not re.fullmatch(r"\d{10}", code):
-        return False
-    if code == code[0] * 10:
-        return False
-    check = int(code[9])
-    total = sum(int(code[i]) * (10 - i) for i in range(9))
-    remainder = total % 11
-    digit = remainder if remainder < 2 else 11 - remainder
-    return digit == check
 
 # Same class-naming convention as apps/store/forms.py, so widget markup
 # rendered by {{ form.field }} keeps checkout.html's original look exactly.
@@ -64,10 +45,13 @@ class CheckoutForm(forms.Form):
         required=False,
         widget=forms.EmailInput(attrs={"placeholder": "name@example.com", "dir": "ltr", "class": LTR_INPUT_CLASS}),
     )
+    # قبلاً required=False بود — طبق خواسته‌ی صریح، حالا کد ملی هم مثل
+    # نام/آدرس/کدپستی یک فیلد اجباری تسویه‌حساب است (لازم برای صدور
+    # فاکتور رسمی). فرم پروفایل (accounts.forms.ProfileForm) عمداً همچنان
+    # این فیلد را اختیاری نگه می‌دارد — این‌جا فقط الزام مخصوص خرید است.
     national_code = forms.CharField(
         label="کد ملی",
         max_length=10,
-        required=False,
         widget=forms.TextInput(attrs={"placeholder": "۰۰۱۲۳۴۵۶۷۸", "dir": "ltr", "class": LTR_INPUT_CLASS}),
     )
 
@@ -139,28 +123,26 @@ class CheckoutForm(forms.Form):
     # ------------------------------------------------------------------
     # این clean_<field>ها دقیقاً همان قاعده‌هایی هستند که checkout.js از قبل
     # سمت فرانت‌اند (به‌صورت ناقص/شکسته) پیاده‌سازی کرده بود — این‌جا برای
-    # اولین‌بار واقعاً روی سرور هم اجرا می‌شوند. جزئیات «چرا هر دو لایه لازم
-    # است» را در توضیح این نشست، جدا از کد، بیان می‌کنم.
+    # اولین‌بار واقعاً روی سرور هم اجرا می‌شوند. خودِ قوانین در
+    # apps.store.validators زندگی می‌کنند (مشترک با فرم آدرس‌های من و فرم
+    # پروفایل)، این‌جا فقط صدا زده می‌شوند.
     # ------------------------------------------------------------------
 
     def clean_full_name(self):
         value = self.cleaned_data["full_name"].strip()
         if len(value) < 3:
             raise forms.ValidationError("نام و نام خانوادگی باید حداقل ۳ کاراکتر باشد.")
-        if not PERSIAN_LETTERS_RE.match(value):
-            raise forms.ValidationError("نام و نام خانوادگی باید فقط شامل حروف فارسی باشد.")
+        validate_persian_letters(value, "نام و نام خانوادگی")
         return value
 
     def clean_province(self):
         value = self.cleaned_data["province"].strip()
-        if not PERSIAN_LETTERS_RE.match(value):
-            raise forms.ValidationError("نام استان باید فقط شامل حروف فارسی باشد.")
+        validate_persian_letters(value, "نام استان")
         return value
 
     def clean_city(self):
         value = self.cleaned_data["city"].strip()
-        if not PERSIAN_LETTERS_RE.match(value):
-            raise forms.ValidationError("نام شهر باید فقط شامل حروف فارسی باشد.")
+        validate_persian_letters(value, "نام شهر")
         return value
 
     def clean_full_address(self):
@@ -173,27 +155,20 @@ class CheckoutForm(forms.Form):
 
     def clean_postal_code(self):
         value = self.cleaned_data["postal_code"].strip()
-        if not re.fullmatch(r"\d{10}", value):
-            raise forms.ValidationError("کد پستی باید دقیقاً ۱۰ رقم باشد.")
+        validate_postal_code(value)
         return value
 
     def clean_plaque(self):
         value = self.cleaned_data["plaque"].strip()
-        if not re.fullmatch(r"\d+", value):
-            raise forms.ValidationError("شماره پلاک معتبر نیست.")
+        validate_digits_only(value, "شماره پلاک")
         return value
 
     def clean_unit(self):
         value = self.cleaned_data["unit"].strip()
-        # اختیاری است — فقط وقتی چیزی وارد شده باشد بررسی می‌کنیم.
-        if value and not re.fullmatch(r"\d+", value):
-            raise forms.ValidationError("شماره واحد معتبر نیست.")
+        validate_digits_only(value, "شماره واحد")
         return value
 
     def clean_national_code(self):
         value = self.cleaned_data["national_code"].strip()
-        # اختیاری است (برای صدور فاکتور رسمی) — اگر خالی گذاشته شود مشکلی
-        # نیست، اما اگر چیزی وارد شود باید واقعاً یک کد ملی معتبر باشد.
-        if value and not _is_valid_iranian_national_code(value):
-            raise forms.ValidationError("کد ملی معتبر نیست.")
+        validate_national_code(value)
         return value

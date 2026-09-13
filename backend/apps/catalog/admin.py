@@ -12,15 +12,26 @@ import django_jalali.admin  # noqa: F401
 # FORMFIELD_FOR_DBFIELD_DEFAULTS for every ModelAdmin in the project.
 import apps.store.admin_persian_numbers  # noqa: F401
 
+# Adds the "keep native browser validation errors from popping up in
+# English" and "don't wipe already-chosen product images on a
+# validation error" fixes to every ModelAdmin — see the module
+# docstring in apps/store/admin_ux_fixes.py.
+import apps.store.admin_ux_fixes  # noqa: F401
+from apps.store.persian_numerals import format_jalali_datetime
+
 from .models import Brand, Category, Flavor, Product, ProductImage, ProductSpec, ProductVariant
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("name", "parent", "is_active")
-    list_filter = ("is_active",)
+    list_display = ("name", "parent", "is_main_category", "is_popular", "is_active")
+    list_filter = ("is_active", "is_main_category", "is_popular")
     search_fields = ("name",)
     prepopulated_fields = {"slug": ("name",)}
+    # BooleanField + choices (بالای models.py) یعنی این دو فیلد به‌جای
+    # چک‌باکس، به‌صورت رادیو («بله»/«خیر») نمایش داده می‌شوند — دقیقاً
+    # همان چیزی که خواسته شده بود.
+    radio_fields = {"is_main_category": admin.HORIZONTAL, "is_popular": admin.HORIZONTAL}
 
 
 @admin.register(Brand)
@@ -55,8 +66,12 @@ class ProductSpecInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("name", "category", "brand", "is_active", "created_at")
+    list_display = ("name", "category", "brand", "is_active", "created_at_display")
     list_filter = ("is_active", "category", "brand")
     search_fields = ("name", "short_description")
     prepopulated_fields = {"slug": ("name",)}
     inlines = [ProductImageInline, ProductVariantInline, ProductSpecInline]
+
+    @admin.display(description="تاریخ ایجاد", ordering="created_at")
+    def created_at_display(self, obj):
+        return format_jalali_datetime(obj.created_at)

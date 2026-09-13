@@ -7,6 +7,13 @@ import django_jalali.admin  # noqa: F401  (Jalali widget for date fields)
 # see the module docstring in apps/store/admin_persian_numbers.py.
 import apps.store.admin_persian_numbers  # noqa: F401
 
+# Adds the "keep native browser validation errors from popping up in
+# English" and "don't wipe already-chosen files on a validation error"
+# fixes to every ModelAdmin — see the module docstring in
+# apps/store/admin_ux_fixes.py.
+import apps.store.admin_ux_fixes  # noqa: F401
+from apps.store.persian_numerals import format_jalali_datetime
+
 from .models import Coupon, CouponRedemption
 
 
@@ -14,12 +21,16 @@ class CouponRedemptionInline(admin.TabularInline):
     model = CouponRedemption
     extra = 0
     can_delete = False
-    readonly_fields = ("user", "order", "redeemed_at")
+    readonly_fields = ("user", "order", "redeemed_at_display")
 
     def has_add_permission(self, request, obj=None):
         # Redemptions only ever get created by CheckoutView.post() — never
         # by hand in admin, since that would bypass the one-per-user check.
         return False
+
+    @admin.display(description="تاریخ استفاده")
+    def redeemed_at_display(self, obj):
+        return format_jalali_datetime(obj.redeemed_at)
 
 
 @admin.register(Coupon)
@@ -31,8 +42,8 @@ class CouponAdmin(admin.ModelAdmin):
         "is_active",
         "used_count",
         "usage_limit",
-        "valid_from",
-        "valid_until",
+        "valid_from_display",
+        "valid_until_display",
     )
     list_filter = ("discount_type", "is_active")
     search_fields = ("code",)
@@ -43,3 +54,11 @@ class CouponAdmin(admin.ModelAdmin):
         ("محدودیت‌ها", {"fields": ("usage_limit", "used_count", "valid_from", "valid_until")}),
     )
     inlines = [CouponRedemptionInline]
+
+    @admin.display(description="تاریخ شروع اعتبار", ordering="valid_from")
+    def valid_from_display(self, obj):
+        return format_jalali_datetime(obj.valid_from)
+
+    @admin.display(description="تاریخ پایان اعتبار", ordering="valid_until")
+    def valid_until_display(self, obj):
+        return format_jalali_datetime(obj.valid_until)
