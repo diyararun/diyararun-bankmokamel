@@ -8,6 +8,11 @@ import django_jalali.admin  # noqa: F401  (Jalali widget for date fields)
 # stock, order, ...) accepts Persian/Arabic-indic digits — see the
 # module docstring in admin_persian_numbers.py.
 from . import admin_persian_numbers  # noqa: F401
+
+# Adds the "keep native browser validation errors from popping up in
+# English" and "don't wipe already-chosen files on a validation error"
+# fixes to every ModelAdmin — see the module docstring in admin_ux_fixes.py.
+from . import admin_ux_fixes  # noqa: F401
 from .persian_numerals import format_jalali_datetime
 
 from .models import FAQ, ContactMessage, SiteSettings, Testimonial

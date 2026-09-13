@@ -11,6 +11,12 @@ import django_jalali.admin  # noqa: F401
 # this. Importing it is enough; it patches Django admin's
 # FORMFIELD_FOR_DBFIELD_DEFAULTS for every ModelAdmin in the project.
 import apps.store.admin_persian_numbers  # noqa: F401
+
+# Adds the "keep native browser validation errors from popping up in
+# English" and "don't wipe already-chosen product images on a
+# validation error" fixes to every ModelAdmin — see the module
+# docstring in apps/store/admin_ux_fixes.py.
+import apps.store.admin_ux_fixes  # noqa: F401
 from apps.store.persian_numerals import format_jalali_datetime
 
 from .models import Brand, Category, Flavor, Product, ProductImage, ProductSpec, ProductVariant

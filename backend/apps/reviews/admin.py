@@ -4,6 +4,12 @@ from django.contrib import admin
 # if a moderator ever edits it directly) accepts Persian/Arabic-indic
 # digits — see the module docstring in apps/store/admin_persian_numbers.py.
 import apps.store.admin_persian_numbers  # noqa: F401
+
+# Adds the "keep native browser validation errors from popping up in
+# English" and "don't wipe already-chosen files on a validation error"
+# fixes to every ModelAdmin — see the module docstring in
+# apps/store/admin_ux_fixes.py.
+import apps.store.admin_ux_fixes  # noqa: F401
 from apps.store.persian_numerals import format_jalali_datetime
 
 from .models import Review
