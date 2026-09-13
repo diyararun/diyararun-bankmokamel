@@ -391,6 +391,21 @@
                 >
               </div>
               {% endif %}
+              {% if not variant.is_in_stock %}
+              <!--
+                کل کارت قبلاً کم‌رنگ می‌شد (opacity-50 روی خودِ div کارت)،
+                ولی هیچ نشانه‌ی صریحی نمی‌گفت چرا — این برچسب دقیقاً همان
+                چیزی را می‌گوید که چشم کاربر با کم‌رنگی حدس می‌زند، به‌جای
+                این‌که مجبور باشد خودش نتیجه بگیرد. سمت چپ کارت گذاشته شده
+                تا با برچسب تخفیف (سمت راست) قاطی نشود.
+              -->
+              <div class="absolute top-3 left-3 z-10">
+                <span
+                  class="bg-slate-800 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-md"
+                  >ناموجود</span
+                >
+              </div>
+              {% endif %}
               <div>
                 <div
                   class="h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group"
