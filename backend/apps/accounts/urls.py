@@ -10,4 +10,8 @@ urlpatterns = [
     path("otp/verify/", views.verify_otp, name="otp_verify"),
     path("logout/", views.logout_view, name="logout"),
     path("profile/", views.profile_view, name="profile"),
+    path("orders/", views.order_list_view, name="orders"),
+    path("orders/<str:tracking_code>/", views.order_detail_view, name="order_detail"),
+    path("orders/<str:tracking_code>/pay/", views.mark_order_paid, name="order_mark_paid"),
+    path("orders/<str:tracking_code>/invoice/", views.order_invoice_view, name="order_invoice"),
 ]

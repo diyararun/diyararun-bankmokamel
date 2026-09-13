@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load toman %}
+
+{% block title %}فاکتور سفارش {{ order.tracking_code }} | بانک مکمل{% endblock %}
+
+<!--
+  فاکتور «قابل‌چاپ» است، نه یک فایل PDF واقعاً تولیدشده در سرور — دکمه‌ی
+  چاپ همان قابلیت "چاپ به PDF" مرورگر را صدا می‌زند. این انتخاب عمدی است
+  تا افزودن یک وابستگی سنگین جدید (مثل WeasyPrint) به پروژه لازم نباشد؛
+  توضیح کامل‌تر در پیام این نشست آمده. هدر/فوتر/سبد خرید سایت روی این
+  صفحه عمداً نمایش داده نمی‌شوند تا هم چاپ تمیز باشد و هم تمرکز کاربر روی
+  خود فاکتور باشد.
+-->
+{% block cart_drawer %}{% endblock %}
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+  <main class="max-w-3xl mx-auto px-4 sm:px-6 py-10 print:py-0 print:max-w-full">
+    <div class="flex items-center justify-between mb-6 print:hidden">
+      <a
+        href="{% url 'accounts:order_detail' order.tracking_code %}"
+        class="text-xs font-bold text-slate-500 hover:text-red-600 transition-colors flex items-center gap-1"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l-7 7 7 7M2 12h20" />
+        </svg>
+        بازگشت به جزئیات سفارش
+      </a>
+      <button
+        type="button"
+        onclick="window.print()"
+        class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-colors shadow-lg shadow-red-600/20"
+      >
+        چاپ / ذخیره به‌صورت PDF
+      </button>
+    </div>
+
+    <div class="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 space-y-6 print:border-0 print:rounded-none print:p-0">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div>
+          <div class="text-lg font-black text-slate-900">
+            بانک<span class="text-red-600">مکمل</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">فاکتور فروش</p>
+        </div>
+        <div class="text-left text-xs">
+          <p class="font-bold text-slate-800" dir="ltr">{{ order.tracking_code }}</p>
+          <p class="text-slate-400 mt-0.5">{{ order.created_at }}</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        <div>
+          <p class="text-slate-400 mb-1">خریدار</p>
+          <p class="font-bold text-slate-800">{{ order.full_name }}</p>
+          <p class="text-slate-500 mt-0.5" dir="ltr">{{ order.phone }}</p>
+          {% if order.national_code %}<p class="text-slate-500 mt-0.5">کد ملی: {{ order.national_code }}</p>{% endif %}
+        </div>
+        <div>
+          <p class="text-slate-400 mb-1">آدرس تحویل</p>
+          <p class="font-bold text-slate-800 leading-relaxed">
+            {{ order.province }}، {{ order.city }}، {{ order.full_address }}، پلاک {{ order.plaque }}{% if order.unit %}، واحد {{ order.unit }}{% endif %}
+          </p>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="border-b border-slate-200 text-slate-400">
+              <th class="text-right py-2 font-bold">کالا</th>
+              <th class="text-center py-2 font-bold">تعداد</th>
+              <th class="text-left py-2 font-bold">قیمت واحد</th>
+              <th class="text-left py-2 font-bold">جمع</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order.items.all %}
+            <tr class="border-b border-slate-100">
+              <td class="py-2 font-semibold text-slate-800">{{ item.product_name }} ({{ item.variant_label }})</td>
+              <td class="py-2 text-center">{{ item.quantity }}</td>
+              <td class="py-2 text-left" dir="ltr">{{ item.unit_price|toman }} تومان</td>
+              <td class="py-2 text-left font-bold" dir="ltr">{{ item.total_price|toman }} تومان</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="space-y-1.5 text-xs pt-2 max-w-xs mr-auto">
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500">جمع قیمت محصولات</span>
+          <span class="font-bold text-slate-800">{{ order.subtotal_price|toman }} تومان</span>
+        </div>
+        {% if order.product_discount_amount %}
+        <div class="flex items-center justify-between text-emerald-600">
+          <span>تخفیف محصولات</span>
+          <span class="font-bold">{{ order.product_discount_amount|toman }} تومان</span>
+        </div>
+        {% endif %}
+        {% if order.discount_amount %}
+        <div class="flex items-center justify-between text-emerald-600">
+          <span>تخفیف کد تخفیف/کمپین</span>
+          <span class="font-bold">{{ order.discount_amount|toman }} تومان</span>
+        </div>
+        {% endif %}
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500">هزینه ارسال</span>
+          <span class="font-bold text-slate-800">{{ order.shipping_cost|toman }} تومان</span>
+        </div>
+        <div class="flex items-center justify-between text-sm font-black pt-2 border-t border-slate-200">
+          <span class="text-slate-900">مبلغ نهایی پرداخت‌شده</span>
+          <span class="text-red-600">{{ order.total_price|toman }} تومان</span>
+        </div>
+      </div>
+    </div>
+  </main>
+{% endblock %}

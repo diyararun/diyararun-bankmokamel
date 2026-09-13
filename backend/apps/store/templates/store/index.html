@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load django_vite %}
+{% load toman %}
 
 {% block title %}بانک مکمل | مرجع تخصصی مکمل‌های ورزشی و غذایی{% endblock %}
 
@@ -139,7 +140,7 @@
             </div>
           </div>
 
-          {% with product=featured_products.0 %}
+          {% with product=hero_product %}
           {% if product %}
           <!-- کارت اصلی محصول با هاله قرمز و افکت شناور -->
           <div
@@ -194,7 +195,7 @@
                   >قیمت ویژه:</span
                 >
                 <span class="text-red-600 font-black text-2xl tracking-tight"
-                  >{{ variant.price|default:"—" }}
+                  >{{ variant.price|default:"—"|toman }}
                   <span class="text-xs text-slate-500 font-normal"
                     >تومان</span
                   ></span
@@ -204,7 +205,7 @@
               <button
                 data-variant-id="{{ variant.id }}"
                 {% if not variant.is_in_stock %}disabled{% endif %}
-                class="bg-slate-900 hover:bg-red-600 active:scale-95 text-white p-3.5 rounded-2xl shadow-md transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                class="js-add-to-cart bg-slate-900 hover:bg-red-600 active:scale-95 text-white p-3.5 rounded-2xl shadow-md transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <svg
                   class="w-6 h-6"
@@ -368,12 +369,12 @@
           >
             <div>
               <div
-                class="h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group"
+                class="h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group p-4"
               >
-                <a href="{% url 'store:product_detail' slug=p.slug %}">
+                <a href="{% url 'store:product_detail' slug=p.slug %}" class="w-full h-full flex items-center justify-center">
                   {% with image=p.images.first %}
                   <img
-                    class="w-full h-full object-cover"
+                    class="max-w-full max-h-full w-auto h-auto object-contain"
                     src="{% if image %}{{ image.image.url }}{% endif %}"
                     alt="{{ p.name }}"
                   />
@@ -397,7 +398,7 @@
               class="mt-6 flex items-center justify-between border-t pt-4 border-slate-100"
             >
               <span class="font-black text-slate-900 text-base"
-                >{{ variant.price|default:"—" }}
+                >{{ variant.price|default:"—"|toman }}
                 <span class="text-xs font-normal text-slate-500"
                   >تومان</span
                 ></span
@@ -405,7 +406,7 @@
               <button
                 data-variant-id="{{ variant.id }}"
                 {% if not variant.is_in_stock %}disabled{% endif %}
-                class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                class="js-add-to-cart bg-red-600 hover:bg-red-700 text-white p-2 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <svg
                   class="w-5 h-5"
@@ -634,12 +635,12 @@
             {% endif %}
             <div>
               <div
-                class="h-44 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl overflow-hidden"
+                class="h-44 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl overflow-hidden p-4"
               >
-                <a href="{% url 'store:product_detail' slug=p.slug %}">
+                <a href="{% url 'store:product_detail' slug=p.slug %}" class="w-full h-full flex items-center justify-center">
                   {% with image=p.images.first %}
                   <img
-                    class="w-full h-full object-cover"
+                    class="max-w-full max-h-full w-auto h-auto object-contain"
                     src="{% if image %}{{ image.image.url }}{% endif %}"
                     alt="{{ p.name }}"
                   />
@@ -660,18 +661,18 @@
               <div>
                 {% if variant.compare_at_price %}
                 <span class="block text-xs text-slate-400 line-through"
-                  >{{ variant.compare_at_price }}</span
+                  >{{ variant.compare_at_price|toman }}</span
                 >
                 {% endif %}
                 <span class="font-black text-red-600 text-base"
-                  >{{ variant.price|default:"—" }}
+                  >{{ variant.price|default:"—"|toman }}
                   <span class="text-xs font-normal">تومان</span></span
                 >
               </div>
               <button
                 data-variant-id="{{ variant.id }}"
                 {% if not variant.is_in_stock %}disabled{% endif %}
-                class="bg-slate-900 hover:bg-red-600 text-white p-2.5 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                class="js-add-to-cart bg-slate-900 hover:bg-red-600 text-white p-2.5 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <svg
                   class="w-5 h-5"
@@ -746,7 +747,7 @@
         </div>
 
         <div class="space-y-4">
-          <!-- آیتم ۱ -->
+          {% for faq in faqs %}
           <div
             class="bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all shadow-sm"
           >
@@ -754,7 +755,7 @@
               onclick="toggleFaq(this)"
               class="w-full p-5 text-right font-bold text-slate-900 flex items-center justify-between gap-4"
             >
-              <span>چگونه از اصالت مکمل‌های بانک مکمل مطمئن شوم؟</span>
+              <span>{{ faq.question }}</span>
               <svg
                 class="w-5 h-5 text-slate-400 transition-transform duration-300 shrink-0"
                 fill="none"
@@ -774,154 +775,14 @@
             >
               <p
                 class="p-5 pt-3 text-slate-600 text-sm leading-relaxed border-t border-slate-100 mt-2"
-              >
-                تمامی مکمل‌های موجود دارای لیبل استعلام اصالت سازمان غذا و دارو
-                (سیب سلامت) و کد IRC هستند. شما می‌توانید کد پیگیری روی محصول را
-                به سامانه ۲۰۰۰۸۸۲۲ پیامک کنید.
-              </ح>
+              >{{ faq.answer|linebreaksbr }}</p>
             </div>
           </div>
-
-          <!-- آیتم ۲ -->
-          <div
-            class="bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all shadow-sm"
-          >
-            <button
-              onclick="toggleFaq(this)"
-              class="w-full p-5 text-right font-bold text-slate-900 flex items-center justify-between gap-4"
-            >
-              <span>ارسال سفارش‌ها چقدر زمان می‌برد؟</span>
-              <svg
-                class="w-5 h-5 text-slate-400 transition-transform duration-300 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            <div
-              class="faq-content max-h-0 overflow-hidden transition-all duration-300 ease-in-out"
-            >
-              <p
-                class="p-5 pt-3 text-slate-600 text-sm leading-relaxed border-t border-slate-100 mt-2"
-              >
-                سفارش‌های شهر تهران از طریق پیک اختصاصی ظرف مدت ۲ الی ۴ ساعت
-                تحویل می‌شوند. سفارش‌های سایر نقاط کشور از طریق پست پیشتاز یا
-                تیپاکس بین ۲ تا ۴ روز کاری ارسال می‌گردند.
-              </p>
-            </div>
-          </div>
-
-          <div
-            class="bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all shadow-sm"
-          >
-            <button
-              onclick="toggleFaq(this)"
-              class="w-full p-5 text-right font-bold text-slate-900 flex items-center justify-between gap-4"
-            >
-              <span>ارسال سفارش‌ها چقدر زمان می‌برد؟</span>
-              <svg
-                class="w-5 h-5 text-slate-400 transition-transform duration-300 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            <div
-              class="faq-content max-h-0 overflow-hidden transition-all duration-300 ease-in-out"
-            >
-              <p
-                class="p-5 pt-3 text-slate-600 text-sm leading-relaxed border-t border-slate-100 mt-2"
-              >
-                سفارش‌های شهر تهران از طریق پیک اختصاصی ظرف مدت ۲ الی ۴ ساعت
-                تحویل می‌شوند. سفارش‌های سایر نقاط کشور از طریق پست پیشتاز یا
-                تیپاکس بین ۲ تا ۴ روز کاری ارسال می‌گردند.
-              </p>
-            </div>
-          </div>
-
-          <div
-            class="bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all shadow-sm"
-          >
-            <button
-              onclick="toggleFaq(this)"
-              class="w-full p-5 text-right font-bold text-slate-900 flex items-center justify-between gap-4"
-            >
-              <span>ارسال سفارش‌ها چقدر زمان می‌برد؟</span>
-              <svg
-                class="w-5 h-5 text-slate-400 transition-transform duration-300 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            <div
-              class="faq-content max-h-0 overflow-hidden transition-all duration-300 ease-in-out"
-            >
-              <p
-                class="p-5 pt-3 text-slate-600 text-sm leading-relaxed border-t border-slate-100 mt-2"
-              >
-                سفارش‌های شهر تهران از طریق پیک اختصاصی ظرف مدت ۲ الی ۴ ساعت
-                تحویل می‌شوند. سفارش‌های سایر نقاط کشور از طریق پست پیشتاز یا
-                تیپاکس بین ۲ تا ۴ روز کاری ارسال می‌گردند.
-              </p>
-            </div>
-          </div>
-
-          <div
-            class="bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all shadow-sm"
-          >
-            <button
-              onclick="toggleFaq(this)"
-              class="w-full p-5 text-right font-bold text-slate-900 flex items-center justify-between gap-4"
-            >
-              <span>ارسال سفارش‌ها چقدر زمان می‌برد؟</span>
-              <svg
-                class="w-5 h-5 text-slate-400 transition-transform duration-300 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            <div
-              class="faq-content max-h-0 overflow-hidden transition-all duration-300 ease-in-out"
-            >
-              <p
-                class="p-5 pt-3 text-slate-600 text-sm leading-relaxed border-t border-slate-100 mt-2"
-              >
-                سفارش‌های شهر تهران از طریق پیک اختصاصی ظرف مدت ۲ الی ۴ ساعت
-                تحویل می‌شوند. سفارش‌های سایر نقاط کشور از طریق پست پیشتاز یا
-                تیپاکس بین ۲ تا ۴ روز کاری ارسال می‌گردند.
-              </p>
-            </div>
-          </div>
+          {% empty %}
+          <p class="text-slate-400 text-sm text-center py-10">
+            هنوز سوال متداولی ثبت نشده است.
+          </p>
+          {% endfor %}
         </div>
       </div>
     </section> 

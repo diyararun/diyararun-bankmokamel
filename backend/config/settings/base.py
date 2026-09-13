@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "apps.reviews",
     "apps.cart",
     "apps.orders",
+    "apps.coupons",
     "apps.store",
 ]
 
@@ -72,6 +73,9 @@ TEMPLATES = [
                 # Makes editable hero/footer/about/social content available
                 # on every page
                 "apps.store.context_processors.site_settings",
+                # Feeds the category drawer (partials/category_drawer.html)
+                # with real category/subcategory data on every page
+                "apps.store.context_processors.category_drawer",
             ],
         },
     },

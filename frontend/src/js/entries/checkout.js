@@ -1,272 +1,146 @@
-import { showToast } from "../toast.js";
+import { postForm } from "../csrf.js";
+import { formatToman } from "../formatToman.js";
 
-// ======================== Validation for checkout form fields =========================
+// ======================== اعتبارسنجی سمت کلاینت فرم پرداخت =========================
+//
+// این فایل قبلاً یک نسخه‌ی قدیمی و mock داشت: به آی‌دی‌های غیرواقعی مثل
+// fullName/phone/... ارجاع می‌داد که در HTML واقعی این صفحه اصلاً وجود
+// نداشتند، یک آکولاد باز بدون بسته داشت (خطای syntax واقعی — با
+// `node --check` قابل تکرار است)، یک سبد خرید ساختگی رندر می‌کرد، و
+// handleFinalSubmit() اصلاً به سرور POST نمی‌کرد. همه‌ی این‌ها به‌خاطر یک
+// conflict قدیمی هنگام pull باقی مانده بود و هیچ‌کدام واقعاً روی فرم اعمال
+// نمی‌شد. این فایل کامل بازنویسی شده است.
+//
+// نکته‌ی مهم: اعتبارسنجی این‌جا («فقط حرف فارسی»، «فقط رقم») صرفاً برای
+// تجربه‌ی کاربری (UX) است — جلوگیری از تایپ یک کاراکتر اشتباه، نه یک لایه‌ی
+// امنیتی. تنها منبع مورد اعتماد برای صحت داده همان clean_<field>های سمت
+// بک‌اند در apps/orders/forms.py هستند: کاربری که جاوااسکریپت را غیرفعال
+// کند، یا مستقیماً به CheckoutView پست بزند، همچنان توسط بک‌اند بررسی
+// می‌شود. فرم سمت سرور هم دوباره (و به‌طور کامل) همین قوانین را بررسی
+// می‌کند تا هرگز به داده‌ی سمت کلاینت اعتماد نشود.
 
-const fullName = document.getElementById("fullName");
-const phone = document.getElementById("phone");
-const email = document.getElementById("email");
-const nationalCode = document.getElementById("nationalCode");
-const address = document.getElementById("address");
-const postalCode = document.getElementById("postalCode");
-const buildingNumber = document.getElementById("buildingNumber");
-const unit = document.getElementById("unit");
-const province = document.getElementById("province");
-const city = document.getElementById("city");
-
-
-function onlyNumbers(event) {
-  const allowedKeys = [
-    "Backspace",
-    "Delete",
-    "ArrowLeft",
-    "ArrowRight",
-    "Tab",
-    "Home",
-    "End",
-  ];
-
-  if (
-    !/^[0-9]$/.test(event.key) &&
-    !allowedKeys.includes(event.key) &&
-    !(event.ctrlKey || event.metaKey)
-  ) {
-    event.preventDefault();
-  }
-}
-
-function onlyPersianLetters(event) {
-  const allowedKeys = [
-    "Backspace",
-    "Delete",
-    "ArrowLeft",
-    "ArrowRight",
-    "Tab",
-    "Home",
-    "End",
-  ];
-
-  if (
-    !/^[آ-ی\s‌]$/.test(event.key) &&
-    !allowedKeys.includes(event.key) &&
-    !(event.ctrlKey || event.metaKey)
-  ) {
-    event.preventDefault();
-  }
-}
-
-function validateNumberInput(event) {
-  if (!/^\d*$/.test(event.target.value)) {
-    event.target.value = event.target.value.replace(/\D/g, "");
-  }
-}
-
-function validatePersianInput(event) {
-  event.target.value = event.target.value.replace(/[^آ-ی\s‌]/g, "");
-}
-
-nationalCode.addEventListener("keydown", onlyNumbers);
-phone.addEventListener("keydown", onlyNumbers);
-postalCode.addEventListener("keydown", onlyNumbers);
-nationalCode.addEventListener("input", validateNumberInput);
-phone.addEventListener("input", validateNumberInput);
-postalCode.addEventListener("input", validateNumberInput);
-
-
-fullName.addEventListener("keydown", onlyPersianLetters);
-province.addEventListener("keydown", onlyPersianLetters);
-city.addEventListener("keydown", onlyPersianLetters);
-fullName.addEventListener("input", validatePersianInput);
-province.addEventListener("input", validatePersianInput);
-city.addEventListener("input", validatePersianInput);
-
-// TODO: وقتی سبد خرید واقعی به بک‌اند وصل شد، این آیتم‌های نمونه باید از
-// یک context جنگو (مثلاً request.session["cart"] یا مدل Order) خوانده شوند.
-const checkoutItems = [
-  { name: "وی گلد استاندارد 100%", price: 3570000, emoji: "", quantity: 1 },
-  {
-    name: "کراتین میکرونایز شده ۳۰۰ گرم",
-    price: 1150000,
-    emoji: "",
-    quantity: 1,
-  },
+const NAV_KEYS = [
+  "Backspace",
+  "Delete",
+  "ArrowLeft",
+  "ArrowRight",
+  "Tab",
+  "Home",
+  "End",
 ];
 
-let selectedDeliveryDate = "";
+const PERSIAN_LETTER_KEY_RE = /^[آ-ی\s‌-]$/;
 
-function renderCheckoutSummary() {
-  const list = document.getElementById("checkoutItemsList");
-  if (!list) return;
-  list.innerHTML = "";
+function onlyPersianLettersKeydown(event) {
+  if (
+    !PERSIAN_LETTER_KEY_RE.test(event.key) &&
+    !NAV_KEYS.includes(event.key) &&
+    !(event.ctrlKey || event.metaKey)
+  ) {
+    event.preventDefault();
+  }
+}
 
-  checkoutItems.forEach((item) => {
-    const div = document.createElement("div");
-    div.className =
-      "flex items-center justify-between p-2.5 bg-slate-50 border border-slate-100 rounded-2xl";
-    div.innerHTML = `
-      <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 bg-white rounded-xl flex items-center justify-center text-lg shadow-sm shrink-0">${item.emoji}</div>
-        <div>
-          <h4 class="font-bold text-xs text-slate-900 line-clamp-1">${item.name}</h4>
-          <span class="text-[10px] text-slate-400">${item.quantity} عدد</span>
-        </div>
-      </div>
-      <span class="text-xs font-bold text-slate-800">${(item.price * item.quantity).toLocaleString()} تومان</span>
-    `;
-    list.appendChild(div);
+function sanitizePersianInput(event) {
+  event.target.value = event.target.value.replace(/[^آ-ی\s‌-]/g, "");
+}
+
+function onlyDigitsKeydown(event) {
+  if (
+    !/^[0-9]$/.test(event.key) &&
+    !NAV_KEYS.includes(event.key) &&
+    !(event.ctrlKey || event.metaKey)
+  ) {
+    event.preventDefault();
+  }
+}
+
+function sanitizeDigitsInput(event) {
+  event.target.value = event.target.value.replace(/\D/g, "");
+}
+
+function bindField(id, onKeydown, onInput) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener("keydown", onKeydown);
+  el.addEventListener("input", onInput);
+}
+
+// آی‌دی‌های واقعی، همان‌طور که Django برای هر فیلد CheckoutForm می‌سازد
+// (id_<نام فیلد> — پیش‌فرض ویجت‌های جنگو، به‌جز coupon_code که در forms.py
+// صراحتاً id="couponCodeInput" گرفته و initCouponForm جدا مدیریتش می‌کند).
+function initFieldValidation() {
+  ["id_full_name", "id_province", "id_city"].forEach((id) =>
+    bindField(id, onlyPersianLettersKeydown, sanitizePersianInput),
+  );
+  ["id_phone", "id_national_code", "id_postal_code", "id_plaque", "id_unit"].forEach(
+    (id) => bindField(id, onlyDigitsKeydown, sanitizeDigitsInput),
+  );
+}
+
+// ======================== کد تخفیف ========================
+//
+// قبلاً applyCoupon() یک تابع کاملاً ساختگی بود (فقط یک toast با «۱۰٪
+// تخفیف» ثابت نشان می‌داد، بدون تماس واقعی با سرور) و اصلاً به دکمه‌ی
+// واقعی #couponApplyBtn هم وصل نبود. حالا با apps.coupons.views.ApplyCouponView
+// (همان endpoint واقعی /coupons/apply/ که سمت بک‌اند کد را با
+// apps.coupons.services.validate_coupon اعتبارسنجی می‌کند) صحبت می‌کند.
+function initCouponForm() {
+  const applyBtn = document.getElementById("couponApplyBtn");
+  const input = document.getElementById("couponCodeInput");
+  const messageEl = document.getElementById("couponMessage");
+  const discountRow = document.getElementById("couponDiscountRow");
+  const discountAmountEl = document.getElementById("couponDiscountAmount");
+  const finalTotalEl = document.getElementById("finalTotalPrice");
+  const breakdown = document.getElementById("priceBreakdown");
+  if (!applyBtn || !input || !breakdown) return;
+
+  // این دو مقدار عمداً به‌صورت عدد خام (بدون فرمت) روی priceBreakdown
+  // نشسته‌اند (نگاه کنید به checkout.html) — دقیقاً برای همین محاسبه.
+  const subtotal = Number(breakdown.dataset.subtotal || 0);
+  const shippingCost = Number(breakdown.dataset.shippingCost || 0);
+
+  function showMessage(text, isError) {
+    if (!messageEl) return;
+    messageEl.textContent = text;
+    messageEl.classList.remove("hidden");
+    messageEl.classList.toggle("text-red-600", isError);
+    messageEl.classList.toggle("text-emerald-600", !isError);
+  }
+
+  applyBtn.addEventListener("click", async () => {
+    const code = input.value.trim();
+    if (!code) {
+      showMessage("لطفاً کد تخفیف را وارد کنید.", true);
+      return;
+    }
+
+    applyBtn.disabled = true;
+    try {
+      const data = await postForm("/coupons/apply/", { code });
+
+      if (!data.valid) {
+        showMessage(data.message || "کد تخفیف نامعتبر است.", true);
+        return;
+      }
+
+      showMessage(data.message, false);
+      if (discountRow && discountAmountEl && finalTotalEl) {
+        discountRow.classList.remove("hidden");
+        discountAmountEl.textContent = `${formatToman(data.discount_amount)} تومان`;
+        finalTotalEl.textContent = `${formatToman(
+          subtotal - data.discount_amount + shippingCost,
+        )} تومان`;
+      }
+    } catch (err) {
+      showMessage("خطا در برقراری ارتباط. دوباره تلاش کنید.", true);
+    } finally {
+      applyBtn.disabled = false;
+    }
   });
 }
 
-function applyCoupon() {
-  const code = document.getElementById("couponCode").value.trim();
-  if (code) {
-    showToast(
-      "کد تخفیف اعمال شد",
-      `کد «${code}» با موفقیت ثبت گردید (۱۰٪ تخفیف اضافه).`,
-    );
-  } else if (discountCode.length > 50) {
-    showToast("خطا", "کد تخفیف معتبر نیست.");
-  } else {
-    showToast("خطا", "لطفاً کد تخفیف را وارد کنید.");
-  }
-}
-
-function handleFinalSubmit(event) {
-  event.preventDefault();
-  showToast("در حال انتقال...", "سفارش شما ثبت شد. انتقال به درگاه پرداخت...");
-  // TODO: اتصال به view واقعی جنگو برای ثبت سفارش (مدل Order) و اتصال به درگاه بانکی
-  const fullNameValue = fullName.value.trim();
-
-  if (!fullNameValue) {
-    showError("fullName", "نام و نام خانوادگی را وارد کنید.");
-    isValid = false;
-  } else if (fullNameValue.length < 3) {
-    showError("fullName", "نام و نام خانوادگی باید حداقل ۳ کاراکتر باشد.");
-    isValid = false;
-  } else if (!/^[آ-ی\s‌-]+$/.test(fullNameValue)) {
-    showError("fullName", "نام و نام خانوادگی باید فقط شامل حروف باشد.");
-    isValid = false;
-  }
-
-  const phoneValue = phone.value.trim();
-
-  if (!phoneValue) {
-    showError("phone", "شماره همراه را وارد کنید.");
-    isValid = false;
-  } else if (!/^09\d{9}$/.test(phoneValue)) {
-    showError("phone", "شماره همراه معتبر نیست.");
-    isValid = false;
-  }
-
-  const emailValue = email.value.trim();
-
-  if (emailValue && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue)) {
-    showError("email", "ایمیل وارد شده معتبر نیست.");
-    isValid = false;
-  }
-
-  function isValidIranianNationalCode(code) {
-    if (!/^\d{10}$/.test(code)) {
-      return false;
-    }
-
-    if (/^(\d)\1{9}$/.test(code)) {
-      return false;
-    }
-
-    const check = Number(code[9]);
-
-    let sum = 0;
-
-    for (let i = 0; i < 9; i++) {
-      sum += Number(code[i]) * (10 - i);
-    }
-
-    const remainder = sum % 11;
-
-    const digit = remainder < 2 ? remainder : 11 - remainder;
-
-    return digit === check;
-  }
-
-  const nationalCodeValue = nationalCode.value.trim();
-
-  if (!nationalCodeValue) {
-    showError("nationalCode", "کد ملی را وارد کنید.");
-    isValid = false;
-  } else if (!isValidIranianNationalCode(nationalCodeValue)) {
-    showError("nationalCode", "کد ملی معتبر نیست.");
-    isValid = false;
-  }
-
-  const provinceValue = province.value.trim();
-
-  if (!provinceValue) {
-    showError("province", "استان را وارد کنید.");
-    isValid = false;
-  } else if (!/^[آ-ی\s‌-]+$/.test(provinceValue)) {
-    showError("province", "نام استان باید فقط شامل حروف باشد.");
-    isValid = false;
-  }
-
-  const cityValue = city.value.trim();
-
-  if (!cityValue) {
-    showError("city", "شهر را وارد کنید.");
-    isValid = false;
-  } else if (!/^[آ-ی\s‌-]+$/.test(cityValue)) {
-    showError("city", "نام شهر باید فقط شامل حروف باشد.");
-    isValid = false;
-  }
-
-  const addressValue = address.value.trim();
-
-  if (!addressValue) {
-    showError("address", "آدرس را وارد کنید.");
-    isValid = false;
-  } else if (addressValue.length < 10) {
-    showError("address", "آدرس وارد شده خیلی کوتاه است.");
-    isValid = false;
-  } else if (addressValue.length > 500) {
-    showError("address", "آدرس نمی‌تواند بیشتر از ۵۰۰ کاراکتر باشد.");
-    isValid = false;
-  }
-
-  const postalCodeValue = postalCode.value.trim();
-
-  if (!postalCodeValue) {
-    showError("postalCode", "کد پستی را وارد کنید.");
-    isValid = false;
-  } else if (!/^\d{10}$/.test(postalCodeValue)) {
-    showError("postalCode", "کد پستی باید دقیقاً ۱۰ رقم باشد.");
-    isValid = false;
-  }
-
-  const buildingNumberValue = buildingNumber.value.trim();
-
-  if (!buildingNumberValue) {
-    showError("buildingNumber", "شماره پلاک را وارد کنید.");
-    isValid = false;
-  } else if (!/^\d+$/.test(buildingNumberValue)) {
-    showError("buildingNumber", "شماره پلاک معتبر نیست.");
-    isValid = false;
-  }
-
-  const unitValue = unit.value.trim();
-
-  if (unitValue && !/^\d+$/.test(unitValue)) {
-    showError("unit", "شماره واحد معتبر نیست.");
-    isValid = false;
-  }
-
-  // if (isValid) {
-  //     // ارسال فرم به بک‌اند
-  //     console.log("Form is valid");
-  // }
-}
-
-window.applyCoupon = applyCoupon;
-window.handleFinalSubmit = handleFinalSubmit;
-
 document.addEventListener("DOMContentLoaded", () => {
-  renderCheckoutSummary();
+  initFieldValidation();
+  initCouponForm();
 });

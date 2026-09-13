@@ -52,6 +52,10 @@ class User(AbstractUser):
     phone = models.CharField("شماره موبایل", max_length=11, unique=True)
     national_code = models.CharField("کد ملی", max_length=10, blank=True)
     avatar_emoji = models.CharField("آیکون پروفایل", max_length=4, default="👤")
+    # Temporary single-address convenience field, filled automatically from
+    # checkout — superseded once the real "آدرس‌های من" address book (with
+    # multiple saved addresses) is built.
+    address = models.TextField("آدرس", blank=True)
 
     USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = []

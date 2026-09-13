@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load django_vite %}
+{% load toman %}
 
 {% block title %}محصولات | بانک مکمل - مرجع تخصصی مکمل‌های ورزشی و غذایی{% endblock %}
 
@@ -41,10 +42,19 @@
         >
           <div>
             <h1 class="text-2xl font-black text-slate-900">
-              فروشگاه محصولات مکمل
+              {% if search_query %}
+                نتایج جستجو برای «{{ search_query }}»
+              {% else %}
+                فروشگاه محصولات مکمل
+              {% endif %}
             </h1>
             <p class="text-xs text-slate-500 mt-1">
-              نمایش {{ page_obj.start_index }} تا {{ page_obj.end_index }} از {{ page_obj.paginator.count }} محصول موجود
+              {% if page_obj.paginator.count %}
+                نمایش {{ page_obj.start_index }} تا {{ page_obj.end_index }} از {{ page_obj.paginator.count }} محصول
+                {% if search_query %}مطابق با جستجوی شما{% else %}موجود{% endif %}
+              {% else %}
+                محصولی یافت نشد.
+              {% endif %}
             </p>
           </div>
 
@@ -206,26 +216,30 @@
                       <div class="space-y-3">
                         <input
                           type="range"
-                          min="500000"
-                          max="6000000"
-                          step="100000"
+                          min="{{ price_min }}"
+                          max="{{ price_max_bound }}"
+                          step="10000"
                           name="price_max"
-                          value="{{ selected_price_max|default:6000000 }}"
+                          value="{{ selected_price_max|default:price_max_bound }}"
                           id="priceRange"
                           class="w-full accent-red-600 cursor-pointer"
                         />
                         <div
                           class="flex items-center justify-between text-xs font-bold text-slate-600"
                         >
-                          <span>از ۵۰۰,۰۰۰</span>
+                          <span>از {{ price_min|toman }}</span>
                           <span class="text-red-600" id="priceRangeValue"
-                            >تا {{ selected_price_max|default:"۶,۰۰۰,۰۰۰" }} تومان</span
+                            >تا {{ selected_price_max|default:price_max_bound|toman }} تومان</span
                           >
                         </div>
                       </div>
                     </div>
 
                     <!-- فیلتر ۳: وزن / حجم -->
+                    <!-- فقط وقتی نمایش داده می‌شود که حداقل یک تنوع فعال، وزن مشخصی داشته باشد
+                         (show_weight_filter در ProductListView.get_context_data محاسبه می‌شود) —
+                         اگر فروشنده اصلاً از فیلد وزن استفاده نکند، این بخش کاملاً حذف می‌شود. -->
+                    {% if show_weight_filter %}
                     <div class="mb-6 border-b border-slate-100 pb-5">
                       <h4 class="font-bold text-slate-900 text-sm mb-3">
                         وزن / حجم محصول
@@ -241,8 +255,13 @@
                         {% endfor %}
                       </div>
                     </div>
+                    {% endif %}
 
                     <!-- فیلتر ۴: نوع مکمل (فرم) -->
+                    <!-- فقط وقتی نمایش داده می‌شود که حداقل یک محصول فعال، نوع/فرم مشخصی داشته باشد
+                         (show_form_type_filter) — اگر هیچ محصولی form_type نداشته باشد، این بخش
+                         حذف می‌شود تا خریدار با فیلتری که هیچ نتیجه‌ای فیلتر نمی‌کند گیج نشود. -->
+                    {% if show_form_type_filter %}
                     <div class="mb-6 border-b border-slate-100 pb-5">
                       <h4 class="font-bold text-slate-900 text-sm mb-3">
                         نوع مکمل (فرم)
@@ -282,6 +301,7 @@
                         {% endfor %}
                       </div>
                     </div>
+                    {% endif %}
 
                     <!-- فیلتر ۵: فقط کالاهای موجود -->
                     <div>
@@ -404,11 +424,11 @@
                 <div>
                   {% if variant.compare_at_price %}
                   <span class="block text-xs text-slate-400 line-through"
-                    >{{ variant.compare_at_price }}</span
+                    >{{ variant.compare_at_price|toman }}</span
                   >
                   {% endif %}
                   <span class="font-black text-red-600 text-base"
-                    >{{ variant.price|default:"—" }}
+                    >{{ variant.price|default:"—"|toman }}
                     <span class="text-xs font-normal text-slate-500"
                       >تومان</span
                     ></span

@@ -3,10 +3,15 @@ import json
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
+from django.db.models import Prefetch
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 from django_ratelimit.decorators import ratelimit
+
+from apps.cart.services import merge_guest_cart_into_user
+from apps.orders.models import Order, OrderItem
 
 from .forms import OtpVerifyForm, PhoneForm, ProfileForm
 from .models import PhoneOTP
@@ -77,9 +82,28 @@ def verify_otp(request):
     otp.save(update_fields=["is_used"])
 
     user, _created = User.objects.get_or_create(phone=phone, defaults={"username": phone})
-    login(request, user)
 
-    return JsonResponse({"ok": True, "redirect_url": "/"})
+    # Must read the session key BEFORE login(): login() rotates it for
+    # session-fixation security, so it has to be captured while it still
+    # points at whatever guest cart this visitor built up before logging in.
+    guest_session_key = request.session.session_key
+    login(request, user)
+    merge_guest_cart_into_user(guest_session_key, user)
+
+    # "next" is what LoginRequiredMixin (e.g. on checkout) put in the URL
+    # when it redirected here — without honoring it, a customer sent to
+    # log in from checkout would land back on the homepage instead of
+    # picking up where they left off. url_has_allowed_host_and_scheme
+    # guards against an open-redirect (never trust a raw "next" value).
+    next_url = request.POST.get("next", "")
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        redirect_url = next_url
+    else:
+        redirect_url = "/"
+
+    return JsonResponse({"ok": True, "redirect_url": redirect_url})
 
 
 @login_required
@@ -101,3 +125,104 @@ def profile_view(request):
         form = ProfileForm(instance=request.user)
 
     return render(request, "accounts/profile.html", {"form": form})
+
+
+@login_required
+def order_list_view(request):
+    """صفحه‌ی «سفارش‌های من» - سفارش‌های واقعی کاربر جاری.
+
+    select_related/prefetch_related هر دو اینجا لازم‌اند: هر سفارش خودش
+    یک بار کوئری برای آیتم‌هاش می‌خورد (prefetch_related روی items) و هر
+    آیتم هم برای عکسش به variant/product نیاز دارد (select_related داخل
+    Prefetch) — بدون این‌ها، صفحه‌ای با ۱۰ سفارش دوتایی، ده‌ها کوئری
+    اضافه به دیتابیس می‌زد (N+1).
+    """
+    orders = (
+        request.user.orders.prefetch_related(
+            Prefetch(
+                "items",
+                queryset=OrderItem.objects.select_related("variant__product"),
+            )
+        )
+        .order_by("-created_at")
+    )
+    return render(request, "accounts/orders.html", {"orders": orders})
+
+
+@login_required
+@require_POST
+def mark_order_paid(request, tracking_code):
+    """شبیه‌سازی «پرداخت موفق» — دکمه‌ی «کلیک کنید برای پرداخت» در
+    order_detail.html به همین view پست می‌کند.
+
+    طبق تصمیم صریح‌ای که قبلاً روی همین پروژه گرفته شد، اتصال واقعی به
+    درگاه بانکی یک فاز جداگانه‌ی بعدی نقشه راه است (نه بخشی از این نشست).
+    پس این view ادعای پرداخت واقعی ندارد: فقط وضعیت سفارش را از
+    "pending_payment" به "paid" تغییر می‌دهد تا کل جریان (دکمه‌ی پرداخت ←
+    فعال شدن دکمه‌ی دریافت فاکتور ← تعویض هدر از حالت «مراحل ثبت سفارش»
+    به هدر اصلی سایت) قابل نمایش و تست باشد. وقتی درگاه واقعی وصل شود،
+    فقط همین یک view باید عوض شود؛ بقیه‌ی سایت (تمپلیت‌ها، لیست سفارش‌ها،
+    فاکتور) از روی `order.status`/`order.is_paid` کار می‌کنند و دست‌نخورده
+    می‌مانند.
+
+    اگر سفارش از قبل پرداخت شده یا لغو شده باشد (مثلاً کاربر روی دکمه
+    دوبار کلیک کرده یا صفحه را رفرش کرده)، کاری انجام نمی‌دهیم — فقط به
+    همان صفحه‌ی جزئیات برمی‌گردیم، بدون خطا.
+    """
+    order = get_object_or_404(Order, tracking_code=tracking_code, user=request.user)
+    if order.status == "pending_payment":
+        order.status = "paid"
+        order.save(update_fields=["status"])
+        messages.success(request, "پرداخت با موفقیت انجام شد.")
+    return redirect("accounts:order_detail", tracking_code=order.tracking_code)
+
+
+@login_required
+def order_invoice_view(request, tracking_code):
+    """صفحه‌ی «دریافت فاکتور» — یک نسخه‌ی قابل‌چاپ از سفارش (چاپ مرورگر →
+    ذخیره به‌صورت PDF)، نه یک فایل PDF واقعی تولیدشده در سرور. این انتخاب
+    عمدی است: افزودن یک کتابخانه‌ی تولید PDF (مثل WeasyPrint) یک وابستگی
+    جدید و سنگین به پروژه اضافه می‌کند که فعلاً برایش نیازی مشخص نشده؛
+    قابلیت "چاپ به PDF" مرورگر همان نتیجه (یک فاکتور قابل ذخیره/چاپ) را
+    بدون هیچ وابستگی‌ای می‌دهد. اگر بعداً یک فاکتور رسمی/قالب‌بندی‌شده‌ی
+    ثابت لازم شد، همین‌جا می‌شود کتابخانه‌ی تولید PDF اضافه کرد.
+
+    دسترسی فقط برای سفارش‌های پرداخت‌شده باز است — دریافت فاکتور برای
+    سفارشی که هنوز پرداخت نشده معنی ندارد.
+    """
+    order = get_object_or_404(
+        Order.objects.prefetch_related(
+            Prefetch(
+                "items",
+                queryset=OrderItem.objects.select_related("variant__product"),
+            )
+        ),
+        tracking_code=tracking_code,
+        user=request.user,
+    )
+    if not order.is_paid:
+        messages.error(request, "برای دریافت فاکتور، ابتدا باید سفارش را پرداخت کنید.")
+        return redirect("accounts:order_detail", tracking_code=order.tracking_code)
+    return render(request, "accounts/order_invoice.html", {"order": order})
+
+
+@login_required
+def order_detail_view(request, tracking_code):
+    """جزئیات کامل یک سفارش. عمداً با `tracking_code` واقعی پیدا می‌شود، نه
+    `pk` — همان دلیل امنیتی/طراحی که خودِ فیلد `tracking_code` را ساختیم:
+    یک شناسه‌ی ترتیبی نباید توی URL عمومی باشد. فیلتر `user=request.user`
+    هم تضمین می‌کند کاربر فقط بتواند سفارش خودش را ببیند، حتی اگر
+    tracking_code یک سفارش دیگر را حدس بزند (که عملاً غیرممکن است) یا
+    لینکش را از جایی دیگر پیدا کند.
+    """
+    order = get_object_or_404(
+        Order.objects.prefetch_related(
+            Prefetch(
+                "items",
+                queryset=OrderItem.objects.select_related("variant__product"),
+            )
+        ),
+        tracking_code=tracking_code,
+        user=request.user,
+    )
+    return render(request, "accounts/order_detail.html", {"order": order})
