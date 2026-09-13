@@ -101,7 +101,8 @@
 
               <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1"
-                  >{{ form.national_code.label }} (جهت صدور فاکتور رسمی)</label
+                  >{{ form.national_code.label }} (جهت صدور فاکتور رسمی)
+                  <span class="text-red-600">*</span></label
                 >
                 {{ form.national_code }}
                 {% if form.national_code.errors %}<span class="text-[10px] text-red-600 mt-1 block">{{ form.national_code.errors.0 }}</span>{% endif %}

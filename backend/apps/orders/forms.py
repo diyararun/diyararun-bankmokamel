@@ -45,10 +45,13 @@ class CheckoutForm(forms.Form):
         required=False,
         widget=forms.EmailInput(attrs={"placeholder": "name@example.com", "dir": "ltr", "class": LTR_INPUT_CLASS}),
     )
+    # قبلاً required=False بود — طبق خواسته‌ی صریح، حالا کد ملی هم مثل
+    # نام/آدرس/کدپستی یک فیلد اجباری تسویه‌حساب است (لازم برای صدور
+    # فاکتور رسمی). فرم پروفایل (accounts.forms.ProfileForm) عمداً همچنان
+    # این فیلد را اختیاری نگه می‌دارد — این‌جا فقط الزام مخصوص خرید است.
     national_code = forms.CharField(
         label="کد ملی",
         max_length=10,
-        required=False,
         widget=forms.TextInput(attrs={"placeholder": "۰۰۱۲۳۴۵۶۷۸", "dir": "ltr", "class": LTR_INPUT_CLASS}),
     )
 
