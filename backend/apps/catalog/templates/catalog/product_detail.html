@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load django_vite %}
 {% load toman %}
+{% load jalali_datetime %}
 
 {% block title %}{{ product.name }} | بانک مکمل{% endblock %}
 
@@ -433,7 +434,7 @@
                       </div>
                     </div>
                     <span class="text-[10px] text-slate-400"
-                      >{{ review.created_at }}</span
+                      >{{ review.created_at|jdatetime }}</span
                     >
                   </div>
                   <div class="text-amber-400 text-xs">{{ review.stars_display }}</div>

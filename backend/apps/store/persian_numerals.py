@@ -35,3 +35,34 @@ def to_ascii_digits(value):
     """Persian or Arabic-indic digits -> ASCII digits. Non-digit
     characters pass through untouched."""
     return str(value).translate(TO_ASCII)
+
+
+# Default format for format_jalali_datetime(): full Jalali date + time,
+# down to the second — no microseconds, no UTC offset. Both jdatetime's
+# own datetime objects (what django-jalali's jDateTimeField returns) and
+# plain Python datetimes understand these strftime directives, so this
+# one function works whichever kind of value it's handed.
+JALALI_DATETIME_FORMAT = "%Y/%m/%d - %H:%M:%S"
+
+
+def format_jalali_datetime(value, fmt=JALALI_DATETIME_FORMAT):
+    """Formats a django-jalali datetime (or a plain aware/naive datetime)
+    into a clean, Persian-digit string — e.g. "۱۴۰۵/۰۶/۲۲ - ۱۰:۳۱:۴۰"
+    instead of the raw "1405-06-22 10:31:40.878179+0330" that printing a
+    jDateTimeField value directly (with no formatting at all) produces.
+
+    Shared between the `jdatetime` template filter (apps/store/templatetags)
+    and every admin.py that shows a date column, so the storefront and the
+    admin panel format dates identically instead of each guessing at their
+    own %-format string.
+    """
+    if not value:
+        return value
+    try:
+        formatted = value.strftime(fmt)
+    except (AttributeError, ValueError, TypeError):
+        # Not a date/datetime-like value at all — return it unchanged
+        # rather than raising, so a bad input never crashes a page/admin
+        # list over what's ultimately just a display nicety.
+        return value
+    return to_persian_digits(formatted)

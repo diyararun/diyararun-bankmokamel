@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load django_vite %}
 {% load toman %}
+{% load jalali_datetime %}
 
 {% block title %}جزئیات سفارش {{ order.tracking_code }} | بانک مکمل{% endblock %}
 
@@ -56,7 +57,7 @@
           <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="space-y-1">
               <h1 class="text-xl font-black text-slate-900" dir="ltr">{{ order.tracking_code }}</h1>
-              <p class="text-xs text-slate-400">ثبت‌شده در {{ order.created_at }}</p>
+              <p class="text-xs text-slate-400">ثبت‌شده در {{ order.created_at|jdatetime }}</p>
             </div>
             {% if order.status == "cancelled" %}
             <span class="text-xs font-bold px-4 py-2 rounded-full bg-red-50 text-red-600">
