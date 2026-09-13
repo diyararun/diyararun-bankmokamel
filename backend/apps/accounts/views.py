@@ -13,8 +13,8 @@ from django_ratelimit.decorators import ratelimit
 from apps.cart.services import merge_guest_cart_into_user
 from apps.orders.models import Order, OrderItem
 
-from .forms import OtpVerifyForm, PhoneForm, ProfileForm
-from .models import PhoneOTP
+from .forms import AddressForm, OtpVerifyForm, PhoneForm, ProfileForm
+from .models import Address, PhoneOTP
 
 User = get_user_model()
 
@@ -124,7 +124,7 @@ def profile_view(request):
     else:
         form = ProfileForm(instance=request.user)
 
-    return render(request, "accounts/profile.html", {"form": form})
+    return render(request, "accounts/profile.html", {"form": form, "active_page": "profile"})
 
 
 @login_required
@@ -146,7 +146,7 @@ def order_list_view(request):
         )
         .order_by("-created_at")
     )
-    return render(request, "accounts/orders.html", {"orders": orders})
+    return render(request, "accounts/orders.html", {"orders": orders, "active_page": "orders"})
 
 
 @login_required
@@ -225,4 +225,91 @@ def order_detail_view(request, tracking_code):
         tracking_code=tracking_code,
         user=request.user,
     )
-    return render(request, "accounts/order_detail.html", {"order": order})
+    # این صفحه از سایدبار مستقیماً باز نمی‌شود (از کارت سفارش در
+    # «سفارش‌های من» باز می‌شود)، ولی همان سایدبار مشترک را دارد — پس
+    # منطقی است که همچنان «سفارش‌های من» را در آن فعال نشان دهیم.
+    return render(request, "accounts/order_detail.html", {"order": order, "active_page": "orders"})
+
+
+@login_required
+def address_list_view(request):
+    """صفحه‌ی «آدرس‌های من» — لیست آدرس‌های ذخیره‌شده‌ی کاربر."""
+    addresses = request.user.addresses.all()
+    return render(request, "accounts/addresses.html", {"addresses": addresses, "active_page": "addresses"})
+
+
+@login_required
+def address_create_view(request):
+    # اولین آدرسی که کاربر ثبت می‌کند، خودکار پیش‌فرض می‌شود — دیگر
+    # نیازی نیست کاربری که فقط یک آدرس دارد حتماً چک‌باکس «پیش‌فرض» را
+    # هم بزند تا این آدرس واقعاً جایی استفاده شود.
+    is_first_address = not request.user.addresses.exists()
+
+    if request.method == "POST":
+        form = AddressForm(request.POST)
+        if form.is_valid():
+            address = form.save(commit=False)
+            address.user = request.user
+            if is_first_address:
+                address.is_default = True
+            address.save()
+            messages.success(request, "آدرس با موفقیت ثبت شد.")
+            return redirect("accounts:addresses")
+    else:
+        form = AddressForm(initial={"is_default": is_first_address})
+
+    return render(
+        request,
+        "accounts/address_form.html",
+        {"form": form, "active_page": "addresses", "is_new": True},
+    )
+
+
+@login_required
+def address_edit_view(request, pk):
+    address = get_object_or_404(Address, pk=pk, user=request.user)
+
+    if request.method == "POST":
+        form = AddressForm(request.POST, instance=address)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "آدرس با موفقیت ویرایش شد.")
+            return redirect("accounts:addresses")
+    else:
+        form = AddressForm(instance=address)
+
+    return render(
+        request,
+        "accounts/address_form.html",
+        {"form": form, "active_page": "addresses", "is_new": False, "address": address},
+    )
+
+
+@login_required
+@require_POST
+def address_delete_view(request, pk):
+    address = get_object_or_404(Address, pk=pk, user=request.user)
+    was_default = address.is_default
+    address.delete()
+
+    # اگر آدرس حذف‌شده پیش‌فرض بود و کاربر آدرس دیگری هم دارد، یکی از
+    # بقیه را (جدیدترین) خودکار پیش‌فرض می‌کنیم — بدون این کار، کاربر با
+    # چند آدرس باقی می‌ماند که هیچ‌کدام پیش‌فرض نیست.
+    if was_default:
+        next_address = request.user.addresses.order_by("-created_at").first()
+        if next_address:
+            next_address.is_default = True
+            next_address.save(update_fields=["is_default"])
+
+    messages.success(request, "آدرس حذف شد.")
+    return redirect("accounts:addresses")
+
+
+@login_required
+@require_POST
+def address_set_default_view(request, pk):
+    address = get_object_or_404(Address, pk=pk, user=request.user)
+    address.is_default = True
+    address.save()  # save() خودش بقیه‌ی آدرس‌های همین کاربر را از پیش‌فرض بودن خارج می‌کند
+    messages.success(request, "آدرس پیش‌فرض به‌روزرسانی شد.")
+    return redirect("accounts:addresses")

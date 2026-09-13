@@ -1,9 +1,11 @@
 import random
 
+from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+from django_jalali.db import models as jmodels
 
 
 class UserManager(BaseUserManager):
@@ -94,3 +96,51 @@ class PhoneOTP(models.Model):
 
     def __str__(self):
         return f"{self.phone} - {self.code}"
+
+
+class Address(models.Model):
+    """یک آدرس ذخیره‌شده‌ی «آدرس‌های من» — همان فیلدهایی که فرم
+    تسویه‌حساب (apps.orders.forms.CheckoutForm) هم جمع می‌کند، ولی این‌بار
+    قابل‌ذخیره و استفاده‌ی مجدد برای خریدهای بعدی. عمداً یک مدل جدا از
+    User.address (فیلد قدیمی و موقتِ تک‌آدرسی که همان‌جا هم مستندسازی
+    شده بود که قرار است با همین قابلیت جایگزین شود) — یک کاربر می‌تواند
+    چند آدرس (خانه، محل کار، ...) داشته باشد.
+
+    این مدل هنوز به CheckoutForm وصل نشده (یعنی انتخاب یکی از این
+    آدرس‌ها هنگام تسویه‌حساب هنوز کار نمی‌کند) — این‌جا فقط خودِ صفحه‌ی
+    مدیریت آدرس‌ها ساخته شده؛ اتصالش به تسویه‌حساب یک قدم بعدی جداست.
+    """
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, verbose_name="کاربر", related_name="addresses", on_delete=models.CASCADE
+    )
+    title = models.CharField("عنوان آدرس", max_length=50, help_text="مثلاً «خانه» یا «محل کار»")
+    full_name = models.CharField("نام و نام خانوادگی تحویل‌گیرنده", max_length=150)
+    phone = models.CharField("شماره همراه", max_length=11)
+    province = models.CharField("استان", max_length=50)
+    city = models.CharField("شهر", max_length=50)
+    full_address = models.TextField("آدرس کامل پستی")
+    postal_code = models.CharField("کد پستی", max_length=10)
+    plaque = models.CharField("پلاک", max_length=20)
+    unit = models.CharField("واحد", max_length=20, blank=True)
+    is_default = models.BooleanField("آدرس پیش‌فرض", default=False)
+    created_at = jmodels.jDateTimeField("تاریخ ثبت", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "آدرس"
+        verbose_name_plural = "آدرس‌ها"
+        ordering = ["-is_default", "-created_at"]
+
+    def __str__(self):
+        return f"{self.title} — {self.user}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # فقط یک آدرس پیش‌فرض در هر لحظه، برای هر کاربر — وقتی این یکی
+        # پیش‌فرض می‌شود، بقیه‌ی آدرس‌های همین کاربر خودکار از پیش‌فرض
+        # بودن خارج می‌شوند. بعد از super().save() انجام می‌شود تا pk
+        # همیشه از قبل موجود باشد (برای exclude زیر).
+        if self.is_default:
+            Address.objects.filter(user_id=self.user_id, is_default=True).exclude(pk=self.pk).update(
+                is_default=False
+            )
