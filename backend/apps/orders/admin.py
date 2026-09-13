@@ -6,6 +6,7 @@ from django.urls import reverse
 # ShippingSettings.flat_rate) accepts Persian/Arabic-indic digits — see
 # the module docstring in apps/store/admin_persian_numbers.py.
 import apps.store.admin_persian_numbers  # noqa: F401
+from apps.store.persian_numerals import format_jalali_datetime
 
 from .models import Order, OrderItem, ShippingSettings
 
@@ -32,7 +33,7 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("tracking_code", "user", "full_name", "phone", "status", "total_price", "created_at")
+    list_display = ("tracking_code", "user", "full_name", "phone", "status", "total_price", "created_at_display")
     list_filter = ("status", "payment_method", "created_at")
     search_fields = ("tracking_code", "full_name", "phone", "user__phone", "postal_code")
     readonly_fields = (
@@ -44,3 +45,7 @@ class OrderAdmin(admin.ModelAdmin):
         "total_price",
     )
     inlines = [OrderItemInline]
+
+    @admin.display(description="تاریخ ثبت", ordering="created_at")
+    def created_at_display(self, obj):
+        return format_jalali_datetime(obj.created_at)

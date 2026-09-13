@@ -11,6 +11,7 @@ import django_jalali.admin  # noqa: F401
 # this. Importing it is enough; it patches Django admin's
 # FORMFIELD_FOR_DBFIELD_DEFAULTS for every ModelAdmin in the project.
 import apps.store.admin_persian_numbers  # noqa: F401
+from apps.store.persian_numerals import format_jalali_datetime
 
 from .models import Brand, Category, Flavor, Product, ProductImage, ProductSpec, ProductVariant
 
@@ -55,8 +56,12 @@ class ProductSpecInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("name", "category", "brand", "is_active", "created_at")
+    list_display = ("name", "category", "brand", "is_active", "created_at_display")
     list_filter = ("is_active", "category", "brand")
     search_fields = ("name", "short_description")
     prepopulated_fields = {"slug": ("name",)}
     inlines = [ProductImageInline, ProductVariantInline, ProductSpecInline]
+
+    @admin.display(description="تاریخ ایجاد", ordering="created_at")
+    def created_at_display(self, obj):
+        return format_jalali_datetime(obj.created_at)
