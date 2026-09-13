@@ -112,7 +112,11 @@ class CheckoutView(LoginRequiredMixin, View):
             user.save(update_fields=["email", "national_code"])
 
         messages.success(request, f"سفارش شما با کد پیگیری {order.tracking_code} با موفقیت ثبت شد.")
-        return redirect(reverse("accounts:orders"))
+        # به جای لیست کلی سفارش‌ها، مستقیم به جزئیات همین سفارش می‌رویم —
+        # همان صفحه‌ای که هدر آن گام سوم استپر ("تکمیل و دریافت فاکتور") را
+        # نشان می‌دهد و دکمه‌ی پرداخت آزمایشی/دریافت فاکتور را دارد
+        # (accounts/order_detail.html، به‌شرط status="pending_payment").
+        return redirect(reverse("accounts:order_detail", kwargs={"tracking_code": order.tracking_code}))
 
     def _context(self, form, cart):
         # The sidebar order summary shows the shipping cost, product

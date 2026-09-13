@@ -4,6 +4,35 @@
 
 {% block title %}جزئیات سفارش {{ order.tracking_code }} | بانک مکمل{% endblock %}
 
+<!--
+  این صفحه دو نقش دارد:
+  ۱) وقتی سفارش هنوز پرداخت نشده (status="pending_payment")، همان صفحه‌ی
+     «گام ۳: تکمیل و دریافت فاکتور» است که در استپر بالای checkout.html
+     دیده می‌شود — بلافاصله بعد از «پرداخت و ثبت نهایی سفارش» کاربر به
+     همین‌جا (با همان tracking_code) هدایت می‌شود. برای همین در این حالت
+     همان هدر مخصوص مراحل ثبت سفارش (header_checkout.html) را با
+     checkout_step=3 نشان می‌دهیم، نه هدر معمولی سایت.
+  ۲) به‌محض پرداخت (واقعی یا آزمایشی)، سفارش دیگر یک «جریان در حال انجام»
+     نیست، بلکه یک سفارش عادی در تاریخچه‌ی کاربر است — پس هدر و سبد خرید
+     شناور به حالت عادی سایت برمی‌گردند (header_main.html) و همان محتوای
+     همیشگی این صفحه (اقلام، آدرس، خلاصه‌ی مالی) نمایش داده می‌شود.
+-->
+{% block cart_drawer %}
+  {% if order.status != "pending_payment" %}
+    {% include "partials/cart_drawer.html" %}
+    {% include "partials/category_drawer.html" %}
+  {% endif %}
+{% endblock %}
+
+{% block header %}
+  {% if order.status == "pending_payment" %}
+    {% include "partials/header_checkout.html" with checkout_step=3 %}
+  {% else %}
+    {% include "partials/header_main.html" %}
+    {% include "partials/mobile_menu.html" %}
+  {% endif %}
+{% endblock %}
+
 {% block content %}
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <!-- مسیر (Breadcrumb) -->
@@ -29,12 +58,12 @@
               <h1 class="text-xl font-black text-slate-900" dir="ltr">{{ order.tracking_code }}</h1>
               <p class="text-xs text-slate-400">ثبت‌شده در {{ order.created_at }}</p>
             </div>
-            {% if order.status == "delivered" or order.status == "paid" %}
-            <span class="text-xs font-bold px-4 py-2 rounded-full bg-emerald-50 text-emerald-600">
+            {% if order.status == "cancelled" %}
+            <span class="text-xs font-bold px-4 py-2 rounded-full bg-red-50 text-red-600">
               {{ order.get_status_display }}
             </span>
-            {% elif order.status == "cancelled" %}
-            <span class="text-xs font-bold px-4 py-2 rounded-full bg-red-50 text-red-600">
+            {% elif order.is_paid %}
+            <span class="text-xs font-bold px-4 py-2 rounded-full bg-emerald-50 text-emerald-600">
               {{ order.get_status_display }}
             </span>
             {% else %}
@@ -45,24 +74,44 @@
           </div>
 
           {% if order.status == "pending_payment" %}
-          <!-- کارت پرداخت: فقط توضیحی و placeholder — هیچ ادعایی درباره‌ی
-               اتصال واقعی به درگاه بانکی نمی‌کند. طبق تصمیم صریح شما، اتصال
-               واقعی به درگاه یک فاز جداگانه‌ی بعدی است. -->
+          <!--
+            دکمه‌ی «کلیک کنید برای پرداخت» — واقعاً به سرور POST می‌کند
+            (accounts:order_mark_paid)، اما پرداخت واقعی نیست، یک شبیه‌سازی
+            است: طبق تصمیم صریح‌ای که قبلاً گرفته شد، اتصال واقعی به درگاه
+            بانکی یک فاز جداگانه‌ی بعدیِ نقشه راه است. بعد از این کلیک،
+            وضعیت سفارش paid می‌شود، این بخش جای خودش را به کارت سبز زیر
+            می‌دهد و هدر صفحه به هدر اصلی سایت برمی‌گردد (رفرش صفحه، چون
+            این یک فرم POST معمولی است، نه fetch).
+          -->
           <div class="mt-5 flex flex-wrap items-center justify-between gap-4 bg-amber-50 border border-amber-200 rounded-2xl p-4">
             <div>
               <p class="text-xs font-bold text-amber-700">این سفارش هنوز پرداخت نشده است.</p>
               <p class="text-[11px] text-amber-600 mt-0.5">
-                اتصال به درگاه پرداخت بانکی در فاز بعدی نقشه راه تکمیل می‌شود.
+                اتصال واقعی به درگاه بانکی در فاز بعدی نقشه راه انجام می‌شود؛ دکمه‌ی زیر فعلاً پرداخت را به‌صورت آزمایشی شبیه‌سازی می‌کند.
               </p>
             </div>
-            <button
-              type="button"
-              disabled
-              title="به‌زودی"
-              class="bg-amber-300 text-amber-800 text-xs font-bold px-5 py-2.5 rounded-xl cursor-not-allowed shrink-0"
+            <form method="post" action="{% url 'accounts:order_mark_paid' order.tracking_code %}">
+              {% csrf_token %}
+              <button
+                type="submit"
+                class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-colors shadow-sm shadow-red-600/20 shrink-0"
+              >
+                کلیک کنید برای پرداخت
+              </button>
+            </form>
+          </div>
+          {% elif order.is_paid %}
+          <!-- سفارش پرداخت‌شده — حالا «دریافت فاکتور» فعال است. -->
+          <div class="mt-5 flex flex-wrap items-center justify-between gap-4 bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+            <div>
+              <p class="text-xs font-bold text-emerald-700">پرداخت این سفارش با موفقیت انجام شده است.</p>
+            </div>
+            <a
+              href="{% url 'accounts:order_invoice' order.tracking_code %}"
+              class="bg-white hover:bg-emerald-100 text-emerald-700 text-xs font-bold px-5 py-2.5 rounded-xl border border-emerald-200 transition-colors shrink-0"
             >
-              پرداخت آنلاین (به‌زودی)
-            </button>
+              دریافت فاکتور
+            </a>
           </div>
           {% endif %}
         </div>

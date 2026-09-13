@@ -150,6 +150,63 @@ def order_list_view(request):
 
 
 @login_required
+@require_POST
+def mark_order_paid(request, tracking_code):
+    """شبیه‌سازی «پرداخت موفق» — دکمه‌ی «کلیک کنید برای پرداخت» در
+    order_detail.html به همین view پست می‌کند.
+
+    طبق تصمیم صریح‌ای که قبلاً روی همین پروژه گرفته شد، اتصال واقعی به
+    درگاه بانکی یک فاز جداگانه‌ی بعدی نقشه راه است (نه بخشی از این نشست).
+    پس این view ادعای پرداخت واقعی ندارد: فقط وضعیت سفارش را از
+    "pending_payment" به "paid" تغییر می‌دهد تا کل جریان (دکمه‌ی پرداخت ←
+    فعال شدن دکمه‌ی دریافت فاکتور ← تعویض هدر از حالت «مراحل ثبت سفارش»
+    به هدر اصلی سایت) قابل نمایش و تست باشد. وقتی درگاه واقعی وصل شود،
+    فقط همین یک view باید عوض شود؛ بقیه‌ی سایت (تمپلیت‌ها، لیست سفارش‌ها،
+    فاکتور) از روی `order.status`/`order.is_paid` کار می‌کنند و دست‌نخورده
+    می‌مانند.
+
+    اگر سفارش از قبل پرداخت شده یا لغو شده باشد (مثلاً کاربر روی دکمه
+    دوبار کلیک کرده یا صفحه را رفرش کرده)، کاری انجام نمی‌دهیم — فقط به
+    همان صفحه‌ی جزئیات برمی‌گردیم، بدون خطا.
+    """
+    order = get_object_or_404(Order, tracking_code=tracking_code, user=request.user)
+    if order.status == "pending_payment":
+        order.status = "paid"
+        order.save(update_fields=["status"])
+        messages.success(request, "پرداخت با موفقیت انجام شد.")
+    return redirect("accounts:order_detail", tracking_code=order.tracking_code)
+
+
+@login_required
+def order_invoice_view(request, tracking_code):
+    """صفحه‌ی «دریافت فاکتور» — یک نسخه‌ی قابل‌چاپ از سفارش (چاپ مرورگر →
+    ذخیره به‌صورت PDF)، نه یک فایل PDF واقعی تولیدشده در سرور. این انتخاب
+    عمدی است: افزودن یک کتابخانه‌ی تولید PDF (مثل WeasyPrint) یک وابستگی
+    جدید و سنگین به پروژه اضافه می‌کند که فعلاً برایش نیازی مشخص نشده؛
+    قابلیت "چاپ به PDF" مرورگر همان نتیجه (یک فاکتور قابل ذخیره/چاپ) را
+    بدون هیچ وابستگی‌ای می‌دهد. اگر بعداً یک فاکتور رسمی/قالب‌بندی‌شده‌ی
+    ثابت لازم شد، همین‌جا می‌شود کتابخانه‌ی تولید PDF اضافه کرد.
+
+    دسترسی فقط برای سفارش‌های پرداخت‌شده باز است — دریافت فاکتور برای
+    سفارشی که هنوز پرداخت نشده معنی ندارد.
+    """
+    order = get_object_or_404(
+        Order.objects.prefetch_related(
+            Prefetch(
+                "items",
+                queryset=OrderItem.objects.select_related("variant__product"),
+            )
+        ),
+        tracking_code=tracking_code,
+        user=request.user,
+    )
+    if not order.is_paid:
+        messages.error(request, "برای دریافت فاکتور، ابتدا باید سفارش را پرداخت کنید.")
+        return redirect("accounts:order_detail", tracking_code=order.tracking_code)
+    return render(request, "accounts/order_invoice.html", {"order": order})
+
+
+@login_required
 def order_detail_view(request, tracking_code):
     """جزئیات کامل یک سفارش. عمداً با `tracking_code` واقعی پیدا می‌شود، نه
     `pk` — همان دلیل امنیتی/طراحی که خودِ فیلد `tracking_code` را ساختیم:

@@ -54,6 +54,13 @@ class Order(models.Model):
         ("cancelled", "لغوشده"),
     ]
 
+    # هر وضعیتی به‌جز "در انتظار پرداخت" و "لغوشده" یعنی سفارش واقعاً پرداخت
+    # شده است — این‌جا یک‌بار تعریف شده تا هم تمپلیت‌ها (نمایش دکمه‌ی «دریافت
+    # فاکتور» به‌جای «کلیک کنید برای پرداخت») و هم ویوها همیشه یک تعریف واحد
+    # از "پرداخت‌شده" را بررسی کنند، نه اینکه هرکدام جداگانه لیست وضعیت‌ها را
+    # کپی کرده باشند و روزی از هم جدا بیفتند.
+    PAID_STATUSES = {"paid", "processing", "shipped", "delivered"}
+
     # Only one option exists in checkout.html today ("پرداخت اینترنتی");
     # kept as choices (not hardcoded) so adding a second method later
     # (e.g. cash on delivery) is a one-line addition, not a schema change.
@@ -129,6 +136,10 @@ class Order(models.Model):
 
     def __str__(self):
         return f"سفارش {self.tracking_code or self.pk} - {self.full_name}"
+
+    @property
+    def is_paid(self):
+        return self.status in self.PAID_STATUSES
 
     def save(self, *args, **kwargs):
         if not self.tracking_code:
