@@ -369,10 +369,18 @@
         <section class="lg:col-span-3">
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for p in products %}
+            <!--
+              variant قبلاً داخل خودِ کارت (بعد از باز شدن تگ div) تعریف
+              می‌شد، برای همین موجود/ناموجود بودنش روی کلاس کارت قابل
+              استفاده نبود — فقط دکمه‌ی + کم‌رنگ می‌شد، نه کل کارت. حالا
+              with قبل از div کارت آمده تا variant.is_in_stock همان
+              اول در دسترس باشد و کل کارت (نه فقط دکمه) برای کالای
+              ناموجود کم‌رنگ‌تر دیده شود.
+            -->
+            {% with variant=p.default_variant %}
             <div
-              class="bg-white rounded-2xl p-5 border border-slate-200/80 hover:shadow-xl transition-all group flex flex-col justify-between relative"
+              class="bg-white rounded-2xl p-5 border border-slate-200/80 hover:shadow-xl transition-all group flex flex-col justify-between relative {% if not variant.is_in_stock %}opacity-50{% endif %}"
             >
-              {% with variant=p.default_variant %}
               {% if variant.discount_percent %}
               <div
                 class="absolute top-3 right-3 z-10 flex flex-col gap-1.5 items-start"
@@ -437,7 +445,7 @@
                 <button
                   data-variant-id="{{ variant.id }}"
                   {% if not variant.is_in_stock %}disabled{% endif %}
-                  class="bg-red-600 hover:bg-red-700 text-white p-2.5 rounded-xl transition-colors shadow-md shadow-red-600/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                  class="js-add-to-cart bg-red-600 hover:bg-red-700 text-white p-2.5 rounded-xl transition-colors shadow-md shadow-red-600/20 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <svg
                     class="w-5 h-5"
