@@ -33,7 +33,13 @@ def category_drawer(request):
     included from base.html on every page) with real data instead of the
     handful of hardcoded example categories it used to have.
 
-    Only top-level categories are queried directly; each one's active
+    Only top-level categories that the seller has flagged as
+    `is_main_category` are queried directly (previously this was every
+    top-level category, `parent__isnull=True` alone — changed together
+    with the homepage's "دسته‌بندی‌های محبوب" section in
+    store/views.py::IndexView so both surfaces agree on what counts as a
+    "دسته‌بندی اصلی" instead of one using the parent-less structural rule
+    and the other a seller-controlled flag); each one's active
     subcategories are attached as `.active_children` via Prefetch so the
     template can loop over them without a second query per category
     (Category.parent/children already existed on the model — this is the
@@ -42,7 +48,7 @@ def category_drawer(request):
     this section was scoped.
     """
     top_level_categories = (
-        Category.objects.filter(is_active=True, parent__isnull=True)
+        Category.objects.filter(is_active=True, parent__isnull=True, is_main_category=True)
         .prefetch_related(
             Prefetch(
                 "children",

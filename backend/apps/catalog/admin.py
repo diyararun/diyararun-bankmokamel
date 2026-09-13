@@ -24,10 +24,14 @@ from .models import Brand, Category, Flavor, Product, ProductImage, ProductSpec,
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("name", "parent", "is_active")
-    list_filter = ("is_active",)
+    list_display = ("name", "parent", "is_main_category", "is_popular", "is_active")
+    list_filter = ("is_active", "is_main_category", "is_popular")
     search_fields = ("name",)
     prepopulated_fields = {"slug": ("name",)}
+    # BooleanField + choices (بالای models.py) یعنی این دو فیلد به‌جای
+    # چک‌باکس، به‌صورت رادیو («بله»/«خیر») نمایش داده می‌شوند — دقیقاً
+    # همان چیزی که خواسته شده بود.
+    radio_fields = {"is_main_category": admin.HORIZONTAL, "is_popular": admin.HORIZONTAL}
 
 
 @admin.register(Brand)

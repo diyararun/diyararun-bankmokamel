@@ -15,7 +15,14 @@ class IndexView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["active_nav"] = "home"
-        context["categories"] = Category.objects.filter(is_active=True)
+        # بخش «دسته‌بندی‌های محبوب» صفحه‌ی اصلی — فقط دسته‌بندی‌هایی که
+        # فروشنده از پنل ادمین صریحاً «دسته‌بندی محبوب» علامت زده (که خودش
+        # فقط برای «دسته‌بندی اصلی»ها ممکن است، طبق Category.clean())،
+        # حداکثر ۸ تا، دقیقاً طبق خواسته. قبلاً این‌جا همه‌ی دسته‌بندی‌های
+        # فعال بدون هیچ سقف/فیلتری نمایش داده می‌شدند.
+        context["categories"] = Category.objects.filter(
+            is_active=True, is_main_category=True, is_popular=True
+        ).order_by("name")[:8]
         context["brands"] = Brand.objects.filter(is_active=True)
         # Newest active products with at least one active variant, for the
         # "featured products" section on the homepage.
