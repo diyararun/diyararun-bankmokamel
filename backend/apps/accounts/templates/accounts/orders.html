@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load django_vite %}
 {% load toman %}
+{% load jalali_datetime %}
 
 {% block title %}سفارش‌های من | بانک مکمل{% endblock %}
 
@@ -15,7 +16,8 @@
       <span class="text-red-600">سفارش‌های من</span>
     </nav>
 
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- accountWrapper: توضیح کامل در accounts/profile.html -->
+    <div id="accountWrapper" class="grid grid-cols-1 lg:grid-cols-4 gap-6">
       <!-- ==================== سایدبار حساب کاربری ==================== -->
       {% include "partials/profile_aside.html" %}
 
@@ -41,7 +43,7 @@
                   </div>
                   <div>
                     <span class="block text-[10px] text-slate-400">تاریخ ثبت</span>
-                    <span class="font-bold text-sm text-slate-800">{{ order.created_at }}</span>
+                    <span class="font-bold text-sm text-slate-800">{{ order.created_at|jdatetime }}</span>
                   </div>
                 </div>
 

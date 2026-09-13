@@ -16,7 +16,14 @@
       <span class="text-red-600">پروفایل من</span>
     </nav>
 
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!--
+      accountWrapper هم سایدبار و هم محتوای اصلی را دربر می‌گیرد —
+      frontend/src/js/accountNav.js با کلیک روی هر گزینه‌ی سایدبار، فقط
+      همین یک بخش را از سرور دوباره می‌گیرد و جایگزین می‌کند (نه کل
+      صفحه)، و چون سایدبار هم داخل همین wrapper است، وضعیت «فعال» آن هم
+      خودکار با هر ناوبری به‌روز می‌شود، بدون نیاز به منطق جداگانه در JS.
+    -->
+    <div id="accountWrapper" class="grid grid-cols-1 lg:grid-cols-4 gap-6">
       <!-- ==================== سایدبار حساب کاربری ==================== -->
       <!-- این سایدبار قبلاً اینجا (و در orders.html) جداگانه و کپی‌شده
            نوشته شده بود، درحالی‌که order_detail.html از partials/profile_aside.html
