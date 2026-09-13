@@ -13,6 +13,8 @@ Kept in one place so both directions agree on exactly which glyphs map
 to which digit, instead of each call site maintaining its own table.
 """
 
+from django.utils.safestring import mark_safe
+
 _ASCII = "0123456789"
 _PERSIAN = "۰۱۲۳۴۵۶۷۸۹"
 # Arabic-indic digits (٠-٩) are a different set of glyphs than Persian
@@ -65,4 +67,17 @@ def format_jalali_datetime(value, fmt=JALALI_DATETIME_FORMAT):
         # rather than raising, so a bad input never crashes a page/admin
         # list over what's ultimately just a display nicety.
         return value
-    return to_persian_digits(formatted)
+    persian = to_persian_digits(formatted)
+    # Wrapped in <bdi dir="ltr"> so the browser treats "YYYY/MM/DD - HH:MM:SS"
+    # as one isolated left-to-right run, immune to the surrounding RTL
+    # paragraph it's dropped into. Without this, this exact string (two
+    # numeric groups joined by " - ", no strong RTL character anywhere
+    # in it) gets visually reordered by the page's RTL bidi context —
+    # which is exactly why the time was rendering before the date
+    # instead of after: the same reason phone/postal-code/national-code
+    # fields elsewhere in this project always get dir="ltr" on their
+    # container, just applied here once, centrally, instead of at every
+    # template/admin call site (and easy to forget at a new one).
+    # mark_safe is fine here: the only content inside the tag is digits,
+    # "/", " - ", and ":" — never anything from user input.
+    return mark_safe(f'<bdi dir="ltr">{persian}</bdi>')
