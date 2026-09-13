@@ -85,24 +85,34 @@
                 </div>
               </div>
 
-              <dl class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs">
-                <div class="flex justify-between gap-3">
+              <!--
+                قبلاً هر ردیف flex justify-between بود — یعنی label سمت
+                راست می‌نشست و value با text-left به انتهای دیگر سطر
+                پرتاب می‌شد، با یک فاصله‌ی خالی بزرگ وسط. در RTL این کار
+                غیرطبیعی است: چشم انتظار دارد value بلافاصله بعد از
+                label (یعنی سمت چپ همان label، نزدیک به آن) بیاید، نه در
+                گوشه‌ی دیگر کارت. حالا هر جفت label/value زیر هم (label
+                کوچک و کم‌رنگ در بالا، value درست زیرش) چیده می‌شوند —
+                هر دو با چیدمان طبیعی راست‌چین صفحه، بدون فاصله‌ی مصنوعی.
+              -->
+              <dl class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs">
+                <div>
                   <dt class="text-slate-400">تحویل‌گیرنده</dt>
-                  <dd class="font-bold text-slate-800 text-left">{{ addr.full_name }}</dd>
+                  <dd class="font-bold text-slate-800 mt-0.5">{{ addr.full_name }}</dd>
                 </div>
-                <div class="flex justify-between gap-3">
+                <div>
                   <dt class="text-slate-400">شماره تماس</dt>
-                  <dd class="font-bold text-slate-800 text-left" dir="ltr">{{ addr.phone }}</dd>
+                  <dd class="font-bold text-slate-800 mt-0.5" dir="ltr">{{ addr.phone }}</dd>
                 </div>
-                <div class="flex justify-between gap-3 sm:col-span-2">
-                  <dt class="text-slate-400 shrink-0">آدرس</dt>
-                  <dd class="font-bold text-slate-800 text-left">
+                <div class="sm:col-span-2">
+                  <dt class="text-slate-400">آدرس</dt>
+                  <dd class="font-bold text-slate-800 mt-0.5">
                     {{ addr.province }}، {{ addr.city }}، {{ addr.full_address }}، پلاک {{ addr.plaque }}{% if addr.unit %}، واحد {{ addr.unit }}{% endif %}
                   </dd>
                 </div>
-                <div class="flex justify-between gap-3">
+                <div>
                   <dt class="text-slate-400">کد پستی</dt>
-                  <dd class="font-bold text-slate-800 text-left" dir="ltr">{{ addr.postal_code }}</dd>
+                  <dd class="font-bold text-slate-800 mt-0.5" dir="ltr">{{ addr.postal_code }}</dd>
                 </div>
               </dl>
             </div>
