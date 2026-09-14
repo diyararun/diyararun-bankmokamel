@@ -520,9 +520,24 @@
           class="flex gap-5 overflow-x-auto no-scrollbar scroll-smooth py-1"
         >
           {% for p in related_products %}
+          <!--
+            variant قبل از تگ کارت تعریف شد (نه فقط دور بخش قیمت/دکمه)
+            تا is_in_stock از همون اول در دسترس باشه و کل کارت (نه فقط
+            دکمه‌ی افزودن) برای کالای ناموجود کم‌رنگ‌تر دیده بشه — دقیقاً
+            همون الگویی که در صفحه‌ی محصولات (products.html) استفاده شده.
+          -->
+          {% with variant=p.default_variant %}
           <div
-            class="min-w-[250px] sm:min-w-[270px] bg-slate-50/70 rounded-2xl p-4 border border-slate-100 hover:bg-white hover:border-slate-200 hover:shadow-xl transition-all group flex flex-col justify-between"
+            class="min-w-[250px] sm:min-w-[270px] bg-slate-50/70 rounded-2xl p-4 border border-slate-100 hover:bg-white hover:border-slate-200 hover:shadow-xl transition-all group flex flex-col justify-between relative {% if not variant.is_in_stock %}opacity-50{% endif %}"
           >
+            {% if not variant.is_in_stock %}
+            <div class="absolute top-3 left-3 z-10">
+              <span
+                class="bg-slate-800 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-md"
+                >ناموجود</span
+              >
+            </div>
+            {% endif %}
             <a href="{% url 'store:product_detail' slug=p.slug %}">
               <div
                 class="h-40 bg-white rounded-xl mb-3 flex items-center justify-center text-4xl shadow-sm overflow-hidden p-3"
@@ -546,7 +561,6 @@
             <div
               class="mt-5 flex items-center justify-between border-t pt-3 border-slate-200/60"
             >
-              {% with variant=p.default_variant %}
               <span class="font-black text-slate-900 text-sm"
                 >{{ variant.price|default:"—"|toman }}
                 <span class="text-[10px] font-normal text-slate-500"
@@ -572,9 +586,9 @@
                   />
                 </svg>
               </button>
-              {% endwith %}
             </div>
           </div>
+          {% endwith %}
           {% endfor %}
         </div>
       </section>
@@ -625,9 +639,17 @@
       </button>
 
       <div class="text-center space-y-4">
+        <!--
+          قبلاً w-64/h-64 (فقط ۲۵۶ تا ۳۲۰ پیکسل) بود — یعنی دکمه‌ی
+          ذره‌بین عملاً تصویر را کوچک‌تر از حالت عادی نشان می‌داد، نه
+          بزرگ‌تر. این مودال یک لایه‌ی تمام‌صفحه است (fixed inset-0)، پس
+          جای خالی زیادی برای بزرگ‌تر شدن دارد؛ با vw/vh به‌جای اندازه‌ی
+          ثابت، روی هر سایز صفحه هم بخش زیادی از فضای خالی را پر می‌کند
+          و هم به دکمه‌های قبلی/بعدی کنار صفحه نمی‌چسبد.
+        -->
         <div
           id="modalEmojiContainer"
-          class="modal-img-animate w-64 h-64 sm:w-80 sm:h-80 bg-slate-800 rounded-3xl flex items-center justify-center shadow-2xl border border-slate-700 select-none overflow-hidden"
+          class="modal-img-animate w-[85vw] h-[50vh] sm:w-[75vw] sm:h-[65vh] lg:h-[75vh] max-w-3xl bg-slate-800 rounded-3xl flex items-center justify-center shadow-2xl border border-slate-700 select-none overflow-hidden"
         >
           {% with image=product.images.first %}
           <img class="max-w-full max-h-full w-auto h-auto object-contain" src="{% if image %}{{ image.image.url }}{% endif %}" alt="{{ product.name }}" />
