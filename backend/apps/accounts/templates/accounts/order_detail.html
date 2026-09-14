@@ -124,8 +124,13 @@
           </h2>
           <div class="space-y-3">
             {% for item in order.items.all %}
+            <!--
+              نشست ۳۶: w-16/h-16 (۶۴px) بود؛ چون img همیشه w-full/h-full
+              همین جعبه است، بزرگ‌کردن تصویر یعنی بزرگ‌کردن همین دو عدد —
+              به w-24/h-24 (۹۶px) رسید.
+            -->
             <div class="flex items-center gap-4 p-3 bg-slate-50 border border-slate-100 rounded-2xl">
-              <div class="w-16 h-16 bg-white rounded-xl overflow-hidden shrink-0">
+              <div class="w-24 h-24 bg-white rounded-xl overflow-hidden shrink-0">
                 {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.product_name }}" class="w-full h-full object-cover" />{% endif %}
               </div>
               <div class="flex-1 min-w-0">
