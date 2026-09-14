@@ -144,6 +144,14 @@ class AddressForm(forms.ModelForm):
             ),
             "plaque": forms.TextInput(attrs={"placeholder": "پلاک", "class": ADDRESS_HALF_INPUT_CLASS}),
             "unit": forms.TextInput(attrs={"placeholder": "واحد", "class": ADDRESS_HALF_INPUT_CLASS}),
+            # همان کلاس چک‌باکس سفارشی فیلتر پیشرفته‌ی صفحه‌ی محصولات
+            # (apps/catalog/templates/catalog/products.html) — این ویجت
+            # فقط خودِ <input> را با این کلاس‌ها می‌دهد، لایه‌های تزئینی
+            # (مربع رنگی + تیک SVG) در قالب (address_form.html) دور همین
+            # اینپوت پیچیده شده‌اند، دقیقاً به همان ساختاری که آنجا هست.
+            "is_default": forms.CheckboxInput(
+                attrs={"class": "filter-checkbox peer appearance-none absolute inset-0 w-full h-full m-0 cursor-pointer z-10"}
+            ),
         }
 
     def clean_phone(self):
