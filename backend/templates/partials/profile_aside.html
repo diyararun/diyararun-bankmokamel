@@ -1,8 +1,17 @@
 <aside class="lg:col-span-1">
         <div
-          class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-6 lg:sticky lg:top-24"
+          class="bg-white rounded-3xl border border-slate-200/80 shadow-sm lg:p-6 lg:space-y-6 lg:sticky lg:top-24 overflow-hidden"
         >
-          <div class="flex flex-col items-center text-center gap-3">
+          <!--
+            نشست ۳۵: پایین‌تر از 1024px این سایدبار به‌جای همیشه-باز، یک
+            دراپ‌داون بسته (پیش‌فرض) است — دکمه‌ی زیر (نام + شماره +
+            chevron) با کلیک لینک‌ها را باز/بسته می‌کند، تا مشتری با ورود
+            به صفحه اول محتوای اصلی (مثلاً فرم ویرایش اطلاعات) را ببیند،
+            نه این‌که کل بالای صفحه را سایدبار بگیرد. از 1024px به بالا
+            دقیقاً همان چیزی است که قبلاً بود: همیشه باز، ثابت (sticky).
+            toggleAccountSidebarMenu در frontend/src/js/accountNav.js.
+          -->
+          <div class="hidden lg:flex flex-col items-center text-center gap-3">
             <span
               class="w-20 h-20 rounded-full bg-red-600 text-white flex items-center justify-center text-4xl shadow-lg shadow-red-600/30"
               >{{ user.avatar_emoji }}</span
@@ -13,7 +22,39 @@
             </div>
           </div>
 
-          <nav class="space-y-1.5 text-sm font-bold">
+          <button
+            type="button"
+            id="accountSidebarToggle"
+            onclick="toggleAccountSidebarMenu()"
+            aria-expanded="false"
+            aria-controls="accountSidebarNav"
+            class="lg:hidden w-full flex items-center justify-between gap-3 p-4"
+          >
+            <span class="flex items-center gap-2.5">
+              <span
+                class="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center text-lg shrink-0"
+                >{{ user.avatar_emoji }}</span
+              >
+              <span class="text-right">
+                <span class="block font-black text-slate-900 text-sm">{{ user.display_name }}</span>
+                <span class="block text-xs text-slate-400" dir="ltr">{{ user.phone }}</span>
+              </span>
+            </span>
+            <svg
+              id="accountSidebarChevron"
+              class="w-4 h-4 text-slate-500 shrink-0 transition-transform duration-200"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <nav
+            id="accountSidebarNav"
+            class="hidden lg:block space-y-1.5 text-sm font-bold border-t border-slate-100 mt-1 pt-3 px-4 pb-4 lg:border-0 lg:mt-0 lg:pt-0 lg:px-0 lg:pb-0"
+          >
             <!--
               active_page یک context var است که هر ویو (profile_view،
               order_list_view/order_detail_view، address_list_view/...) خودش
