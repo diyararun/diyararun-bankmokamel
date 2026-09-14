@@ -363,7 +363,7 @@
           id="bestSlider"
           class="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth py-2"
         >
-          {% for p in featured_products %}
+          {% for p in best_seller_products %}
           <div
             class="min-w-[260px] sm:min-w-[290px] bg-white rounded-2xl p-5 border border-slate-200/80 hover:shadow-xl transition-all group flex flex-col justify-between relative"
           >
@@ -621,7 +621,7 @@
           id="discSlider"
           class="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth py-2"
         >
-          {% for p in discounted_products %}
+          {% for p in featured_deal_products %}
           {% with variant=p.default_variant %}
           <div
             class="min-w-[260px] sm:min-w-[290px] bg-white text-slate-900 rounded-2xl p-5 shadow-xl relative flex flex-col justify-between"

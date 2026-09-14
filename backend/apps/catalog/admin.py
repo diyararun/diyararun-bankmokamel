@@ -66,8 +66,23 @@ class ProductSpecInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("name", "category", "brand", "is_active", "created_at_display")
-    list_filter = ("is_active", "category", "brand")
+    list_display = (
+        "name",
+        "category",
+        "brand",
+        "is_best_seller",
+        "is_featured_deal",
+        "is_active",
+        "created_at_display",
+    )
+    # is_best_seller/is_featured_deal are editable right here, in the list —
+    # not on each product's own edit page — on purpose: with a few hundred
+    # products, the seller needs to search/filter this same list down to
+    # the handful they mean, then tick a checkbox and hit one "ذخیره" for
+    # the whole (already-filtered, already-paginated) page. No separate
+    # picker screen, no per-product field to hunt for.
+    list_editable = ("is_best_seller", "is_featured_deal")
+    list_filter = ("is_active", "is_best_seller", "is_featured_deal", "category", "brand")
     search_fields = ("name", "short_description")
     prepopulated_fields = {"slug": ("name",)}
     inlines = [ProductImageInline, ProductVariantInline, ProductSpecInline]
