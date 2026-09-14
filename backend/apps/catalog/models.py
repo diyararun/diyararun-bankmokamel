@@ -220,7 +220,7 @@ PRODUCT_IMAGE_JPEG_QUALITY = 85
 # حد دلخواه دیده می‌شدند؛ برای تغییر دوباره‌ی میزان زوم در آینده، فقط
 # همین عدد را عوض کنید و دستور مدیریتی زیر را دوباره اجرا کنید:
 #   python manage.py normalize_product_images
-PRODUCT_IMAGE_CONTENT_RATIO = 0.94
+PRODUCT_IMAGE_CONTENT_RATIO = 0.9
 # A pixel counts as "background" during trimming only if it's within
 # this much of pure white (0-255 per channel) — a hard difference-from-
 # white check would also flag ordinary JPEG compression noise in an
