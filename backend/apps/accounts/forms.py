@@ -77,6 +77,21 @@ class ProfileForm(forms.ModelForm):
         validate_national_code(value)
         return value
 
+    # نشست ۳۵: تا همین‌جا نام/نام‌خانوادگی هیچ قانونی نداشتند، با این‌که
+    # apps.store.validators از همان اول (نگاه کنید به docstring بالای آن
+    # فایل) دقیقاً برای اشتراک بین فرم تسویه‌حساب، فرم آدرس‌ها، *و* فرم
+    # پروفایل نوشته شده بود. همان تابعی که full_name در آن دو فرم دیگر
+    # استفاده می‌کند، اینجا هم روی هرکدام از این دو فیلد جدا اجرا می‌شود.
+    def clean_first_name(self):
+        value = self.cleaned_data["first_name"].strip()
+        validate_persian_letters(value, "نام")
+        return value
+
+    def clean_last_name(self):
+        value = self.cleaned_data["last_name"].strip()
+        validate_persian_letters(value, "نام خانوادگی")
+        return value
+
 
 class AddressForm(forms.ModelForm):
     """فرم افزودن/ویرایش یک آدرس در «آدرس‌های من». همان فیلدها و همان

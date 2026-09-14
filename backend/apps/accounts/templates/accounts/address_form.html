@@ -3,6 +3,8 @@
 
 {% block title %}{% if is_new %}افزودن آدرس جدید{% else %}ویرایش آدرس{% endif %} | بانک مکمل{% endblock %}
 
+{% block entry %}{% vite_asset 'src/js/entries/addressForm.js' %}{% endblock %}
+
 {% block content %}
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <!-- مسیر (Breadcrumb) -->

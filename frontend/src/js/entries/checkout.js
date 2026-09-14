@@ -1,5 +1,6 @@
 import { postForm } from "../csrf.js";
 import { formatToman } from "../formatToman.js";
+import { initFieldValidation } from "../fieldValidation.js";
 
 // ======================== اعتبارسنجی سمت کلاینت فرم پرداخت =========================
 //
@@ -18,64 +19,20 @@ import { formatToman } from "../formatToman.js";
 // کند، یا مستقیماً به CheckoutView پست بزند، همچنان توسط بک‌اند بررسی
 // می‌شود. فرم سمت سرور هم دوباره (و به‌طور کامل) همین قوانین را بررسی
 // می‌کند تا هرگز به داده‌ی سمت کلاینت اعتماد نشود.
-
-const NAV_KEYS = [
-  "Backspace",
-  "Delete",
-  "ArrowLeft",
-  "ArrowRight",
-  "Tab",
-  "Home",
-  "End",
-];
-
-const PERSIAN_LETTER_KEY_RE = /^[آ-ی\s‌-]$/;
-
-function onlyPersianLettersKeydown(event) {
-  if (
-    !PERSIAN_LETTER_KEY_RE.test(event.key) &&
-    !NAV_KEYS.includes(event.key) &&
-    !(event.ctrlKey || event.metaKey)
-  ) {
-    event.preventDefault();
-  }
-}
-
-function sanitizePersianInput(event) {
-  event.target.value = event.target.value.replace(/[^آ-ی\s‌-]/g, "");
-}
-
-function onlyDigitsKeydown(event) {
-  if (
-    !/^[0-9]$/.test(event.key) &&
-    !NAV_KEYS.includes(event.key) &&
-    !(event.ctrlKey || event.metaKey)
-  ) {
-    event.preventDefault();
-  }
-}
-
-function sanitizeDigitsInput(event) {
-  event.target.value = event.target.value.replace(/\D/g, "");
-}
-
-function bindField(id, onKeydown, onInput) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.addEventListener("keydown", onKeydown);
-  el.addEventListener("input", onInput);
-}
+//
+// نشست ۳۵: منطق «فقط حرف فارسی»/«فقط رقم» از اینجا به یک ماژول مشترک
+// (../fieldValidation.js) منتقل شد، چون فرم پروفایل و فرم آدرس‌های من
+// هم دقیقاً به همین دو قانون نیاز داشتند — همان چیزی که checkout.js از
+// قبل (فقط اینجا) پیاده کرده بود.
 
 // آی‌دی‌های واقعی، همان‌طور که Django برای هر فیلد CheckoutForm می‌سازد
 // (id_<نام فیلد> — پیش‌فرض ویجت‌های جنگو، به‌جز coupon_code که در forms.py
 // صراحتاً id="couponCodeInput" گرفته و initCouponForm جدا مدیریتش می‌کند).
-function initFieldValidation() {
-  ["id_full_name", "id_province", "id_city"].forEach((id) =>
-    bindField(id, onlyPersianLettersKeydown, sanitizePersianInput),
-  );
-  ["id_phone", "id_national_code", "id_postal_code", "id_plaque", "id_unit"].forEach(
-    (id) => bindField(id, onlyDigitsKeydown, sanitizeDigitsInput),
-  );
+function initCheckoutFieldValidation() {
+  initFieldValidation({
+    persian: ["id_full_name", "id_province", "id_city"],
+    digits: ["id_phone", "id_national_code", "id_postal_code", "id_plaque", "id_unit"],
+  });
 }
 
 // ======================== کد تخفیف ========================
@@ -141,6 +98,6 @@ function initCouponForm() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  initFieldValidation();
+  initCheckoutFieldValidation();
   initCouponForm();
 });
