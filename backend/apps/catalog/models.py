@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import models
 from django_jalali.db import models as jmodels
-from PIL import Image, ImageOps
+from PIL import Image, ImageChops, ImageOps
 
 # Rendered as an admin radio widget (two options) instead of the default
 # checkbox for is_main_category/is_popular below — see
@@ -205,6 +205,16 @@ class Product(models.Model):
 # matters for page speed, not just layout consistency).
 PRODUCT_IMAGE_CANVAS_SIZE = 1000
 PRODUCT_IMAGE_JPEG_QUALITY = 85
+# How much of the final square canvas the product itself should fill,
+# after normalize_image()'s own whitespace-trimming step below — the
+# rest is even margin split between every side. See _trim_white_margin()
+# for why this trimming step exists at all.
+PRODUCT_IMAGE_CONTENT_RATIO = 0.86
+# A pixel counts as "background" during trimming only if it's within
+# this much of pure white (0-255 per channel) — a hard difference-from-
+# white check would also flag ordinary JPEG compression noise in an
+# otherwise-white studio backdrop as "content" and defeat the trim.
+PRODUCT_IMAGE_WHITE_MARGIN_THRESHOLD = 12
 
 
 class ProductImage(models.Model):
@@ -223,6 +233,16 @@ class ProductImage(models.Model):
     relying on every seller to crop/pad their photos consistently by hand
     — fixes that at the source, for every place this image is used
     (product cards, hero, the detail-page gallery), not just one section.
+
+    نشست ۳۲: صرفاً مربع‌کردن کافی نبود — دو عکس با همان محصول ولی حاشیه‌ی
+    سفید متفاوت (یکی محصول را تنگ فریم کرده، دیگری فضای خالی زیادی
+    دورش گذاشته) باز هم داخل همان مربع، اندازه‌های به‌ظاهر متفاوتی به
+    نظر می‌رسیدند — چون حاشیه‌ی خودِ عکس اصلی دست‌نخورده باقی می‌ماند.
+    _trim_white_margin() پایین، قبل از قرار گرفتن روی بوم، این حاشیه‌ی
+    سفید/تقریباً سفید را از هر عکسی می‌بُرد (چه پس‌زمینه‌ی سفید واقعی
+    باشد، چه شفافیتی که همین‌جا به سفید تبدیل شده) تا محصول همیشه یک
+    نسبت ثابت (PRODUCT_IMAGE_CONTENT_RATIO) از قاب نهایی را پر کند —
+    نه هرچقدر که در عکس اصلی اتفاقی پر کرده بود.
     """
 
     product = models.ForeignKey(Product, verbose_name="محصول", related_name="images", on_delete=models.CASCADE)
@@ -272,7 +292,10 @@ class ProductImage(models.Model):
         else:
             image = image.convert("RGB")
 
-        image.thumbnail((PRODUCT_IMAGE_CANVAS_SIZE, PRODUCT_IMAGE_CANVAS_SIZE), Image.LANCZOS)
+        image = ProductImage._trim_white_margin(image)
+
+        content_size = round(PRODUCT_IMAGE_CANVAS_SIZE * PRODUCT_IMAGE_CONTENT_RATIO)
+        image.thumbnail((content_size, content_size), Image.LANCZOS)
 
         canvas = Image.new("RGB", (PRODUCT_IMAGE_CANVAS_SIZE, PRODUCT_IMAGE_CANVAS_SIZE), (255, 255, 255))
         offset = (
@@ -286,6 +309,41 @@ class ProductImage(models.Model):
 
         original_name = os.path.splitext(os.path.basename(uploaded_file.name))[0]
         return ContentFile(buffer.getvalue(), name=f"{original_name}.jpg")
+
+    @staticmethod
+    def _trim_white_margin(image):
+        """Crops away any plain white (or near-white) margin around the
+        product, so the amount of "breathing room" in the final square
+        depends only on PRODUCT_IMAGE_CONTENT_RATIO above — never on how
+        tightly or loosely the seller happened to frame the original
+        photo, and never on whether that margin started out as an actual
+        white studio background or as transparency flattened onto white
+        a few lines up. Without this, two photos of similarly-sized
+        products could still land on the exact same size canvas and look
+        like two different sizes — one "zoomed in", one "zoomed out" —
+        purely because of how much empty space each seller's original
+        photo happened to have around the product.
+
+        Standard, dependency-free way to find "everything that isn't the
+        background": diff the image against a solid white image of the
+        same size, threshold that difference (a flat *near*-white JPEG
+        backdrop is never perfectly (0,0,0) different from pure white —
+        ordinary compression noise alone guarantees that — so a bare
+        `getbbox()` on the raw difference would see that noise as
+        "content" across the whole photo and trim nothing), then take the
+        bounding box of what's left.
+
+        Falls back to the untouched image whenever there's nothing to
+        crop to (a blank/all-white photo, or a photo whose background
+        isn't white/near-white at all — a lifestyle shot on a colored or
+        textured background, say) rather than risk cropping into content
+        it can't actually tell apart from background.
+        """
+        white = Image.new("RGB", image.size, (255, 255, 255))
+        diff = ImageChops.difference(image, white).convert("L")
+        diff = diff.point(lambda pixel: 255 if pixel > PRODUCT_IMAGE_WHITE_MARGIN_THRESHOLD else 0)
+        bbox = diff.getbbox()
+        return image.crop(bbox) if bbox else image
 
 
 class ProductVariant(models.Model):
