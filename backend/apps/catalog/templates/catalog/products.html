@@ -408,12 +408,24 @@
               {% endif %}
               <div>
                 <div
-                  class="h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group"
+                  class="h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group p-4"
                 >
-                 <a href="{% url 'store:product_detail' slug=p.slug %}">
+                 <!--
+                   object-contain (نه object-cover): جعبه‌ی این کارت
+                   مربع نیست (ارتفاعش ثابت است، عرضش نه)، و چون
+                   object-cover همیشه تصویر را طوری بزرگ/برش می‌زند که
+                   دقیقاً همان جعبه‌ی نامربع را پر کند، هر عکسی که
+                   محصولش داخل قاب مربعِ نرمال‌شده‌اش (ProductImage.
+                   normalize_image) کمی بیشتر جا گرفته بود، همین‌جا
+                   واقعاً از لبه‌ها بریده و zoom می‌شد. با object-contain
+                   کل تصویر همیشه کامل و بدون برش دیده می‌شود — دقیقاً
+                   همان روشی که همین الان در بخش‌های صفحه‌ی اصلی
+                   (store/index.html) استفاده می‌شود.
+                 -->
+                 <a href="{% url 'store:product_detail' slug=p.slug %}" class="w-full h-full flex items-center justify-center">
                   {% with image=p.images.first %}
                   <img
-                    class="w-full h-full object-cover"
+                    class="max-w-full max-h-full w-auto h-auto object-contain"
                     src="{% if image %}{{ image.image.url }}{% endif %}"
                     alt="{{ p.name }}"
                     {% if forloop.counter > 6 %}
