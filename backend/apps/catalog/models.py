@@ -209,7 +209,18 @@ PRODUCT_IMAGE_JPEG_QUALITY = 85
 # after normalize_image()'s own whitespace-trimming step below — the
 # rest is even margin split between every side. See _trim_white_margin()
 # for why this trimming step exists at all.
-PRODUCT_IMAGE_CONTENT_RATIO = 0.86
+#
+# This is the ONE place that controls how "zoomed in" every product photo
+# looks — homepage, product listing, and product-detail page all read the
+# exact same stored file, so raising or lowering this single number is
+# reflected everywhere at once, with no template changes needed. Keep it
+# below 1.0 (a small margin on every side reads as an intentional product
+# shot; exactly 1.0 would touch the canvas edges and can look like a bad
+# crop). نشست ۳۳: از ۰.۸۶ به ۰.۹۴ افزایش یافت چون محصولات کمی دورتر از
+# حد دلخواه دیده می‌شدند؛ برای تغییر دوباره‌ی میزان زوم در آینده، فقط
+# همین عدد را عوض کنید و دستور مدیریتی زیر را دوباره اجرا کنید:
+#   python manage.py normalize_product_images
+PRODUCT_IMAGE_CONTENT_RATIO = 0.94
 # A pixel counts as "background" during trimming only if it's within
 # this much of pure white (0-255 per channel) — a hard difference-from-
 # white check would also flag ordinary JPEG compression noise in an
