@@ -115,13 +115,13 @@
           <button
             id="profileMenuBtn"
             onclick="toggleProfileMenu()"
-            class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm ps-2 pe-3 py-1.5 rounded-xl transition-all"
+            aria-label="{{ user.display_name }}"
+            class="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm ps-2 pe-2.5 py-1.5 rounded-xl transition-all"
           >
             <span
               class="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center text-base shrink-0"
               >{{ user.avatar_emoji }}</span
             >
-            <span class="max-w-[7rem] truncate">{{ user.display_name }}</span>
             <svg
               class="w-3.5 h-3.5 text-slate-500"
               fill="none"
