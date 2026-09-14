@@ -369,7 +369,7 @@
           >
             <div>
               <div
-                class="h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group p-4"
+                class="h-56 bg-white rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group p-4"
               >
                 <a href="{% url 'store:product_detail' slug=p.slug %}" class="w-full h-full flex items-center justify-center">
                   {% with image=p.images.first %}
@@ -635,7 +635,7 @@
             {% endif %}
             <div>
               <div
-                class="h-44 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl overflow-hidden p-4"
+                class="h-52 bg-white rounded-xl mb-4 flex items-center justify-center text-5xl overflow-hidden p-4"
               >
                 <a href="{% url 'store:product_detail' slug=p.slug %}" class="w-full h-full flex items-center justify-center">
                   {% with image=p.images.first %}

@@ -65,7 +65,7 @@ function renderThumbnails() {
       };
     } else {
       const isSelected = i === currentGalleryIndex;
-      button.className = `thumb-btn h-16 bg-slate-50 rounded-xl flex items-center justify-center overflow-hidden transition-all ${
+      button.className = `thumb-btn h-16 bg-white rounded-xl flex items-center justify-center overflow-hidden transition-all ${
         isSelected
           ? "border-2 border-red-600"
           : "border border-slate-200 hover:border-slate-300"

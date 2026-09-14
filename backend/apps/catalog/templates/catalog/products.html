@@ -408,7 +408,7 @@
               {% endif %}
               <div>
                 <div
-                  class="h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group p-4"
+                  class="h-56 bg-white rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group p-4"
                 >
                  <!--
                    object-contain (نه object-cover): جعبه‌ی این کارت
@@ -420,7 +420,12 @@
                    واقعاً از لبه‌ها بریده و zoom می‌شد. با object-contain
                    کل تصویر همیشه کامل و بدون برش دیده می‌شود — دقیقاً
                    همان روشی که همین الان در بخش‌های صفحه‌ی اصلی
-                   (store/index.html) استفاده می‌شود.
+                   (store/index.html) استفاده می‌شود. h-56 (نه h-48) و
+                   bg-white (نه bg-slate-100): نسبت جعبه کمی عمودی‌تر شد
+                   تا به شکل واقعی بیشتر محصولات (قوطی/بسته‌بندی عمودی)
+                   نزدیک‌تر باشد، و پس‌زمینه‌ی خاکستری حذف شد تا با
+                   پس‌زمینه‌ی سفید خودِ عکسِ نرمال‌شده یکی دیده شود —
+                   نشست ۳۳.
                  -->
                  <a href="{% url 'store:product_detail' slug=p.slug %}" class="w-full h-full flex items-center justify-center">
                   {% with image=p.images.first %}
