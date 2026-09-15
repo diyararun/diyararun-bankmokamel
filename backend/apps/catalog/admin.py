@@ -51,6 +51,13 @@ class FlavorAdmin(admin.ModelAdmin):
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
+    # نشست ۳۷: حداکثر ۵ تصویر برای هر محصول. توجه: صرفاً max_num باعث
+    # می‌شود ادمین فرم خالیِ بیشتری برای اضافه‌کردن نشان ندهد، اما به‌تنهایی
+    # جلوی ارسال دستیِ فرم‌های بیشتر (مثلاً با دستکاری POST) را نمی‌گیرد —
+    # validate_max=True لازم است تا این سقف واقعاً در اعتبارسنجی فرم‌ست
+    # اعمال شود و اگر کسی بیشتر از ۵ ردیف بفرستد، خطای واقعی برگردد.
+    max_num = 5
+    validate_max = True
 
 
 class ProductVariantInline(admin.TabularInline):
