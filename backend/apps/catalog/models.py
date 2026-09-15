@@ -7,6 +7,8 @@ from django.db import models
 from django_jalali.db import models as jmodels
 from PIL import Image, ImageChops, ImageOps
 
+from .validators import validate_image_before_pillow
+
 # Rendered as an admin radio widget (two options) instead of the default
 # checkbox for is_main_category/is_popular below — see
 # CategoryAdmin.radio_fields in apps/catalog/admin.py. Django admin only
@@ -200,9 +202,11 @@ class Product(models.Model):
 # Every product image is normalized to a square canvas of this size (px)
 # before it's ever saved to disk — see ProductImage.save() below. Chosen
 # to be large enough to still look sharp on a product-detail zoom, small
-# enough that the resulting JPEG stays tiny (a few hundred KB at most,
-# usually well under 100KB — see the docstring on save() for why this
-# matters for page speed, not just layout consistency).
+# enough that the resulting JPEG stays tiny — usually well under 100KB for
+# an ordinary clean product photo, and never above
+# PRODUCT_IMAGE_MAX_OUTPUT_BYTES below even for an unusually complex one
+# (see _encode_within_size_cap()) — see the docstring on save() for why
+# this matters for page speed, not just layout consistency.
 PRODUCT_IMAGE_CANVAS_SIZE = 1000
 PRODUCT_IMAGE_JPEG_QUALITY = 85
 # How much of the final square canvas the product itself should fill,
@@ -226,6 +230,22 @@ PRODUCT_IMAGE_CONTENT_RATIO = 0.9
 # white check would also flag ordinary JPEG compression noise in an
 # otherwise-white studio backdrop as "content" and defeat the trim.
 PRODUCT_IMAGE_WHITE_MARGIN_THRESHOLD = 12
+# نشست ۳۷ — لایه‌ی سوم از استراتژی چهار-لایه‌ای (نگاه کنید به
+# apps/catalog/validators.py برای لایه‌ی دوم و به progress-log.md برای
+# توضیح کامل هر چهار لایه): تا این‌جا هیچ سقف واقعی‌ای روی حجم خروجی
+# نهایی وجود نداشت — کیفیت ثابت ۸۵ برای عکس‌های تمیز و ساده‌ی محصول
+# معمولاً چند ده کیلوبایت خروجی می‌دهد، اما برای یک عکس شلوغ/پرجزئیات
+# می‌تواند به چند صد کیلوبایت هم برسد (چون حجم JPEG به پیچیدگیِ بصریِ
+# تصویر بستگی دارد، نه فقط ابعادش). save() پایین، بعد از اولین
+# انکود، اگر خروجی از این سقف بیشتر بود، کیفیت را پله‌پله کم می‌کند و
+# دوباره انکود می‌کند تا واقعاً زیر سقف بیاید — یعنی «حداکثر ۱۰۰-۱۵۰
+# کیلوبایت» دیگر فقط یک انتظار تجربی نیست، یک تضمین است.
+PRODUCT_IMAGE_MAX_OUTPUT_BYTES = 150 * 1024  # ۱۵۰ کیلوبایت
+# پایین‌تر از این کیفیت، افت کیفیت بصری برای یک عکس فروشگاهی به‌وضوح
+# نامناسب می‌شود — بهتر است یک عکس واقعاً غیرعادی (مثلاً یک بافت بسیار
+# نویزی) کمی بیشتر از سقف بماند تا این‌که همه‌ی عکس‌ها را به‌خاطر یک
+# مورد استثنایی زشت کنیم.
+PRODUCT_IMAGE_MIN_JPEG_QUALITY = 50
 
 
 class ProductImage(models.Model):
@@ -269,6 +289,19 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.order}"
+
+    def clean(self):
+        # نشست ۳۷ — لایه‌ی دوم از استراتژی چهار-لایه‌ای (نگاه کنید به
+        # apps/catalog/validators.py): این بررسی‌ها ارزان‌اند و *قبل* از
+        # این‌که Pillow واقعاً پردازش سنگین (thumbnail/paste/re-encode در
+        # normalize_image پایین) را روی فایل انجام بدهد اجرا می‌شوند —
+        # دقیقاً همان لحظه‌ای که فرم ادمین این مدل را قبل از ذخیره
+        # اعتبارسنجی می‌کند (ModelForm._post_clean -> instance.full_clean)،
+        # پس خطا به‌صورت طبیعی زیر فیلد «تصویر» در ادمین نمایش داده
+        # می‌شود، نه یک خطای سرور ۵۰۰.
+        super().clean()
+        if self.image and not self.image._committed:
+            validate_image_before_pillow(self.image)
 
     def save(self, *args, **kwargs):
         # `_committed` is False exactly when a NEW file was just assigned
@@ -315,8 +348,7 @@ class ProductImage(models.Model):
         )
         canvas.paste(image, offset)
 
-        buffer = io.BytesIO()
-        canvas.save(buffer, format="JPEG", quality=PRODUCT_IMAGE_JPEG_QUALITY, optimize=True)
+        buffer = ProductImage._encode_within_size_cap(canvas)
 
         original_name = os.path.splitext(os.path.basename(uploaded_file.name))[0]
         return ContentFile(buffer.getvalue(), name=f"{original_name}.jpg")
@@ -355,6 +387,37 @@ class ProductImage(models.Model):
         diff = diff.point(lambda pixel: 255 if pixel > PRODUCT_IMAGE_WHITE_MARGIN_THRESHOLD else 0)
         bbox = diff.getbbox()
         return image.crop(bbox) if bbox else image
+
+    @staticmethod
+    def _encode_within_size_cap(canvas):
+        """Encodes canvas as JPEG at PRODUCT_IMAGE_JPEG_QUALITY, then —
+        only if that first encode came out heavier than
+        PRODUCT_IMAGE_MAX_OUTPUT_BYTES — re-encodes at progressively lower
+        quality until it fits (or PRODUCT_IMAGE_MIN_JPEG_QUALITY is
+        reached, whichever comes first).
+
+        JPEG size depends on how visually busy the image is, not just its
+        pixel dimensions (نگاه کنید به توضیح بالای
+        PRODUCT_IMAGE_MAX_OUTPUT_BYTES) — an ordinary clean product photo
+        never even enters this loop; it only kicks in for the rare
+        unusually noisy/complex source image, so the vast majority of
+        images still get the full PRODUCT_IMAGE_JPEG_QUALITY.
+        """
+        quality = PRODUCT_IMAGE_JPEG_QUALITY
+        buffer = io.BytesIO()
+        canvas.save(buffer, format="JPEG", quality=quality, optimize=True)
+
+        # `quality = max(quality - 10, MIN)` (نه صرفاً `quality -= 10`) عمداً
+        # است: در غیر این صورت آخرین قدم می‌توانست کیفیت را از بالای سقف
+        # مستقیم به *زیر* PRODUCT_IMAGE_MIN_JPEG_QUALITY ببرد (مثلاً از ۵۵
+        # به ۴۵)، چون شرط حلقه با کیفیتِ *قبل* از کم‌شدن سنجیده می‌شود، نه
+        # بعد از آن — این‌طور کیفیت هرگز از سقفِ پایین عبور نمی‌کند.
+        while buffer.tell() > PRODUCT_IMAGE_MAX_OUTPUT_BYTES and quality > PRODUCT_IMAGE_MIN_JPEG_QUALITY:
+            quality = max(quality - 10, PRODUCT_IMAGE_MIN_JPEG_QUALITY)
+            buffer = io.BytesIO()
+            canvas.save(buffer, format="JPEG", quality=quality, optimize=True)
+
+        return buffer
 
 
 class ProductVariant(models.Model):
