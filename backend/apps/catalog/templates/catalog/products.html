@@ -41,7 +41,7 @@
           class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
         >
           <div>
-            <h1 class="text-2xl font-black text-slate-900">
+            <h1 class="font-title text-heading-24 font-black text-slate-900">
               {% if search_query %}
                 نتایج جستجو برای «{{ search_query }}»
               {% else %}
@@ -129,7 +129,7 @@
                 <span class="font-extrabold text-slate-900 text-base">فیلترهای پیشرفته</span>
                 <span
                   id="activeFilterCount"
-                  class="hidden bg-red-600 text-white text-[10px] font-bold w-5 h-5 rounded-full items-center justify-center"
+                  class="hidden bg-red-600 text-white text-caption-10 font-bold w-5 h-5 rounded-full items-center justify-center"
                   >۰</span
                 >
               </div>
@@ -169,7 +169,7 @@
 
                     <!-- فیلتر ۱: برندها -->
                     <div class="mb-6 border-b border-slate-100 pb-5">
-                      <h4 class="font-bold text-slate-900 text-sm mb-3">برند سازنده</h4>
+                      <h4 class="font-title font-bold text-slate-900 text-heading-14 mb-3">برند سازنده</h4>
                       <div
                         class="space-y-1 max-h-48 overflow-y-auto pr-1 -mr-1 no-scrollbar"
                       >
@@ -210,7 +210,7 @@
 
                     <!-- فیلتر ۲: محدوده قیمت -->
                     <div class="mb-6 border-b border-slate-100 pb-5">
-                      <h4 class="font-bold text-slate-900 text-sm mb-3">
+                      <h4 class="font-title font-bold text-slate-900 text-heading-14 mb-3">
                         محدوده قیمت (تومان)
                       </h4>
                       <div class="space-y-3">
@@ -241,7 +241,7 @@
                          اگر فروشنده اصلاً از فیلد وزن استفاده نکند، این بخش کاملاً حذف می‌شود. -->
                     {% if show_weight_filter %}
                     <div class="mb-6 border-b border-slate-100 pb-5">
-                      <h4 class="font-bold text-slate-900 text-sm mb-3">
+                      <h4 class="font-title font-bold text-slate-900 text-heading-14 mb-3">
                         وزن / حجم محصول
                       </h4>
                       <div class="grid grid-cols-2 gap-2 text-xs">
@@ -263,7 +263,7 @@
                          حذف می‌شود تا خریدار با فیلتری که هیچ نتیجه‌ای فیلتر نمی‌کند گیج نشود. -->
                     {% if show_form_type_filter %}
                     <div class="mb-6 border-b border-slate-100 pb-5">
-                      <h4 class="font-bold text-slate-900 text-sm mb-3">
+                      <h4 class="font-title font-bold text-slate-900 text-heading-14 mb-3">
                         نوع مکمل (فرم)
                       </h4>
                       <div class="space-y-1 text-xs">
@@ -386,7 +386,7 @@
                 class="absolute top-3 right-3 z-10 flex flex-col gap-1.5 items-start"
               >
                 <span
-                  class="bg-amber-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-md"
+                  class="bg-amber-500 text-white font-extrabold text-caption-10 px-2 py-0.5 rounded-md"
                   >{{ variant.discount_percent }}٪ تخفیف</span
                 >
               </div>
@@ -401,19 +401,36 @@
               -->
               <div class="absolute top-3 left-3 z-10">
                 <span
-                  class="bg-slate-800 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-md"
+                  class="bg-slate-800 text-white font-extrabold text-caption-10 px-2 py-0.5 rounded-md"
                   >ناموجود</span
                 >
               </div>
               {% endif %}
               <div>
                 <div
-                  class="h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group"
+                  class="h-56 bg-white rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group p-4"
                 >
-                 <a href="{% url 'store:product_detail' slug=p.slug %}">
+                 <!--
+                   object-contain (نه object-cover): جعبه‌ی این کارت
+                   مربع نیست (ارتفاعش ثابت است، عرضش نه)، و چون
+                   object-cover همیشه تصویر را طوری بزرگ/برش می‌زند که
+                   دقیقاً همان جعبه‌ی نامربع را پر کند، هر عکسی که
+                   محصولش داخل قاب مربعِ نرمال‌شده‌اش (ProductImage.
+                   normalize_image) کمی بیشتر جا گرفته بود، همین‌جا
+                   واقعاً از لبه‌ها بریده و zoom می‌شد. با object-contain
+                   کل تصویر همیشه کامل و بدون برش دیده می‌شود — دقیقاً
+                   همان روشی که همین الان در بخش‌های صفحه‌ی اصلی
+                   (store/index.html) استفاده می‌شود. h-56 (نه h-48) و
+                   bg-white (نه bg-slate-100): نسبت جعبه کمی عمودی‌تر شد
+                   تا به شکل واقعی بیشتر محصولات (قوطی/بسته‌بندی عمودی)
+                   نزدیک‌تر باشد، و پس‌زمینه‌ی خاکستری حذف شد تا با
+                   پس‌زمینه‌ی سفید خودِ عکسِ نرمال‌شده یکی دیده شود —
+                   نشست ۳۳.
+                 -->
+                 <a href="{% url 'store:product_detail' slug=p.slug %}" class="w-full h-full flex items-center justify-center">
                   {% with image=p.images.first %}
                   <img
-                    class="w-full h-full object-cover"
+                    class="max-w-full max-h-full w-auto h-auto object-contain"
                     src="{% if image %}{{ image.image.url }}{% endif %}"
                     alt="{{ p.name }}"
                     {% if forloop.counter > 6 %}
@@ -427,13 +444,13 @@
                   <span class="text-xs text-red-600 font-bold">{{ p.category.name }}</span>
                   {% if variant.label %}
                   <span
-                    class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md"
+                    class="text-caption-10 bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md"
                     >{{ variant.label }} گرمی</span
                   >
                   {% endif %}
                 </div>
                 <h3
-                  class="font-bold text-slate-900 text-base mt-1 line-clamp-1 group-hover:text-red-600 transition-colors"
+                  class="font-title font-bold text-slate-900 text-heading-16 mt-1 line-clamp-1 group-hover:text-red-600 transition-colors"
                 >
                   <a href="{% url 'store:product_detail' slug=p.slug %}">{{ p.name }}</a>
                 </h3>

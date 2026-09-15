@@ -56,7 +56,7 @@
         <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8">
           <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="space-y-1">
-              <h1 class="text-xl font-black text-slate-900" dir="ltr">{{ order.tracking_code }}</h1>
+              <h1 class="font-title text-heading-20 font-black text-slate-900" dir="ltr">{{ order.tracking_code }}</h1>
               <p class="text-xs text-slate-400">ثبت‌شده در {{ order.created_at|jdatetime }}</p>
             </div>
             {% if order.status == "cancelled" %}
@@ -87,7 +87,7 @@
           <div class="mt-5 flex flex-wrap items-center justify-between gap-4 bg-amber-50 border border-amber-200 rounded-2xl p-4">
             <div>
               <p class="text-xs font-bold text-amber-700">این سفارش هنوز پرداخت نشده است.</p>
-              <p class="text-[11px] text-amber-600 mt-0.5">
+              <p class="text-caption-11 text-amber-600 mt-0.5">
                 اتصال واقعی به درگاه بانکی در فاز بعدی نقشه راه انجام می‌شود؛ دکمه‌ی زیر فعلاً پرداخت را به‌صورت آزمایشی شبیه‌سازی می‌کند.
               </p>
             </div>
@@ -119,22 +119,27 @@
 
         <!-- ==================== اقلام سفارش ==================== -->
         <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8">
-          <h2 class="text-base font-extrabold text-slate-900 pb-4 mb-4 border-b border-slate-100">
+          <h2 class="font-title text-heading-16 font-extrabold text-slate-900 pb-4 mb-4 border-b border-slate-100">
             محصولات این سفارش
           </h2>
           <div class="space-y-3">
             {% for item in order.items.all %}
+            <!--
+              نشست ۳۶: w-16/h-16 (۶۴px) بود؛ چون img همیشه w-full/h-full
+              همین جعبه است، بزرگ‌کردن تصویر یعنی بزرگ‌کردن همین دو عدد —
+              به w-24/h-24 (۹۶px) رسید.
+            -->
             <div class="flex items-center gap-4 p-3 bg-slate-50 border border-slate-100 rounded-2xl">
-              <div class="w-16 h-16 bg-white rounded-xl overflow-hidden shrink-0">
+              <div class="w-24 h-24 bg-white rounded-xl overflow-hidden shrink-0">
                 {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.product_name }}" class="w-full h-full object-cover" />{% endif %}
               </div>
               <div class="flex-1 min-w-0">
-                <h3 class="font-bold text-sm text-slate-900 line-clamp-1">{{ item.product_name }}</h3>
+                <h3 class="font-title font-bold text-heading-14 text-slate-900 line-clamp-1">{{ item.product_name }}</h3>
                 <p class="text-xs text-slate-400 mt-0.5">{{ item.variant_label }} · {{ item.quantity }} عدد</p>
               </div>
               <div class="text-left shrink-0">
                 <span class="block font-bold text-sm text-slate-900">{{ item.total_price|toman }} تومان</span>
-                <span class="block text-[11px] text-slate-400">{{ item.unit_price|toman }} تومان / عدد</span>
+                <span class="block text-caption-11 text-slate-400">{{ item.unit_price|toman }} تومان / عدد</span>
               </div>
             </div>
             {% endfor %}
@@ -144,7 +149,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <!-- ==================== اطلاعات تحویل‌گیرنده و آدرس ==================== -->
           <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-4">
-            <h2 class="text-base font-extrabold text-slate-900 pb-4 border-b border-slate-100">
+            <h2 class="font-title text-heading-16 font-extrabold text-slate-900 pb-4 border-b border-slate-100">
               مشخصات و آدرس تحویل
             </h2>
             <dl class="space-y-2.5 text-xs">
@@ -177,7 +182,7 @@
 
           <!-- ==================== خلاصه‌ی مالی ==================== -->
           <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-2.5">
-            <h2 class="text-base font-extrabold text-slate-900 pb-4 mb-1.5 border-b border-slate-100">
+            <h2 class="font-title text-heading-16 font-extrabold text-slate-900 pb-4 mb-1.5 border-b border-slate-100">
               خلاصه‌ی مالی
             </h2>
             <div class="flex items-center justify-between text-xs text-slate-600">
@@ -204,7 +209,7 @@
               <span class="text-slate-900">مبلغ نهایی:</span>
               <span class="text-red-600 text-lg">{{ order.total_price|toman }} تومان</span>
             </div>
-            <p class="text-[11px] text-slate-400 pt-2 border-t border-slate-100">
+            <p class="text-caption-11 text-slate-400 pt-2 border-t border-slate-100">
               روش پرداخت: {{ order.get_payment_method_display }}
             </p>
           </div>

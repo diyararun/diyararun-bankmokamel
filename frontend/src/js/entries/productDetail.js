@@ -16,8 +16,14 @@ const productData = JSON.parse(
 // a different weight pill (see selectVariant() below).
 let selectedVariantId = productData.defaultVariantId;
 
+// object-contain (not object-cover): every one of this string's three
+// destinations (the main image, each thumbnail, the zoom modal) already
+// centers its content with flex — object-cover would still crop into
+// the product itself whenever that destination's box isn't exactly
+// square, on a normalized image that already isn't cropped at the
+// source (see ProductImage.normalize_image in apps/catalog/models.py).
 const productImageHTML = (url) =>
-  `<img class="w-full h-full object-cover" src="${url}" alt="${productData.name}" />`;
+  `<img class="max-w-full max-h-full w-auto h-auto object-contain" src="${url}" alt="${productData.name}" />`;
 
 // Falls back to a single empty placeholder if the product has no
 // uploaded images yet, so the gallery/thumbnail code below never has to
@@ -59,7 +65,7 @@ function renderThumbnails() {
       };
     } else {
       const isSelected = i === currentGalleryIndex;
-      button.className = `thumb-btn h-16 bg-slate-50 rounded-xl flex items-center justify-center overflow-hidden transition-all ${
+      button.className = `thumb-btn h-16 bg-white rounded-xl flex items-center justify-center overflow-hidden transition-all ${
         isSelected
           ? "border-2 border-red-600"
           : "border border-slate-200 hover:border-slate-300"

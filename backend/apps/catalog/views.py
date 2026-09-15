@@ -1,4 +1,4 @@
-from django.db.models import Max, Min, Q
+from django.db.models import Case, IntegerField, Max, Min, Q, Value, When
 from django.http import JsonResponse
 from django.urls import reverse
 from django.views import View
@@ -57,6 +57,23 @@ class ProductListView(ListView):
             Product.objects.filter(is_active=True)
             .select_related("brand", "category")
             .prefetch_related("images", "variants")
+            # Sold-out products shouldn't compete for attention with ones
+            # a customer can actually buy — this ranks any product with at
+            # least one active, in-stock variant (the same condition
+            # default_variant/is_in_stock use, see models.py) above every
+            # product that has none, regardless of whatever sort the
+            # customer picked. Max() over the Case is what turns a
+            # per-variant flag into a per-product one: it's 1 if ANY
+            # variant qualifies, 0 only if none do.
+            .annotate(
+                in_stock_rank=Max(
+                    Case(
+                        When(variants__is_active=True, variants__stock__gt=0, then=Value(1)),
+                        default=Value(0),
+                        output_field=IntegerField(),
+                    )
+                )
+            )
         )
 
         if not self.filter_form.is_valid():
@@ -64,7 +81,7 @@ class ProductListView(ListView):
             # rather than a hard error — these are bookmarkable GET
             # params, not a form a visitor fills in and must get exactly
             # right.
-            return queryset.order_by("-created_at").distinct()
+            return queryset.order_by("-in_stock_rank", "-created_at").distinct()
 
         data = self.filter_form.cleaned_data
 
@@ -89,7 +106,7 @@ class ProductListView(ListView):
             queryset = queryset.filter(variants__stock__gt=0, variants__is_active=True)
 
         sort = data.get("sort") or "newest"
-        return queryset.order_by(SORT_FIELD_MAP.get(sort, "-created_at")).distinct()
+        return queryset.order_by("-in_stock_rank", SORT_FIELD_MAP.get(sort, "-created_at")).distinct()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -45,7 +45,7 @@
 
           <!-- main title -->
           <h1
-            class="text-4xl sm:text-6xl lg:text-7xl font-black text-slate-900 leading-[1.15] tracking-tight"
+            class="font-title text-hero-mobile sm:text-hero-tablet lg:text-hero-desktop font-black text-slate-900 leading-[1.15] tracking-tight"
           >
             {{ site_settings.hero_title|default:"سوخت حرفه‌ای برای" }} <br />
             <span
@@ -104,19 +104,19 @@
               <p class="text-xl sm:text-2xl font-black text-slate-900">
                 ۱۰+ هزار
               </p>
-              <p class="text-[11px] text-slate-500 font-medium">مشتری راضی</p>
+              <p class="text-caption-11 text-slate-500 font-medium">مشتری راضی</p>
             </div>
             <div
               class="bg-white/60 backdrop-blur-sm p-3 rounded-2xl border border-slate-100"
             >
-              <p class="text-xl sm:text-2xl font-black text-slate-900">٪۱۰۰</p>
-              <p class="text-[11px] text-slate-500 font-medium">ضمانت بازگشت</p>
+              <p class="text-xl sm:text-2xl font-black text-slate-900">%۱۰۰</p>
+              <p class="text-caption-11 text-slate-500 font-medium">ضمانت بازگشت</p>
             </div>
             <div
               class="bg-white/60 backdrop-blur-sm p-3 rounded-2xl border border-slate-100"
             >
               <p class="text-xl sm:text-2xl font-black text-slate-900">۲۴/۷</p>
-              <p class="text-[11px] text-slate-500 font-medium">
+              <p class="text-caption-11 text-slate-500 font-medium">
                 پشتیبانی تخصصی
               </p>
             </div>
@@ -136,7 +136,7 @@
             </div>
             <div>
               <p class="text-xs font-bold text-slate-900">تحویل سریع</p>
-              <p class="text-[10px] text-slate-500">ارسال به سراسر کشور</p>
+              <p class="text-caption-10 text-slate-500">ارسال به سراسر کشور</p>
             </div>
           </div>
 
@@ -153,7 +153,7 @@
 
             <!-- نشان پرفروش‌ترین -->
             <div
-              class="absolute top-4 right-4 bg-gradient-to-r from-red-600 to-rose-600 text-white text-[10px] font-black tracking-wider px-3.5 py-1.5 rounded-xl shadow-md shadow-red-500/20 z-10"
+              class="absolute top-4 right-4 bg-gradient-to-r from-red-600 to-rose-600 text-white text-caption-10 font-black tracking-wider px-3.5 py-1.5 rounded-xl shadow-md shadow-red-500/20 z-10"
             >
               پرفروش‌ترین هفته
             </div>
@@ -176,7 +176,7 @@
             <!-- اطلاعات محصول -->
             <div class="space-y-1">
               <a href="{% url 'store:product_detail' slug=product.slug %}">
-                <h3 class="text-xl font-bold text-slate-900">
+                <h3 class="font-title text-heading-20 font-bold text-slate-900">
                   {{ product.name }}
                 </h3>
               </a>
@@ -191,7 +191,7 @@
               class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between"
             >
               <div>
-                <span class="block text-[10px] text-slate-400 font-medium"
+                <span class="block text-caption-10 text-slate-400 font-medium"
                   >قیمت ویژه:</span
                 >
                 <span class="text-red-600 font-black text-2xl tracking-tight"
@@ -237,7 +237,7 @@
         <!-- Header -->
         <div class="flex items-center justify-between mb-8">
           <div>
-            <h2 class="text-2xl font-black text-slate-900">
+            <h2 class="font-title text-heading-24 font-black text-slate-900">
               دسته‌بندی‌های محبوب
             </h2>
             <p class="text-slate-500 text-sm mt-1">
@@ -294,7 +294,7 @@
               {% endif %}
             </div>
             <h3
-              class="font-bold text-slate-900 group-hover:text-white text-sm transition-colors"
+              class="font-title font-bold text-slate-900 group-hover:text-white text-heading-14 transition-colors"
             >
               {{ cat.name }}
             </h3>
@@ -313,7 +313,7 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between mb-8">
           <div>
-            <h2 class="text-2xl font-black text-slate-900">محصولات پرفروش</h2>
+            <h2 class="font-title text-heading-24 font-black text-slate-900">محصولات پرفروش</h2>
             <p class="text-slate-500 text-sm mt-1">
               محبوب‌ترین انتخاب‌های ورزشکاران حرفه‌ای
             </p>
@@ -363,13 +363,13 @@
           id="bestSlider"
           class="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth py-2"
         >
-          {% for p in featured_products %}
+          {% for p in best_seller_products %}
           <div
             class="min-w-[260px] sm:min-w-[290px] bg-white rounded-2xl p-5 border border-slate-200/80 hover:shadow-xl transition-all group flex flex-col justify-between relative"
           >
             <div>
               <div
-                class="h-48 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group p-4"
+                class="h-56 bg-white rounded-xl mb-4 flex items-center justify-center text-5xl relative overflow-hidden group p-0"
               >
                 <a href="{% url 'store:product_detail' slug=p.slug %}" class="w-full h-full flex items-center justify-center">
                   {% with image=p.images.first %}
@@ -384,7 +384,7 @@
               <span class="text-xs text-red-600 font-bold">{{ p.category.name }}</span>
               <a href="{% url 'store:product_detail' slug=p.slug %}">
                 <h3
-                  class="font-bold text-slate-900 text-base mt-1 line-clamp-1 group-hover:text-red-600 transition-colors"
+                  class="font-title font-bold text-slate-900 text-heading-16 mt-1 line-clamp-1 group-hover:text-red-600 transition-colors"
                 >
                   {{ p.name }}
                 </h3>
@@ -436,7 +436,7 @@
     <section id="about" class="py-16 bg-white border-y border-slate-100">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-2xl mx-auto mb-12">
-          <h2 class="text-2xl sm:text-3xl font-black text-slate-900">
+          <h2 class="font-title text-heading-24 sm:text-heading-30 font-black text-slate-900">
             چرا بانک مکمل را انتخاب کنید؟
           </h2>
           <p class="text-slate-500 text-sm mt-2">
@@ -465,7 +465,7 @@
                 />
               </svg>
             </div>
-            <h3 class="font-bold text-slate-900 text-lg mb-2">
+            <h3 class="font-title font-bold text-slate-900 text-heading-18 mb-2">
               تضمین ۱۰۰٪ اصالت کالا
             </h3>
             <p class="text-slate-500 text-xs leading-relaxed">
@@ -494,7 +494,7 @@
                 />
               </svg>
             </div>
-            <h3 class="font-bold text-slate-900 text-lg mb-2">
+            <h3 class="font-title font-bold text-slate-900 text-heading-18 mb-2">
               ارسال سریع به کل کشور
             </h3>
             <p class="text-slate-500 text-xs leading-relaxed">
@@ -523,7 +523,7 @@
                 />
               </svg>
             </div>
-            <h3 class="font-bold text-slate-900 text-lg mb-2">
+            <h3 class="font-title font-bold text-slate-900 text-heading-18 mb-2">
               پشتیبانی تخصصی ۲۴/۷
             </h3>
             <p class="text-slate-500 text-xs leading-relaxed">
@@ -551,7 +551,7 @@
                 />
               </svg>
             </div>
-            <h3 class="font-bold text-slate-900 text-lg mb-2">
+            <h3 class="font-title font-bold text-slate-900 text-heading-18 mb-2">
               ضمانت بهترین قیمت
             </h3>
             <p class="text-slate-500 text-xs leading-relaxed">
@@ -569,7 +569,7 @@
           <div class="flex items-center gap-3">
             <span class="text-3xl">🔥</span>
             <div>
-              <h2 class="text-2xl font-black">تخفیفات ویژه و شگفت‌انگیز</h2>
+              <h2 class="font-title text-heading-24 font-black">تخفیفات ویژه و شگفت‌انگیز</h2>
               <p class="text-red-100 text-sm">
                 پیشنهادهای محدود با بالاترین درصد تخفیف
               </p>
@@ -621,7 +621,7 @@
           id="discSlider"
           class="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth py-2"
         >
-          {% for p in discounted_products %}
+          {% for p in featured_deal_products %}
           {% with variant=p.default_variant %}
           <div
             class="min-w-[260px] sm:min-w-[290px] bg-white text-slate-900 rounded-2xl p-5 shadow-xl relative flex flex-col justify-between"
@@ -635,7 +635,7 @@
             {% endif %}
             <div>
               <div
-                class="h-44 bg-slate-100 rounded-xl mb-4 flex items-center justify-center text-5xl overflow-hidden p-4"
+                class="h-52 bg-white rounded-xl mb-4 flex items-center justify-center text-5xl overflow-hidden p-4"
               >
                 <a href="{% url 'store:product_detail' slug=p.slug %}" class="w-full h-full flex items-center justify-center">
                   {% with image=p.images.first %}
@@ -648,7 +648,7 @@
                 </a>
               </div>
               <span class="text-xs text-red-600 font-bold">{{ p.category.name }}</span>
-              <h3 class="font-bold text-slate-900 text-base mt-1 line-clamp-1">
+              <h3 class="font-title font-bold text-slate-900 text-heading-16 mt-1 line-clamp-1">
                 <a href="{% url 'store:product_detail' slug=p.slug %}">{{ p.name }}</a>
               </h3>
               <p class="text-slate-400 text-xs mt-1">
@@ -738,7 +738,7 @@
     <section class="py-16 bg-slate-50">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
-          <h2 class="text-2xl sm:text-3xl font-black text-slate-900">
+          <h2 class="font-title text-heading-24 sm:text-heading-30 font-black text-slate-900">
             سوالات متداول شما
           </h2>
           <p class="text-slate-500 text-sm mt-2">

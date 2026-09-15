@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 
 # Importing this module patches Django admin's FORMFIELD_FOR_DBFIELD_DEFAULTS
@@ -51,6 +52,28 @@ class FlavorAdmin(admin.ModelAdmin):
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
+    # نشست ۳۷: حداکثر ۵ تصویر برای هر محصول. توجه: صرفاً max_num باعث
+    # می‌شود ادمین فرم خالیِ بیشتری برای اضافه‌کردن نشان ندهد، اما به‌تنهایی
+    # جلوی ارسال دستیِ فرم‌های بیشتر (مثلاً با دستکاری POST) را نمی‌گیرد —
+    # validate_max=True لازم است تا این سقف واقعاً در اعتبارسنجی فرم‌ست
+    # اعمال شود و اگر کسی بیشتر از ۵ ردیف بفرستد، خطای واقعی برگردد.
+    max_num = 5
+    validate_max = True
+
+    @property
+    def media(self):
+        # نشست ۳۷ — لایه‌ی چهارم (اختیاری): فقط یک هشدار زودهنگام سمت
+        # مرورگر، نه یک اعتبارسنجی واقعی؛ توضیح کامل در خودِ این فایل
+        # جاوااسکریپت. عمداً یک `@property` که به `super().media` همان
+        # چیزی که از خودش می‌گیرد را اضافه می‌کند — دقیقاً همان الگویی که
+        # apps/store/admin_ux_fixes.py برای کل پنل ادمین استفاده می‌کند —
+        # نه یک `class Media` ساده‌ی تو در تو، چون `ModelAdmin.media` خودش
+        # از قبل یک property محاسبه‌شونده (نه یک Media ثابت) است و
+        # جایگزین‌کردنش با یک Media تعریف‌شده‌ی ایستا اسکریپت‌های اصلیِ
+        # خودِ جنگو ادمین (jQuery و...) را از دست می‌دهد. این‌طور فقط
+        # همین یک اینلاین (نه هر اینپوت فایلی در کل ادمین) این اسکریپت
+        # اضافه را می‌گیرد.
+        return super().media + forms.Media(js=("admin/js/product_image_upload_hints.js",))
 
 
 class ProductVariantInline(admin.TabularInline):
@@ -66,8 +89,23 @@ class ProductSpecInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("name", "category", "brand", "is_active", "created_at_display")
-    list_filter = ("is_active", "category", "brand")
+    list_display = (
+        "name",
+        "category",
+        "brand",
+        "is_best_seller",
+        "is_featured_deal",
+        "is_active",
+        "created_at_display",
+    )
+    # is_best_seller/is_featured_deal are editable right here, in the list —
+    # not on each product's own edit page — on purpose: with a few hundred
+    # products, the seller needs to search/filter this same list down to
+    # the handful they mean, then tick a checkbox and hit one "ذخیره" for
+    # the whole (already-filtered, already-paginated) page. No separate
+    # picker screen, no per-product field to hunt for.
+    list_editable = ("is_best_seller", "is_featured_deal")
+    list_filter = ("is_active", "is_best_seller", "is_featured_deal", "category", "brand")
     search_fields = ("name", "short_description")
     prepopulated_fields = {"slug": ("name",)}
     inlines = [ProductImageInline, ProductVariantInline, ProductSpecInline]

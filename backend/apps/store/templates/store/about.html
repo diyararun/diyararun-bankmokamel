@@ -22,7 +22,7 @@
           <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
           مرجع تخصصی مکمل‌های ورزشی و غذایی اورجینال
         </span>
-        <h1 class="text-3xl sm:text-5xl font-black text-white leading-tight">
+        <h1 class="font-title text-heading-30 sm:text-heading-48 font-black text-white leading-tight">
           {{ site_settings.about_hero_title|default:"اصالت، تخصص و سلامت در بانک مکمل" }}
         </h1>
         <p
@@ -81,7 +81,7 @@
       <!-- ==================== CORE VALUES SECTION ( ارزش‌های ما ) ==================== -->
       <section class="space-y-8">
         <div class="text-center space-y-2">
-          <h2 class="text-2xl font-black text-slate-900">
+          <h2 class="font-title text-heading-24 font-black text-slate-900">
             ارزش‌ها و تعهدات ما
           </h2>
           <p class="text-xs text-slate-400">
@@ -99,7 +99,7 @@
             >
               🛡️
             </div>
-            <h3 class="font-extrabold text-sm text-slate-900">
+            <h3 class="font-title font-extrabold text-heading-14 text-slate-900">
               تضمین ۱۰۰٪ اصالت
             </h3>
             <p class="text-xs text-slate-500 leading-relaxed">
@@ -117,7 +117,7 @@
             >
               ⚡
             </div>
-            <h3 class="font-extrabold text-sm text-slate-900">
+            <h3 class="font-title font-extrabold text-heading-14 text-slate-900">
               ارسال اکسپرس و سریع
             </h3>
             <p class="text-xs text-slate-500 leading-relaxed">
@@ -135,7 +135,7 @@
             >
               👨‍⚕️
             </div>
-            <h3 class="font-extrabold text-sm text-slate-900">
+            <h3 class="font-title font-extrabold text-heading-14 text-slate-900">
               مشاوره تخصصی رایگان
             </h3>
             <p class="text-xs text-slate-500 leading-relaxed">
@@ -153,7 +153,7 @@
             >
               🏷️
             </div>
-            <h3 class="font-extrabold text-sm text-slate-900">
+            <h3 class="font-title font-extrabold text-heading-14 text-slate-900">
               قیمت منصفانه و رقابتی
             </h3>
             <p class="text-xs text-slate-500 leading-relaxed">
@@ -168,7 +168,7 @@
       <!-- ==================== CUSTOMER TESTIMONIALS SECTION ( رضایت مشتریان ) ==================== -->
       <section class="space-y-8">
         <div class="text-center space-y-2">
-          <h2 class="text-2xl font-black text-slate-900">
+          <h2 class="font-title text-heading-24 font-black text-slate-900">
             نظرات و رضایت همراهان ما
           </h2>
           <p class="text-xs text-slate-400">تجربه واقعی خریداران بانک مکمل</p>
@@ -199,9 +199,9 @@
                     </svg>
                   </div>
                   <div>
-                    <h4 class="font-bold text-xs text-slate-900">{{ testimonial.name }}</h4>
+                    <h4 class="font-title font-bold text-heading-12 text-slate-900">{{ testimonial.name }}</h4>
                     {% if testimonial.role_label %}
-                    <span class="text-[10px] text-emerald-600 font-medium"
+                    <span class="text-caption-10 text-emerald-600 font-medium"
                       >✓ {{ testimonial.role_label }}</span
                     >
                     {% endif %}
@@ -215,7 +215,7 @@
             </div>
             {% if testimonial.display_date %}
             <span
-              class="text-[10px] text-slate-400 block pt-2 border-t border-slate-100"
+              class="text-caption-10 text-slate-400 block pt-2 border-t border-slate-100"
               >ارسال شده در {{ testimonial.display_date }}</span
             >
             {% endif %}

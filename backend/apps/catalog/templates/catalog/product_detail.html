@@ -53,13 +53,20 @@
         <!-- گالری تصاویر -->
         <div class="lg:col-span-5 space-y-3">
           <div
-            class="relative bg-slate-50 rounded-2xl h-80 sm:h-96 flex items-center justify-center border border-slate-100 overflow-hidden group"
+            class="relative bg-slate-50 rounded-2xl h-80 sm:h-96 flex items-center justify-center border border-slate-100 overflow-hidden group p-6"
           >
+            <!--
+              object-contain، نه object-cover: این جعبه مربع نیست، و
+              object-cover روی یک جعبه‌ی نامربع همیشه تصویر مربعِ
+              نرمال‌شده (ProductImage.normalize_image) را کمی برش
+              می‌زند — برای محصولی که در قاب خودش کمی بیشتر جا گرفته،
+              این برش دیده می‌شود و به‌نظر zoom‌شده می‌رسد.
+            -->
             <span
               id="mainImageEmoji"
-              class="w-full h-full transition-all duration-300 group-hover:scale-105 select-none flex items-center justify-center"
+              class="max-w-full max-h-full transition-all duration-300 group-hover:scale-105 select-none flex items-center justify-center"
               >{% with image=product.images.first %}<img
-                    class="w-full h-full object-cover"
+                    class="max-w-full max-h-full w-auto h-auto object-contain"
                     src="{% if image %}{{ image.image.url }}{% endif %}"
                     alt="{{ product.name }}"
                   />{% endwith %}</span
@@ -67,7 +74,7 @@
             {% with variant=product.default_variant %}
             {% if variant.discount_percent %}
             <span
-              class="absolute top-4 right-4 bg-red-600 text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-sm"
+              class="absolute top-4 right-4 bg-red-600 text-white text-caption-10 font-black px-2.5 py-1 rounded-lg shadow-sm"
               >{{ variant.discount_percent }}٪ تخفیف</span
             >
             {% endif %}
@@ -116,11 +123,11 @@
               </div>
               <div class="flex items-center gap-1 text-xs">
                 <span class="text-amber-400 font-bold">★ {{ product.average_rating|floatformat:1|default:"—"|persian_digits }}</span>
-                <span class="text-slate-400 text-[11px]">({{ reviews.count|persian_digits }} نظر)</span>
+                <span class="text-slate-400 text-caption-11">({{ reviews.count|persian_digits }} نظر)</span>
               </div>
             </div>
 
-            <h1 class="text-2xl font-black text-slate-900 mt-2 leading-snug">
+            <h1 class="font-title text-heading-24 font-black text-slate-900 mt-2 leading-snug">
               {{ product.name }}
             </h1>
 
@@ -272,7 +279,7 @@
             id="tabContent-desc"
             class="tab-content active space-y-4 text-slate-600 text-xs sm:text-sm leading-relaxed max-w-4xl"
           >
-            <h3 class="text-base font-extrabold text-slate-900">
+            <h3 class="font-title text-heading-16 font-extrabold text-slate-900">
               نقد و بررسی {{ product.name }}
             </h3>
             <div>
@@ -313,7 +320,7 @@
                 class="lg:col-span-5 bg-slate-50 p-5 rounded-2xl border border-slate-200/80 sticky top-28"
               >
                 <h4
-                  class="font-extrabold text-sm text-slate-900 mb-1 flex items-center gap-2"
+                  class="font-title font-extrabold text-heading-14 text-slate-900 mb-1 flex items-center gap-2"
                 >
                   <svg
                     class="w-4 h-4 text-red-600"
@@ -330,7 +337,7 @@
                   </svg>
                   دیدگاه خود را بنویسید
                 </h4>
-                <p class="text-slate-400 text-[11px] mb-4">
+                <p class="text-slate-400 text-caption-11 mb-4">
                   نظرات شما پس از تایید مدیریت نمایش داده می‌شوند.
                 </p>
 
@@ -343,7 +350,7 @@
                   {% csrf_token %}
                   <div>
                     <label
-                      class="block text-[11px] font-bold text-slate-700 mb-1"
+                      class="block text-caption-11 font-bold text-slate-700 mb-1"
                       >امتیاز</label
                     >
                     <!-- ۵ ستاره‌ی کلیک‌پذیر به‌جای ۵ دکمه‌ی رادیویی ساده‌ی
@@ -376,7 +383,7 @@
                   </div>
                   <div>
                     <label
-                      class="block text-[11px] font-bold text-slate-700 mb-1"
+                      class="block text-caption-11 font-bold text-slate-700 mb-1"
                       >متن دیدگاه</label
                     >
                     {{ review_form.comment }}
@@ -424,17 +431,17 @@
                         {{ review.user.avatar_emoji }}
                       </div>
                       <div>
-                        <h5 class="font-bold text-xs text-slate-900">
+                        <h5 class="font-title font-bold text-heading-12 text-slate-900">
                           {{ review.user.display_name }}
                         </h5>
                         {% if review.is_verified_purchase %}
-                        <span class="text-[10px] text-emerald-600 font-medium"
+                        <span class="text-caption-10 text-emerald-600 font-medium"
                           >✓ خریدار محصول</span
                         >
                         {% endif %}
                       </div>
                     </div>
-                    <span class="text-[10px] text-slate-400"
+                    <span class="text-caption-10 text-slate-400"
                       >{{ review.created_at|jdatetime }}</span
                     >
                   </div>
@@ -463,7 +470,7 @@
       >
         <div class="flex items-center justify-between mb-6">
           <div>
-            <h2 class="text-xl font-black text-slate-900">محصولات مرتبط</h2>
+            <h2 class="font-title text-heading-20 font-black text-slate-900">محصولات مرتبط</h2>
             <p class="text-slate-400 text-xs mt-0.5">
               پیشنهادهای مکمل برای دوره ورزشی شما
             </p>
@@ -513,36 +520,50 @@
           class="flex gap-5 overflow-x-auto no-scrollbar scroll-smooth py-1"
         >
           {% for p in related_products %}
+          <!--
+            variant قبل از تگ کارت تعریف شد (نه فقط دور بخش قیمت/دکمه)
+            تا is_in_stock از همون اول در دسترس باشه و کل کارت (نه فقط
+            دکمه‌ی افزودن) برای کالای ناموجود کم‌رنگ‌تر دیده بشه — دقیقاً
+            همون الگویی که در صفحه‌ی محصولات (products.html) استفاده شده.
+          -->
+          {% with variant=p.default_variant %}
           <div
-            class="min-w-[250px] sm:min-w-[270px] bg-slate-50/70 rounded-2xl p-4 border border-slate-100 hover:bg-white hover:border-slate-200 hover:shadow-xl transition-all group flex flex-col justify-between"
+            class="min-w-[250px] sm:min-w-[270px] bg-slate-50/70 rounded-2xl p-4 border border-slate-100 hover:bg-white hover:border-slate-200 hover:shadow-xl transition-all group flex flex-col justify-between relative {% if not variant.is_in_stock %}opacity-50{% endif %}"
           >
+            {% if not variant.is_in_stock %}
+            <div class="absolute top-3 left-3 z-10">
+              <span
+                class="bg-slate-800 text-white font-extrabold text-caption-10 px-2 py-0.5 rounded-md"
+                >ناموجود</span
+              >
+            </div>
+            {% endif %}
             <a href="{% url 'store:product_detail' slug=p.slug %}">
               <div
-                class="h-40 bg-white rounded-xl mb-3 flex items-center justify-center text-4xl shadow-sm overflow-hidden"
+                class="h-40 bg-white rounded-xl mb-3 flex items-center justify-center text-4xl shadow-sm overflow-hidden p-3"
               >
                 {% with image=p.images.first %}
                 <img
-                    class="w-full h-full object-cover"
+                    class="max-w-full max-h-full w-auto h-auto object-contain"
                     src="{% if image %}{{ image.image.url }}{% endif %}"
                     alt="{{ p.name }}"
                   />
                 {% endwith %}
               </div>
-              <span class="text-[11px] text-red-600 font-bold">{{ p.category.name }}</span>
-              <h3 class="font-bold text-slate-900 text-sm mt-0.5 line-clamp-1">
+              <span class="text-caption-11 text-red-600 font-bold">{{ p.category.name }}</span>
+              <h3 class="font-title font-bold text-slate-900 text-heading-14 mt-0.5 line-clamp-1">
                 {{ p.name }}
               </h3>
-              <p class="text-slate-400 text-[11px] mt-0.5">
+              <p class="text-slate-400 text-caption-11 mt-0.5">
                 {{ p.brand.name }}
               </p>
             </a>
             <div
               class="mt-5 flex items-center justify-between border-t pt-3 border-slate-200/60"
             >
-              {% with variant=p.default_variant %}
               <span class="font-black text-slate-900 text-sm"
                 >{{ variant.price|default:"—"|toman }}
-                <span class="text-[10px] font-normal text-slate-500"
+                <span class="text-caption-10 font-normal text-slate-500"
                   >تومان</span
                 ></span
               >
@@ -565,9 +586,9 @@
                   />
                 </svg>
               </button>
-              {% endwith %}
             </div>
           </div>
+          {% endwith %}
           {% endfor %}
         </div>
       </section>
@@ -618,12 +639,20 @@
       </button>
 
       <div class="text-center space-y-4">
+        <!--
+          قبلاً w-64/h-64 (فقط ۲۵۶ تا ۳۲۰ پیکسل) بود — یعنی دکمه‌ی
+          ذره‌بین عملاً تصویر را کوچک‌تر از حالت عادی نشان می‌داد، نه
+          بزرگ‌تر. این مودال یک لایه‌ی تمام‌صفحه است (fixed inset-0)، پس
+          جای خالی زیادی برای بزرگ‌تر شدن دارد؛ با vw/vh به‌جای اندازه‌ی
+          ثابت، روی هر سایز صفحه هم بخش زیادی از فضای خالی را پر می‌کند
+          و هم به دکمه‌های قبلی/بعدی کنار صفحه نمی‌چسبد.
+        -->
         <div
           id="modalEmojiContainer"
-          class="modal-img-animate w-64 h-64 sm:w-80 sm:h-80 bg-slate-800 rounded-3xl flex items-center justify-center shadow-2xl border border-slate-700 select-none overflow-hidden"
+          class="modal-img-animate w-[85vw] h-[50vh] sm:w-[75vw] sm:h-[65vh] lg:h-[75vh] max-w-3xl bg-slate-800 rounded-3xl flex items-center justify-center shadow-2xl border border-slate-700 select-none overflow-hidden"
         >
           {% with image=product.images.first %}
-          <img class="w-full h-full object-cover" src="{% if image %}{{ image.image.url }}{% endif %}" alt="{{ product.name }}" />
+          <img class="max-w-full max-h-full w-auto h-auto object-contain" src="{% if image %}{{ image.image.url }}{% endif %}" alt="{{ product.name }}" />
           {% endwith %}
         </div>
         <p

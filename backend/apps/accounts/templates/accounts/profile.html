@@ -37,7 +37,7 @@
       <section class="lg:col-span-3">
         <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8">
           <div class="mb-6 space-y-1">
-            <h1 class="text-xl font-black text-slate-900">اطلاعات حساب کاربری</h1>
+            <h1 class="font-title text-heading-20 font-black text-slate-900">اطلاعات حساب کاربری</h1>
             <p class="text-xs text-slate-400">
               اطلاعات شخصی خود را ویرایش و به‌روزرسانی کنید.
             </p>
@@ -63,7 +63,7 @@
                 </label>
                 {{ form.first_name }}
                 {% if form.first_name.errors %}
-                  <span class="text-[10px] text-red-600 mt-1 block">{{ form.first_name.errors.0 }}</span>
+                  <span class="text-caption-10 text-red-600 mt-1 block">{{ form.first_name.errors.0 }}</span>
                 {% endif %}
               </div>
 
@@ -73,7 +73,7 @@
                 </label>
                 {{ form.last_name }}
                 {% if form.last_name.errors %}
-                  <span class="text-[10px] text-red-600 mt-1 block">{{ form.last_name.errors.0 }}</span>
+                  <span class="text-caption-10 text-red-600 mt-1 block">{{ form.last_name.errors.0 }}</span>
                 {% endif %}
               </div>
             </div>
@@ -88,7 +88,7 @@
                   dir="ltr"
                   class="w-full p-3.5 bg-slate-100 border border-slate-200 rounded-2xl text-sm font-bold text-slate-400 cursor-not-allowed"
                 />
-                <span class="text-[10px] text-slate-400 mt-1 block">شماره موبایل قابل ویرایش نیست.</span>
+                <span class="text-caption-10 text-slate-400 mt-1 block">شماره موبایل قابل ویرایش نیست.</span>
               </div>
 
               <div>
@@ -97,7 +97,7 @@
                 </label>
                 {{ form.national_code }}
                 {% if form.national_code.errors %}
-                  <span class="text-[10px] text-red-600 mt-1 block">{{ form.national_code.errors.0 }}</span>
+                  <span class="text-caption-10 text-red-600 mt-1 block">{{ form.national_code.errors.0 }}</span>
                 {% endif %}
               </div>
             </div>
@@ -108,7 +108,7 @@
               </label>
               {{ form.email }}
               {% if form.email.errors %}
-                <span class="text-[10px] text-red-600 mt-1 block">{{ form.email.errors.0 }}</span>
+                <span class="text-caption-10 text-red-600 mt-1 block">{{ form.email.errors.0 }}</span>
               {% endif %}
             </div>
 

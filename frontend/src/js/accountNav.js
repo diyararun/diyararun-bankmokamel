@@ -73,3 +73,29 @@ window.addEventListener("popstate", () => {
   if (!wrapper) return;
   loadAccountSection(window.location.href, wrapper, false);
 });
+
+// ==================== دراپ‌داون سایدبار حساب کاربری (زیر 1024px) ====================
+//
+// partials/profile_aside.html پایین‌تر از 1024px به‌جای سایدبار همیشه-باز،
+// یک دکمه (نام + شماره + chevron) نشان می‌دهد که با کلیک، لیست لینک‌ها
+// (#accountSidebarNav) را باز/بسته می‌کند. از 1024px به بالا این دکمه با
+// lg:hidden اصلاً دیده نمی‌شود و #accountSidebarNav با lg:block همیشه باز
+// است، پس این تابع اصلاً روی حالت دسکتاپ اثری ندارد.
+//
+// چون هر ناوبری بین بخش‌های حساب کاربری کل #accountWrapper (و در نتیجه
+// همین سایدبار) را با نسخه‌ی تازه از سرور جایگزین می‌کند، این دراپ‌داون
+// به‌طور طبیعی بعد از هر کلیک روی یک لینک دوباره در حالت بسته (پیش‌فرض
+// سمت سرور) بارگذاری می‌شود — دقیقاً همان چیزی که می‌خواهیم: محتوای
+// اصلی صفحه‌ی جدید دیده شود، نه لیست لینک‌های باز.
+function toggleAccountSidebarMenu() {
+  const nav = document.getElementById("accountSidebarNav");
+  const chevron = document.getElementById("accountSidebarChevron");
+  const toggle = document.getElementById("accountSidebarToggle");
+  if (!nav || !toggle) return;
+
+  const isOpen = nav.classList.toggle("hidden") === false;
+  toggle.setAttribute("aria-expanded", String(isOpen));
+  if (chevron) chevron.classList.toggle("rotate-180", isOpen);
+}
+
+window.toggleAccountSidebarMenu = toggleAccountSidebarMenu;
