@@ -3,7 +3,9 @@ import os
 
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
-from django.db import models
+from django.db import models, transaction
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django_jalali.db import models as jmodels
 from PIL import Image, ImageChops, ImageOps
 
@@ -309,9 +311,33 @@ class ProductImage(models.Model):
         # re-saving an existing row without touching the image (e.g.
         # editing alt_text). Without this check, every admin save would
         # re-process (and re-compress) an already-normalized image.
+        old_image_name = None
         if self.image and not self.image._committed:
+            # نشست ۳۸: فروشنده وقتی روی یک ردیفِ *موجود* تصویر جدیدی
+            # انتخاب می‌کند، جنگو خودش هرگز فایل قدیمی را از روی دیسک پاک
+            # نمی‌کند — فقط مقدار فیلد در دیتابیس عوض می‌شود، فایل قدیمی
+            # همان‌جا روی media/ باقی می‌ماند، بی‌استفاده و برای همیشه.
+            # چون فروشنده هیچ‌وقت مستقیم وارد پوشه‌ی media نمی‌شود که آن
+            # را پیدا/پاک کند، این با هر جایگزینی یک فایل یتیمِ تکراری
+            # اضافه می‌کند. برای همین، *قبل* از این‌که self.image با فایل
+            # جدید جایگزین شود، نام فایل قدیمی را از خودِ دیتابیس
+            # می‌خوانیم (نه از self، که همین الان فایل جدید را نگه
+            # می‌دارد) تا بعد از ذخیره‌ی موفق فایل جدید بتوانیم آن را پاک
+            # کنیم. self.pk خالی است یعنی این یک ردیف کاملاً جدید است، پس
+            # اصلاً فایل قدیمی‌ای برای پاک‌کردن وجود ندارد.
+            if self.pk:
+                old_image_name = ProductImage.objects.filter(pk=self.pk).values_list("image", flat=True).first()
             self.image = self.normalize_image(self.image)
         super().save(*args, **kwargs)
+
+        if old_image_name and old_image_name != self.image.name:
+            # transaction.on_commit تضمین می‌کند که اگر ذخیره‌ی همین
+            # درخواست به هر دلیلی rollback شود (مثلاً یک خطای دیگر در
+            # همان تراکنش)، فایل قدیمی دست‌نخورده می‌ماند — حذف واقعی
+            # فقط بعد از قطعی‌شدنِ ذخیره‌ی ردیف جدید در دیتابیس اتفاق
+            # می‌افتد، نه زودتر.
+            storage = self.image.storage
+            transaction.on_commit(lambda: storage.delete(old_image_name))
 
     @staticmethod
     def normalize_image(uploaded_file):
@@ -418,6 +444,35 @@ class ProductImage(models.Model):
             canvas.save(buffer, format="JPEG", quality=quality, optimize=True)
 
         return buffer
+
+
+@receiver(post_delete, sender=ProductImage)
+def _delete_product_image_file_from_storage(sender, instance, **kwargs):
+    """نشست ۳۸: هم‌خانواده‌ی همان مشکل «فایل یتیم» که در save() بالا حل
+    شد — وقتی یک ردیف ProductImage پاک می‌شود (چه با تیک «حذف» در همان
+    اینلاینِ «تصاویر محصول» در ادمین، چه به‌خاطر CASCADE وقتی خودِ محصول
+    حذف می‌شود)، جنگو ردیف را از دیتابیس پاک می‌کند اما فایل واقعی روی
+    media/ را دست‌نخورده رها می‌کند.
+
+    این‌جا عمداً به‌جای بازنویسیِ ProductImage.delete()، به سیگنال
+    post_delete وصل شده‌ایم: وقتی خودِ محصول (Product) حذف می‌شود، جنگو
+    برای پاک‌کردنِ ردیف‌های وابسته‌ی آن (CASCADE) از یک مسیر بهینه‌ی
+    داخلی (حذفِ SQL خام روی کل مجموعه) استفاده می‌کند که هرگز متد
+    delete() هیچ مدلی را صدا نمی‌زند — پس اگر این منطق را روی
+    ProductImage.delete() می‌نوشتیم، دقیقاً همان لحظه‌ای که بیشتر از همه
+    لازم بود (حذف کل محصول) کار نمی‌کرد. اما همین که *هر* گیرنده‌ای به
+    pre_delete/post_delete این مدل وصل باشد، جنگو به‌طور خودکار از آن
+    مسیر بهینه صرف‌نظر می‌کند و هر ردیف را جداگانه پردازش می‌کند — یعنی
+    post_delete برای هر ProductImage، چه حذف مستقیم چه از طریق CASCADE،
+    قطعاً اجرا می‌شود.
+
+    مثل save() بالا، حذف واقعی فایل با transaction.on_commit به تأخیر
+    می‌افتد تا اگر تراکنش حذف rollback شد، فایل هنوز روی دیسک باشد.
+    """
+    if not instance.image:
+        return
+    storage, name = instance.image.storage, instance.image.name
+    transaction.on_commit(lambda: storage.delete(name))
 
 
 class ProductVariant(models.Model):
