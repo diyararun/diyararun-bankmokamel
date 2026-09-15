@@ -48,18 +48,31 @@
 
     <!-- چپ: سرچ + سبد خرید + لاگین/پروفایل -->
     <div class="flex items-center gap-3">
-      <!-- اینپوت سرچ بازشونده -->
-      <div class="relative flex items-center">
+      <!-- اینپوت سرچ بازشونده (Live Search) -->
+      <div id="searchWrapper" class="relative flex items-center">
+        <!--
+          عمداً position:absolute (نه یک آیتم عادی داخل فلکس هدر): قبلاً
+          چون اینپوت یک آیتم فلکس معمولی بود، باز شدنش عرض کل ردیف هدر
+          را بیشتر می‌کرد و همین باعث اسکرول افقی/فضای سفید سمت چپ صفحه
+          می‌شد — این با هر تغییری در بخش پروفایل هم برطرف نمی‌شد، چون
+          ریشه‌ی مشکل خودِ نحوه‌ی چیدمان این اینپوت بود. حالا با
+          absolute، هیچ‌وقت روی عرض هدر تاثیر نمی‌گذارد؛ فقط از کنار
+          دکمه‌ی سرچ (left-10، دقیقاً به‌اندازه‌ی عرض خودِ دکمه) به سمت
+          راست باز می‌شود و روی محتوای مجاورش (اولین آیتم نوبار، «ارتباط
+          با ما») سوار می‌شود — دقیقاً همان رفتاری که خواسته شده بود، به
+          جای اینکه فضای «خانه»/«درباره ما» را تنگ کند.
+        -->
         <input
           id="searchInput"
           type="text"
+          autocomplete="off"
           placeholder="جستجوی مکمل، برند..."
-          class="w-0 opacity-0 transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-red-600 bg-slate-100 text-sm rounded-full py-2 px-4 text-slate-800 border border-slate-200"
+          class="absolute top-1/2 -translate-y-1/2 left-0 z-20 w-0 opacity-0 pointer-events-none transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-red-600 bg-slate-100 text-sm rounded-full py-2 px-4 text-slate-800 border border-slate-200"
         />
         <button
           id="searchBtn"
           aria-label="Search"
-          class="p-2.5 text-slate-600 hover:text-red-600 hover:bg-slate-100 rounded-full transition-all"
+          class="relative z-30 p-2.5 text-slate-600 hover:text-red-600 hover:bg-slate-100 rounded-full transition-all"
         >
           <svg
             class="w-5 h-5"
@@ -75,6 +88,12 @@
             />
           </svg>
         </button>
+
+        <!-- نتایج زنده جستجو؛ با JS پر و نمایش داده می‌شود (headerSearch.js) -->
+        <div
+          id="searchResults"
+          class="hidden absolute top-full end-0 mt-2 w-72 sm:w-80 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 overflow-hidden max-h-[70vh] overflow-y-auto custom-scrollbar"
+        ></div>
       </div>
 
       <!-- سبد خرید -->
@@ -97,7 +116,7 @@
         </svg>
         <span
           id="cartBadge"
-          class="absolute top-1 right-1 w-4 h-4 bg-red-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center transition-transform"
+          class="absolute top-1 right-1 w-4 h-4 bg-red-600 text-white text-caption-10 font-bold rounded-full flex items-center justify-center transition-transform"
           >۰</span
         >
       </button>
@@ -105,18 +124,26 @@
       {% if user.is_authenticated %}
         <!-- آیکون پروفایل کاربر لاگین‌کرده -->
         <div class="relative hidden sm:block" id="profileMenuWrapper">
+          <!--
+            زیر 1024px فقط آواتار خالی (بدون کانتینر خاکستری، بدون نام،
+            بدون آیکون فلش) — همان چیزی که باعث می‌شد فضای هدر برای
+            بازشدن سرچ کم بیاید. از 1024px به بالا، دقیقاً همان ظاهر
+            قبلی برمی‌گردد: کانتینر خاکستری + نام کاربر + فلش
+            dropdown، چون در آن عرض دیگر مشکلی برایش پیش نمی‌آید.
+          -->
           <button
             id="profileMenuBtn"
             onclick="toggleProfileMenu()"
-            class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm ps-2 pe-3 py-1.5 rounded-xl transition-all"
+            aria-label="{{ user.display_name }}"
+            class="flex items-center gap-2 lg:bg-slate-100 lg:hover:bg-slate-200 text-slate-800 font-bold text-sm lg:ps-2 lg:pe-3 py-1.5 lg:rounded-xl transition-all"
           >
             <span
               class="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center text-base shrink-0"
               >{{ user.avatar_emoji }}</span
             >
-            <span class="max-w-[7rem] truncate">{{ user.display_name }}</span>
+            <span class="hidden lg:inline-block max-w-[7rem] truncate">{{ user.display_name }}</span>
             <svg
-              class="w-3.5 h-3.5 text-slate-500"
+              class="hidden lg:block w-3.5 h-3.5 text-slate-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -142,7 +169,7 @@
               <span>پروفایل من</span>
             </a>
             <a
-              href="{% url 'store:checkout' %}"
+              href="{% url 'accounts:orders' %}"
               class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-red-600 transition-colors"
             >
               <span>📦</span>

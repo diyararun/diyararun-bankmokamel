@@ -1,0 +1,22 @@
+from django.urls import path
+
+from . import views
+
+app_name = "accounts"
+
+urlpatterns = [
+    path("login/", views.auth_page, name="auth"),
+    path("otp/request/", views.request_otp, name="otp_request"),
+    path("otp/verify/", views.verify_otp, name="otp_verify"),
+    path("logout/", views.logout_view, name="logout"),
+    path("profile/", views.profile_view, name="profile"),
+    path("orders/", views.order_list_view, name="orders"),
+    path("orders/<str:tracking_code>/", views.order_detail_view, name="order_detail"),
+    path("orders/<str:tracking_code>/pay/", views.mark_order_paid, name="order_mark_paid"),
+    path("orders/<str:tracking_code>/invoice/", views.order_invoice_view, name="order_invoice"),
+    path("addresses/", views.address_list_view, name="addresses"),
+    path("addresses/new/", views.address_create_view, name="address_create"),
+    path("addresses/<int:pk>/edit/", views.address_edit_view, name="address_edit"),
+    path("addresses/<int:pk>/delete/", views.address_delete_view, name="address_delete"),
+    path("addresses/<int:pk>/set-default/", views.address_set_default_view, name="address_set_default"),
+]

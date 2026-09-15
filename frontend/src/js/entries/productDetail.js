@@ -1,19 +1,37 @@
 import "../../css/product-detail.css";
 
-import { addMultipleToCart } from "../cartDrawer.js";
-import { showToast } from "../toast.js";
+import { addToCart } from "../cartDrawer.js";
+import { formatToman } from "../formatToman.js";
 
 let currentQuantity = 1;
-const productImageHTML =
-  '<img class="w-full h-full object-cover" src="./test4.webp" alt="" />';
-const galleryImages = [
-  productImageHTML,
-  productImageHTML,
-  productImageHTML,
-  productImageHTML,
-  productImageHTML,
-  productImageHTML,
-];
+
+// Real product data, injected by Django via {{ product_json|json_script:"product-data" }}
+// in product_detail.html (see apps/catalog/views.py ProductDetailView).
+const productData = JSON.parse(
+  document.getElementById("product-data").textContent,
+);
+
+// The weight/serving variant currently selected for "افزودن به سبد خرید" —
+// starts at the server-rendered default, changes when the customer clicks
+// a different weight pill (see selectVariant() below).
+let selectedVariantId = productData.defaultVariantId;
+
+// object-contain (not object-cover): every one of this string's three
+// destinations (the main image, each thumbnail, the zoom modal) already
+// centers its content with flex — object-cover would still crop into
+// the product itself whenever that destination's box isn't exactly
+// square, on a normalized image that already isn't cropped at the
+// source (see ProductImage.normalize_image in apps/catalog/models.py).
+const productImageHTML = (url) =>
+  `<img class="max-w-full max-h-full w-auto h-auto object-contain" src="${url}" alt="${productData.name}" />`;
+
+// Falls back to a single empty placeholder if the product has no
+// uploaded images yet, so the gallery/thumbnail code below never has to
+// special-case an empty array.
+const galleryImages =
+  productData.images.length > 0
+    ? productData.images.map(productImageHTML)
+    : [productImageHTML("")];
 let currentGalleryIndex = 0;
 
 // این آرایه به‌جای «cart» عمومی (که حالا در cartDrawer.js مدیریت می‌شود) فقط
@@ -47,7 +65,7 @@ function renderThumbnails() {
       };
     } else {
       const isSelected = i === currentGalleryIndex;
-      button.className = `thumb-btn h-16 bg-slate-50 rounded-xl flex items-center justify-center overflow-hidden transition-all ${
+      button.className = `thumb-btn h-16 bg-white rounded-xl flex items-center justify-center overflow-hidden transition-all ${
         isSelected
           ? "border-2 border-red-600"
           : "border border-slate-200 hover:border-slate-300"
@@ -106,7 +124,7 @@ function updateGalleryModalContent() {
   document.getElementById("modalEmojiContainer").innerHTML =
     galleryImages[currentGalleryIndex];
   document.getElementById("modalImageCaption").innerText =
-    `تصویر ${currentGalleryIndex + 1} از ${galleryImages.length} - وی گلد استاندارد`;
+    `تصویر ${currentGalleryIndex + 1} از ${galleryImages.length} - ${productData.name}`;
 }
 
 function switchTab(tabKey) {
@@ -132,17 +150,119 @@ function adjustQuantity(delta) {
   document.getElementById("detailQuantity").innerText = currentQuantity;
 }
 
-function addCurrentProductToCart() {
-  // TODO: وقتی مدل Product در جنگو اضافه شد، نام/قیمت/اسلاگ واقعی محصول
-  // باید از context صفحه (به‌جای مقادیر ثابت) خوانده شود.
-  const productName = "وی گلد استاندارد 100%";
-  const productPrice = 3570000;
+// Switches the selected weight/serving variant: updates the price/compare
+// price shown, which variant "افزودن به سبد خرید" will actually add, its
+// disabled/"ناموجود" state, and the pill buttons' active styling.
+function selectVariant(variantId) {
+  const variant = productData.variants.find((v) => v.id === variantId);
+  if (!variant) return;
+  selectedVariantId = variant.id;
 
-  addMultipleToCart(productName, productPrice, galleryImages[0], currentQuantity);
-  showToast(
-    "افزوده شد به سبد",
-    `${currentQuantity} عدد «${productName}» به سبد اضافه شد.`,
-  );
+  document.getElementById("productPrice").innerText = formatToman(variant.price);
+  const compareEl = document.getElementById("productComparePrice");
+  if (variant.compareAtPrice) {
+    compareEl.innerText = formatToman(variant.compareAtPrice);
+    compareEl.classList.remove("hidden");
+  } else {
+    compareEl.classList.add("hidden");
+  }
+
+  document.querySelectorAll(".js-variant-option").forEach((btn) => {
+    const isSelected = Number(btn.dataset.variantId) === variant.id;
+    // Rebuilding className wholesale would silently undo the "hidden"
+    // class selectFlavor() just set on buttons that don't match the
+    // chosen flavor — carry it forward instead of wiping it.
+    const wasHidden = btn.classList.contains("hidden");
+    btn.className = `js-variant-option px-3 py-1.5 border-2 ${
+      isSelected
+        ? "border-red-600 text-red-600 font-bold bg-red-50"
+        : "border-slate-200 text-slate-600 hover:border-red-300 hover:text-red-600"
+    } rounded-lg text-xs transition-colors${wasHidden ? " hidden" : ""}`;
+  });
+
+  const addBtn = document.getElementById("mainAddToCartBtn");
+  addBtn.dataset.variantId = variant.id;
+  addBtn.disabled = !variant.inStock;
+  document.getElementById("mainAddToCartLabel").innerText = variant.inStock
+    ? "افزودن به سبد خرید"
+    : "ناموجود";
+}
+
+// Selecting a flavor doesn't buy anything by itself — a flavor is one half
+// of which ProductVariant actually gets added to the cart, the weight/
+// serving pill is the other half. So this: (1) highlights the chosen
+// flavor pill, (2) shows only the weight pills that exist for THAT flavor
+// (a variant's flavorId either matches or it doesn't — hiding the rest
+// stops the customer from picking a weight/flavor combination that was
+// never a real product variant), and (3) auto-selects the first in-stock
+// variant among what's left, via selectVariant() above.
+function selectFlavor(flavorId) {
+  document.querySelectorAll(".js-flavor-option").forEach((btn) => {
+    const isSelected = Number(btn.dataset.flavorId) === flavorId;
+    btn.className = `js-flavor-option px-3 py-1.5 border-2 ${
+      isSelected
+        ? "border-red-600 text-red-600 font-bold bg-red-50"
+        : "border-slate-200 text-slate-600 hover:border-red-300 hover:text-red-600"
+    } rounded-lg text-xs transition-colors`;
+  });
+
+  let firstMatch = null;
+  let firstInStockMatch = null;
+  document.querySelectorAll(".js-variant-option").forEach((btn) => {
+    const variant = productData.variants.find(
+      (v) => v.id === Number(btn.dataset.variantId),
+    );
+    const matches = !!variant && variant.flavorId === flavorId;
+    btn.classList.toggle("hidden", !matches);
+    if (matches) {
+      firstMatch = firstMatch || variant;
+      if (variant.inStock) firstInStockMatch = firstInStockMatch || variant;
+    }
+  });
+
+  const target = firstInStockMatch || firstMatch;
+  if (target) selectVariant(target.id);
+}
+
+function addCurrentProductToCart() {
+  addToCart(selectedVariantId, currentQuantity);
+}
+
+// Star rating picker for "دیدگاه خود را بنویسید" (see the ratingStars
+// markup in product_detail.html): clicking a star's native <label>
+// checks the matching hidden radio, this just keeps the ★ colors in
+// sync with whichever one is checked, plus a live hover preview —
+// same "radios drive real state, JS keeps the visual in sync" pattern
+// already used for the weight-range filter (see products.js).
+function initRatingStars() {
+  const stars = document.querySelectorAll(".js-rating-star");
+  if (stars.length === 0) return;
+
+  const container = document.getElementById("ratingStars");
+
+  function paint(uptoValue) {
+    stars.forEach((star) => {
+      const filled = Number(star.dataset.value) <= uptoValue;
+      star.classList.toggle("text-amber-400", filled);
+      star.classList.toggle("text-slate-300", !filled);
+    });
+  }
+
+  function checkedValue() {
+    const checked = container.querySelector(".js-rating-radio:checked");
+    return checked ? Number(checked.value) : 0;
+  }
+
+  container.querySelectorAll(".js-rating-radio").forEach((radio) => {
+    radio.addEventListener("change", () => paint(Number(radio.value)));
+  });
+
+  stars.forEach((star) => {
+    star.addEventListener("mouseenter", () => paint(Number(star.dataset.value)));
+  });
+  container.addEventListener("mouseleave", () => paint(checkedValue()));
+
+  paint(checkedValue());
 }
 
 window.selectImage = selectImage;
@@ -156,6 +276,31 @@ window.addCurrentProductToCart = addCurrentProductToCart;
 
 document.addEventListener("DOMContentLoaded", () => {
   renderThumbnails();
+  initRatingStars();
+
+  document.querySelectorAll(".js-variant-option").forEach((btn) => {
+    btn.addEventListener("click", () =>
+      selectVariant(Number(btn.dataset.variantId)),
+    );
+  });
+
+  const flavorButtons = document.querySelectorAll(".js-flavor-option");
+  flavorButtons.forEach((btn) => {
+    btn.addEventListener("click", () =>
+      selectFlavor(Number(btn.dataset.flavorId)),
+    );
+  });
+  // Apply the server-highlighted default flavor's filtering on load, so
+  // the weight pills shown at first paint already match it instead of
+  // listing every flavor's weights until the first click.
+  if (flavorButtons.length > 0) {
+    const defaultVariant = productData.variants.find(
+      (v) => v.id === productData.defaultVariantId,
+    );
+    if (defaultVariant && defaultVariant.flavorId != null) {
+      selectFlavor(defaultVariant.flavorId);
+    }
+  }
 
   const relatedSlider = document.getElementById("relatedSlider");
   if (relatedSlider) {

@@ -1,0 +1,10 @@
+# Pull in everything every environment needs
+-r base.txt
+
+# PostgreSQL driver — binary build is fine for local development
+# (prod.txt uses the non-binary build; see the comment there for why)
+psycopg2-binary>=2.9,<3.0
+
+# Adds an in-browser debug panel (SQL queries, request timing, settings)
+# whenever DEBUG=True — never installed in production
+django-debug-toolbar>=4.4,<5.0

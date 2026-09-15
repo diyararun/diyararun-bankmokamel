@@ -1,0 +1,11 @@
+# Pull in everything every environment needs
+-r base.txt
+
+# PostgreSQL driver — compiled from source (not the "-binary" wheel) because
+# the binary build is officially recommended only for development/testing;
+# production should link against the system libpq for stability
+psycopg2>=2.9,<3.0
+
+# WSGI application server that actually serves Django in production.
+# "manage.py runserver" (used in dev) is explicitly not meant for real traffic.
+gunicorn>=22.0,<23.0
