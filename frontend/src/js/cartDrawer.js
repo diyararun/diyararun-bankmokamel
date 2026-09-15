@@ -78,9 +78,9 @@ export function renderCartDrawer() {
         <p class="text-xs text-slate-400 mt-2 max-w-xs leading-relaxed">
           می‌توانید از بخش محصولات مکمل مورد نظر خود را انتخاب کرده و به سبد اضافه کنید.
         </p>
-        <button onclick="closeCartDrawer()" class="mt-6 bg-slate-900 text-white text-xs font-bold px-6 py-3 rounded-xl hover:bg-red-600 transition-colors">
+        <a href="/products/" onclick="closeCartDrawer()" class="mt-6 bg-slate-900 text-white text-xs font-bold px-6 py-3 rounded-xl hover:bg-red-600 transition-colors">
           مشاهده فروشگاه
-        </button>
+        </a>
       </div>
     `;
     cartFooter.classList.add("hidden");
