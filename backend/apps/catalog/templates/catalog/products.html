@@ -41,7 +41,7 @@
           class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
         >
           <div>
-            <h1 class="text-2xl font-black text-slate-900">
+            <h1 class="font-title text-2xl font-black text-slate-900">
               {% if search_query %}
                 نتایج جستجو برای «{{ search_query }}»
               {% else %}
@@ -169,7 +169,7 @@
 
                     <!-- فیلتر ۱: برندها -->
                     <div class="mb-6 border-b border-slate-100 pb-5">
-                      <h4 class="font-bold text-slate-900 text-sm mb-3">برند سازنده</h4>
+                      <h4 class="font-title font-bold text-slate-900 text-sm mb-3">برند سازنده</h4>
                       <div
                         class="space-y-1 max-h-48 overflow-y-auto pr-1 -mr-1 no-scrollbar"
                       >
@@ -210,7 +210,7 @@
 
                     <!-- فیلتر ۲: محدوده قیمت -->
                     <div class="mb-6 border-b border-slate-100 pb-5">
-                      <h4 class="font-bold text-slate-900 text-sm mb-3">
+                      <h4 class="font-title font-bold text-slate-900 text-sm mb-3">
                         محدوده قیمت (تومان)
                       </h4>
                       <div class="space-y-3">
@@ -241,7 +241,7 @@
                          اگر فروشنده اصلاً از فیلد وزن استفاده نکند، این بخش کاملاً حذف می‌شود. -->
                     {% if show_weight_filter %}
                     <div class="mb-6 border-b border-slate-100 pb-5">
-                      <h4 class="font-bold text-slate-900 text-sm mb-3">
+                      <h4 class="font-title font-bold text-slate-900 text-sm mb-3">
                         وزن / حجم محصول
                       </h4>
                       <div class="grid grid-cols-2 gap-2 text-xs">
@@ -263,7 +263,7 @@
                          حذف می‌شود تا خریدار با فیلتری که هیچ نتیجه‌ای فیلتر نمی‌کند گیج نشود. -->
                     {% if show_form_type_filter %}
                     <div class="mb-6 border-b border-slate-100 pb-5">
-                      <h4 class="font-bold text-slate-900 text-sm mb-3">
+                      <h4 class="font-title font-bold text-slate-900 text-sm mb-3">
                         نوع مکمل (فرم)
                       </h4>
                       <div class="space-y-1 text-xs">
@@ -450,7 +450,7 @@
                   {% endif %}
                 </div>
                 <h3
-                  class="font-bold text-slate-900 text-base mt-1 line-clamp-1 group-hover:text-red-600 transition-colors"
+                  class="font-title font-bold text-slate-900 text-base mt-1 line-clamp-1 group-hover:text-red-600 transition-colors"
                 >
                   <a href="{% url 'store:product_detail' slug=p.slug %}">{{ p.name }}</a>
                 </h3>

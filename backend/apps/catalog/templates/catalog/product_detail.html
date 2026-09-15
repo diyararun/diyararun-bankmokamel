@@ -127,7 +127,7 @@
               </div>
             </div>
 
-            <h1 class="text-2xl font-black text-slate-900 mt-2 leading-snug">
+            <h1 class="font-title text-2xl font-black text-slate-900 mt-2 leading-snug">
               {{ product.name }}
             </h1>
 
@@ -279,7 +279,7 @@
             id="tabContent-desc"
             class="tab-content active space-y-4 text-slate-600 text-xs sm:text-sm leading-relaxed max-w-4xl"
           >
-            <h3 class="text-base font-extrabold text-slate-900">
+            <h3 class="font-title text-base font-extrabold text-slate-900">
               نقد و بررسی {{ product.name }}
             </h3>
             <div>
@@ -320,7 +320,7 @@
                 class="lg:col-span-5 bg-slate-50 p-5 rounded-2xl border border-slate-200/80 sticky top-28"
               >
                 <h4
-                  class="font-extrabold text-sm text-slate-900 mb-1 flex items-center gap-2"
+                  class="font-title font-extrabold text-sm text-slate-900 mb-1 flex items-center gap-2"
                 >
                   <svg
                     class="w-4 h-4 text-red-600"
@@ -431,7 +431,7 @@
                         {{ review.user.avatar_emoji }}
                       </div>
                       <div>
-                        <h5 class="font-bold text-xs text-slate-900">
+                        <h5 class="font-title font-bold text-xs text-slate-900">
                           {{ review.user.display_name }}
                         </h5>
                         {% if review.is_verified_purchase %}
@@ -470,7 +470,7 @@
       >
         <div class="flex items-center justify-between mb-6">
           <div>
-            <h2 class="text-xl font-black text-slate-900">محصولات مرتبط</h2>
+            <h2 class="font-title text-xl font-black text-slate-900">محصولات مرتبط</h2>
             <p class="text-slate-400 text-xs mt-0.5">
               پیشنهادهای مکمل برای دوره ورزشی شما
             </p>
@@ -551,7 +551,7 @@
                 {% endwith %}
               </div>
               <span class="text-[11px] text-red-600 font-bold">{{ p.category.name }}</span>
-              <h3 class="font-bold text-slate-900 text-sm mt-0.5 line-clamp-1">
+              <h3 class="font-title font-bold text-slate-900 text-sm mt-0.5 line-clamp-1">
                 {{ p.name }}
               </h3>
               <p class="text-slate-400 text-[11px] mt-0.5">
