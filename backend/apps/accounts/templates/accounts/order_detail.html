@@ -59,12 +59,33 @@
               <h1 class="font-title text-heading-20 font-black text-slate-900" dir="ltr">{{ order.tracking_code }}</h1>
               <p class="text-xs text-slate-400">ثبت‌شده در {{ order.created_at|jdatetime }}</p>
             </div>
+            <!--
+              نشست ۴۱: تا قبل از این، هر ۴ وضعیتِ بعد از پرداخت
+              (پرداخت‌شده/آماده‌سازی/ارسال‌شده/تحویل‌شده) یک بجِ سبزِ
+              یکسان بودند و فقط متنشان فرق داشت — یعنی مشتری از روی رنگ
+              نمی‌فهمید سفارشش دقیقاً کدام مرحله است. حالا هر ۶ وضعیتِ
+              واقعیِ Order.STATUS_CHOICES رنگِ مخصوصِ خودش را دارد؛ رنگ‌ها
+              از کهربایی (شروع) تا سبز (پایانِ موفق) پیش می‌روند، لغوشده
+              همیشه قرمز است.
+            -->
             {% if order.status == "cancelled" %}
             <span class="text-xs font-bold px-4 py-2 rounded-full bg-red-50 text-red-600">
               {{ order.get_status_display }}
             </span>
-            {% elif order.is_paid %}
+            {% elif order.status == "delivered" %}
             <span class="text-xs font-bold px-4 py-2 rounded-full bg-emerald-50 text-emerald-600">
+              {{ order.get_status_display }}
+            </span>
+            {% elif order.status == "shipped" %}
+            <span class="text-xs font-bold px-4 py-2 rounded-full bg-indigo-50 text-indigo-600">
+              {{ order.get_status_display }}
+            </span>
+            {% elif order.status == "processing" %}
+            <span class="text-xs font-bold px-4 py-2 rounded-full bg-violet-50 text-violet-600">
+              {{ order.get_status_display }}
+            </span>
+            {% elif order.status == "paid" %}
+            <span class="text-xs font-bold px-4 py-2 rounded-full bg-sky-50 text-sky-600">
               {{ order.get_status_display }}
             </span>
             {% else %}
@@ -112,6 +133,36 @@
               class="bg-white hover:bg-emerald-100 text-emerald-700 text-xs font-bold px-5 py-2.5 rounded-xl border border-emerald-200 transition-colors shrink-0"
             >
               دریافت فاکتور
+            </a>
+          </div>
+          {% endif %}
+
+          {% if order.courier_tracking_code and order.courier_tracking_url %}
+          <!--
+            نشست ۴۱: این باکس مستقل از باکسِ بالاست — چون همزمان هم
+            می‌خواهیم «دریافت فاکتور» را نشان بدهیم هم (وقتی مرسوله واقعاً
+            تحویلِ باربری شده) این باکس را. عمداً یک لینکِ ساده به صفحه‌ی
+            عمومیِ رهگیریِ باربری است (courier_tracking_url در models.py)،
+            نه یک لینکِ عمیق با کدِ از‌پیش‌پرشده — چون هیچ‌کدام از باربری‌ها
+            فرمتِ مستندی برای این کار ندارند؛ برای همین خودِ کد را هم
+            به‌صورتِ متنِ قابل‌کپی همین‌جا نشان می‌دهیم تا مشتری با دست در
+            سایتِ باربری واردش کند.
+          -->
+          <div class="mt-5 flex flex-wrap items-center justify-between gap-4 bg-indigo-50 border border-indigo-200 rounded-2xl p-4">
+            <div>
+              <p class="text-xs font-bold text-indigo-700">مرسوله به {{ order.get_courier_display }} تحویل داده شده است.</p>
+              <p class="text-sm font-black text-indigo-900 mt-1" dir="ltr">{{ order.courier_tracking_code }}</p>
+              <p class="text-caption-11 text-indigo-500 mt-0.5">
+                این کد را در سایتِ {{ order.get_courier_display }} وارد کنید تا وضعیتِ لحظه‌ایِ مرسوله را ببینید.
+              </p>
+            </div>
+            <a
+              href="{{ order.courier_tracking_url }}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="bg-white hover:bg-indigo-100 text-indigo-700 text-xs font-bold px-5 py-2.5 rounded-xl border border-indigo-200 transition-colors shrink-0"
+            >
+              پیگیری مرسوله در سایتِ {{ order.get_courier_display }}
             </a>
           </div>
           {% endif %}
