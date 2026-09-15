@@ -91,27 +91,27 @@
 
       <div class="space-y-1.5 text-xs pt-2 max-w-xs mr-auto">
         <div class="flex items-center justify-between">
-          <span class="text-slate-500">جمع قیمت محصولات</span>
+          <span class="text-slate-500">قیمت محصولات با تخفیف:</span>
           <span class="font-bold text-slate-800">{{ order.subtotal_price|toman }} تومان</span>
         </div>
         {% if order.product_discount_amount %}
         <div class="flex items-center justify-between text-emerald-600">
-          <span>تخفیف محصولات</span>
+          <span>سود شما از خرید:</span>
           <span class="font-bold">{{ order.product_discount_amount|toman }} تومان</span>
         </div>
         {% endif %}
         {% if order.discount_amount %}
         <div class="flex items-center justify-between text-emerald-600">
-          <span>تخفیف کد تخفیف/کمپین</span>
+          <span>تخفیف کد تخفیف:</span>
           <span class="font-bold">{{ order.discount_amount|toman }} تومان</span>
         </div>
         {% endif %}
         <div class="flex items-center justify-between">
-          <span class="text-slate-500">هزینه ارسال</span>
+          <span class="text-slate-500">هزینه ارسال:</span>
           <span class="font-bold text-slate-800">{{ order.shipping_cost|toman }} تومان</span>
         </div>
         <div class="flex items-center justify-between text-sm font-black pt-2 border-t border-slate-200">
-          <span class="text-slate-900">مبلغ نهایی پرداخت‌شده</span>
+          <span class="text-slate-900">مبلغ نهایی پرداخت‌شده:</span>
           <span class="text-red-600">{{ order.total_price|toman }} تومان</span>
         </div>
       </div>

@@ -285,12 +285,12 @@
               data-shipping-cost="{{ shipping_cost }}"
             >
               <div class="flex items-center justify-between text-slate-600">
-                <span>قیمت محصولات:</span>
+                <span>قیمت محصولات با تخفیف:</span>
                 <span class="font-bold text-slate-800">{{ cart.total_price|toman }} تومان</span>
               </div>
               {% if product_discount_amount %}
               <div class="flex items-center justify-between text-slate-600">
-                <span>تخفیف محصولات:</span>
+                <span>سود شما از خرید:</span>
                 <span class="font-bold text-emerald-600">{{ product_discount_amount|toman }} تومان</span>
               </div>
               {% endif %}
@@ -342,4 +342,4 @@
 
 {% block footer %}
   {% include "partials/footer_checkout.html" %}
-{% endblock %}
+{% endblock footer %}
