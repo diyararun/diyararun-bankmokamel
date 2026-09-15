@@ -74,7 +74,7 @@
             {% with variant=product.default_variant %}
             {% if variant.discount_percent %}
             <span
-              class="absolute top-4 right-4 bg-red-600 text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-sm"
+              class="absolute top-4 right-4 bg-red-600 text-white text-caption-10 font-black px-2.5 py-1 rounded-lg shadow-sm"
               >{{ variant.discount_percent }}٪ تخفیف</span
             >
             {% endif %}
@@ -123,7 +123,7 @@
               </div>
               <div class="flex items-center gap-1 text-xs">
                 <span class="text-amber-400 font-bold">★ {{ product.average_rating|floatformat:1|default:"—"|persian_digits }}</span>
-                <span class="text-slate-400 text-[11px]">({{ reviews.count|persian_digits }} نظر)</span>
+                <span class="text-slate-400 text-caption-11">({{ reviews.count|persian_digits }} نظر)</span>
               </div>
             </div>
 
@@ -337,7 +337,7 @@
                   </svg>
                   دیدگاه خود را بنویسید
                 </h4>
-                <p class="text-slate-400 text-[11px] mb-4">
+                <p class="text-slate-400 text-caption-11 mb-4">
                   نظرات شما پس از تایید مدیریت نمایش داده می‌شوند.
                 </p>
 
@@ -350,7 +350,7 @@
                   {% csrf_token %}
                   <div>
                     <label
-                      class="block text-[11px] font-bold text-slate-700 mb-1"
+                      class="block text-caption-11 font-bold text-slate-700 mb-1"
                       >امتیاز</label
                     >
                     <!-- ۵ ستاره‌ی کلیک‌پذیر به‌جای ۵ دکمه‌ی رادیویی ساده‌ی
@@ -383,7 +383,7 @@
                   </div>
                   <div>
                     <label
-                      class="block text-[11px] font-bold text-slate-700 mb-1"
+                      class="block text-caption-11 font-bold text-slate-700 mb-1"
                       >متن دیدگاه</label
                     >
                     {{ review_form.comment }}
@@ -435,13 +435,13 @@
                           {{ review.user.display_name }}
                         </h5>
                         {% if review.is_verified_purchase %}
-                        <span class="text-[10px] text-emerald-600 font-medium"
+                        <span class="text-caption-10 text-emerald-600 font-medium"
                           >✓ خریدار محصول</span
                         >
                         {% endif %}
                       </div>
                     </div>
-                    <span class="text-[10px] text-slate-400"
+                    <span class="text-caption-10 text-slate-400"
                       >{{ review.created_at|jdatetime }}</span
                     >
                   </div>
@@ -533,7 +533,7 @@
             {% if not variant.is_in_stock %}
             <div class="absolute top-3 left-3 z-10">
               <span
-                class="bg-slate-800 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-md"
+                class="bg-slate-800 text-white font-extrabold text-caption-10 px-2 py-0.5 rounded-md"
                 >ناموجود</span
               >
             </div>
@@ -550,11 +550,11 @@
                   />
                 {% endwith %}
               </div>
-              <span class="text-[11px] text-red-600 font-bold">{{ p.category.name }}</span>
+              <span class="text-caption-11 text-red-600 font-bold">{{ p.category.name }}</span>
               <h3 class="font-title font-bold text-slate-900 text-heading-14 mt-0.5 line-clamp-1">
                 {{ p.name }}
               </h3>
-              <p class="text-slate-400 text-[11px] mt-0.5">
+              <p class="text-slate-400 text-caption-11 mt-0.5">
                 {{ p.brand.name }}
               </p>
             </a>
@@ -563,7 +563,7 @@
             >
               <span class="font-black text-slate-900 text-sm"
                 >{{ variant.price|default:"—"|toman }}
-                <span class="text-[10px] font-normal text-slate-500"
+                <span class="text-caption-10 font-normal text-slate-500"
                   >تومان</span
                 ></span
               >

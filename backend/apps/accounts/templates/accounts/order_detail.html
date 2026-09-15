@@ -87,7 +87,7 @@
           <div class="mt-5 flex flex-wrap items-center justify-between gap-4 bg-amber-50 border border-amber-200 rounded-2xl p-4">
             <div>
               <p class="text-xs font-bold text-amber-700">این سفارش هنوز پرداخت نشده است.</p>
-              <p class="text-[11px] text-amber-600 mt-0.5">
+              <p class="text-caption-11 text-amber-600 mt-0.5">
                 اتصال واقعی به درگاه بانکی در فاز بعدی نقشه راه انجام می‌شود؛ دکمه‌ی زیر فعلاً پرداخت را به‌صورت آزمایشی شبیه‌سازی می‌کند.
               </p>
             </div>
@@ -139,7 +139,7 @@
               </div>
               <div class="text-left shrink-0">
                 <span class="block font-bold text-sm text-slate-900">{{ item.total_price|toman }} تومان</span>
-                <span class="block text-[11px] text-slate-400">{{ item.unit_price|toman }} تومان / عدد</span>
+                <span class="block text-caption-11 text-slate-400">{{ item.unit_price|toman }} تومان / عدد</span>
               </div>
             </div>
             {% endfor %}
@@ -209,7 +209,7 @@
               <span class="text-slate-900">مبلغ نهایی</span>
               <span class="text-red-600 text-lg">{{ order.total_price|toman }} تومان</span>
             </div>
-            <p class="text-[11px] text-slate-400 pt-2 border-t border-slate-100">
+            <p class="text-caption-11 text-slate-400 pt-2 border-t border-slate-100">
               روش پرداخت: {{ order.get_payment_method_display }}
             </p>
           </div>

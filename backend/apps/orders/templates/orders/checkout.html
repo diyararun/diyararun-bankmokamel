@@ -79,7 +79,7 @@
                   >{{ form.full_name.label }} <span class="text-red-600">*</span></label
                 >
                 {{ form.full_name }}
-                {% if form.full_name.errors %}<span class="text-[10px] text-red-600 mt-1 block">{{ form.full_name.errors.0 }}</span>{% endif %}
+                {% if form.full_name.errors %}<span class="text-caption-10 text-red-600 mt-1 block">{{ form.full_name.errors.0 }}</span>{% endif %}
               </div>
 
               <div>
@@ -88,7 +88,7 @@
                   <span class="text-red-600">*</span></label
                 >
                 {{ form.phone }}
-                {% if form.phone.errors %}<span class="text-[10px] text-red-600 mt-1 block">{{ form.phone.errors.0 }}</span>{% endif %}
+                {% if form.phone.errors %}<span class="text-caption-10 text-red-600 mt-1 block">{{ form.phone.errors.0 }}</span>{% endif %}
               </div>
 
               <div>
@@ -96,7 +96,7 @@
                   >{{ form.email.label }} (اختیاری)</label
                 >
                 {{ form.email }}
-                {% if form.email.errors %}<span class="text-[10px] text-red-600 mt-1 block">{{ form.email.errors.0 }}</span>{% endif %}
+                {% if form.email.errors %}<span class="text-caption-10 text-red-600 mt-1 block">{{ form.email.errors.0 }}</span>{% endif %}
               </div>
 
               <div>
@@ -105,7 +105,7 @@
                   <span class="text-red-600">*</span></label
                 >
                 {{ form.national_code }}
-                {% if form.national_code.errors %}<span class="text-[10px] text-red-600 mt-1 block">{{ form.national_code.errors.0 }}</span>{% endif %}
+                {% if form.national_code.errors %}<span class="text-caption-10 text-red-600 mt-1 block">{{ form.national_code.errors.0 }}</span>{% endif %}
               </div>
             </div>
           </div>
@@ -133,7 +133,7 @@
                   >{{ form.province.label }} <span class="text-red-600">*</span></label
                 >
                 {{ form.province }}
-                {% if form.province.errors %}<span class="text-[10px] text-red-600 mt-1 block">{{ form.province.errors.0 }}</span>{% endif %}
+                {% if form.province.errors %}<span class="text-caption-10 text-red-600 mt-1 block">{{ form.province.errors.0 }}</span>{% endif %}
               </div>
 
               <div>
@@ -141,7 +141,7 @@
                   >{{ form.city.label }} <span class="text-red-600">*</span></label
                 >
                 {{ form.city }}
-                {% if form.city.errors %}<span class="text-[10px] text-red-600 mt-1 block">{{ form.city.errors.0 }}</span>{% endif %}
+                {% if form.city.errors %}<span class="text-caption-10 text-red-600 mt-1 block">{{ form.city.errors.0 }}</span>{% endif %}
               </div>
 
               <div class="sm:col-span-2">
@@ -149,7 +149,7 @@
                   >{{ form.full_address.label }} <span class="text-red-600">*</span></label
                 >
                 {{ form.full_address }}
-                {% if form.full_address.errors %}<span class="text-[10px] text-red-600 mt-1 block">{{ form.full_address.errors.0 }}</span>{% endif %}
+                {% if form.full_address.errors %}<span class="text-caption-10 text-red-600 mt-1 block">{{ form.full_address.errors.0 }}</span>{% endif %}
               </div>
 
               <div>
@@ -157,7 +157,7 @@
                   >{{ form.postal_code.label }} ۱۰ رقمی <span class="text-red-600">*</span></label
                 >
                 {{ form.postal_code }}
-                {% if form.postal_code.errors %}<span class="text-[10px] text-red-600 mt-1 block">{{ form.postal_code.errors.0 }}</span>{% endif %}
+                {% if form.postal_code.errors %}<span class="text-caption-10 text-red-600 mt-1 block">{{ form.postal_code.errors.0 }}</span>{% endif %}
               </div>
 
               <div>
@@ -168,7 +168,7 @@
                   {{ form.plaque }}
                   {{ form.unit }}
                 </div>
-                {% if form.plaque.errors %}<span class="text-[10px] text-red-600 mt-1 block">{{ form.plaque.errors.0 }}</span>{% endif %}
+                {% if form.plaque.errors %}<span class="text-caption-10 text-red-600 mt-1 block">{{ form.plaque.errors.0 }}</span>{% endif %}
               </div>
             </div>
           </div>
@@ -210,7 +210,7 @@
                     <span class="block font-bold text-xs text-slate-900"
                       >پرداخت اینترنتی (با تمامی کارت‌های شتاب)</span
                     >
-                    <span class="block text-[11px] text-slate-400 mt-0.5"
+                    <span class="block text-caption-11 text-slate-400 mt-0.5"
                       >سرعت بالا در پردازش و تحویل سفارش</span
                     >
                   </div>
@@ -246,7 +246,7 @@
                   </div>
                   <div>
                     <h4 class="font-title font-bold text-heading-12 text-slate-900 line-clamp-1">{{ item.product_name }}</h4>
-                    <span class="text-[10px] text-slate-400">{{ item.quantity }} عدد</span>
+                    <span class="text-caption-10 text-slate-400">{{ item.quantity }} عدد</span>
                   </div>
                 </div>
                 <span class="text-xs font-bold text-slate-800">{{ item.total_price|toman }} تومان</span>
@@ -270,7 +270,7 @@
                 </button>
               </div>
               <p id="couponMessage" class="hidden"></p>
-              {% if form.coupon_code.errors %}<span class="text-[10px] text-red-600 mt-1 block">{{ form.coupon_code.errors.0 }}</span>{% endif %}
+              {% if form.coupon_code.errors %}<span class="text-caption-10 text-red-600 mt-1 block">{{ form.coupon_code.errors.0 }}</span>{% endif %}
             </div>
 
             <!-- محاسبه قیمت -->
@@ -331,7 +331,7 @@
               </svg>
             </button>
 
-            <p class="text-[10px] text-slate-400 text-center leading-relaxed">
+            <p class="text-caption-10 text-slate-400 text-center leading-relaxed">
               با کلیک روی ثبت سفارش، شرایط و قوانین بانک مکمل را می‌پذیرید.
             </p>
           </div>
