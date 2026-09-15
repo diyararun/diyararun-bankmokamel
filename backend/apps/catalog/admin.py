@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 
 # Importing this module patches Django admin's FORMFIELD_FOR_DBFIELD_DEFAULTS
@@ -58,6 +59,21 @@ class ProductImageInline(admin.TabularInline):
     # اعمال شود و اگر کسی بیشتر از ۵ ردیف بفرستد، خطای واقعی برگردد.
     max_num = 5
     validate_max = True
+
+    @property
+    def media(self):
+        # نشست ۳۷ — لایه‌ی چهارم (اختیاری): فقط یک هشدار زودهنگام سمت
+        # مرورگر، نه یک اعتبارسنجی واقعی؛ توضیح کامل در خودِ این فایل
+        # جاوااسکریپت. عمداً یک `@property` که به `super().media` همان
+        # چیزی که از خودش می‌گیرد را اضافه می‌کند — دقیقاً همان الگویی که
+        # apps/store/admin_ux_fixes.py برای کل پنل ادمین استفاده می‌کند —
+        # نه یک `class Media` ساده‌ی تو در تو، چون `ModelAdmin.media` خودش
+        # از قبل یک property محاسبه‌شونده (نه یک Media ثابت) است و
+        # جایگزین‌کردنش با یک Media تعریف‌شده‌ی ایستا اسکریپت‌های اصلیِ
+        # خودِ جنگو ادمین (jQuery و...) را از دست می‌دهد. این‌طور فقط
+        # همین یک اینلاین (نه هر اینپوت فایلی در کل ادمین) این اسکریپت
+        # اضافه را می‌گیرد.
+        return super().media + forms.Media(js=("admin/js/product_image_upload_hints.js",))
 
 
 class ProductVariantInline(admin.TabularInline):
