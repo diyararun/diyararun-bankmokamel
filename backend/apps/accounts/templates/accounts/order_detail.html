@@ -5,6 +5,8 @@
 
 {% block title %}جزئیات سفارش {{ order.tracking_code }} | بانک مکمل{% endblock %}
 
+{% block entry %}{% vite_asset 'src/js/entries/orderDetail.js' %}{% endblock %}
+
 <!--
   این صفحه دو نقش دارد:
   ۱) وقتی سفارش هنوز پرداخت نشده (status="pending_payment")، همان صفحه‌ی
@@ -121,15 +123,43 @@
                 موجودیِ کالاهای این سفارش تا {{ order.reservation_deadline|jdatetime }} برای شما رزرو شده است؛ بعد از این زمان سفارش خودکار لغو می‌شود.
               </p>
             </div>
-            <form method="post" action="{% url 'accounts:order_mark_paid' order.tracking_code %}">
-              {% csrf_token %}
-              <button
-                type="submit"
-                class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-colors shadow-sm shadow-red-600/20 shrink-0"
+            <div class="flex flex-col items-center gap-2 shrink-0">
+              <!--
+                نشست ۴۴: قبلاً کاربر فقط یک ساعتِ مطلق («تا ۱۴:۳۲») بالا
+                می‌دید و خودش باید تفریق می‌کرد ببیند چقدر وقت دارد. حالا
+                همین‌جا، کنار دکمه‌ی پرداخت، یک شمارشِ معکوسِ زنده (mm:ss)
+                هم هست تا فوریتِ زمان قابل‌فهم‌تر باشد. data-deadline-ts
+                یک Unix timestamp (ثانیه) است — همان چیزی که
+                order.reservation_deadline در سرور محاسبه می‌کند
+                (Order.reservation_deadline در models.py، خودش بر اساسِ
+                CheckoutSettings.reservation_minutesِ قابل‌تغییر از ادمین
+                است) — یعنی این تایمر هیچ عددی را در جاوااسکریپت هاردکد
+                نمی‌کند، هرچه مهلتِ واقعی باشد همان را می‌شمارد.
+                وقتی به صفر برسد، خودِ تایمر چیزی را لغو نمی‌کند (این کار
+                همچنان فقط وظیفه‌ی سرور — release_expired_pending_orders —
+                است)؛ فقط صفحه را دوباره بارگذاری می‌کند تا وضعیتِ واقعیِ
+                «لغوشده» را از سرور ببینیم.
+              -->
+              <div
+                id="reservationCountdownBox"
+                data-deadline-ts="{{ order.reservation_deadline|date:'U' }}"
+                class="flex items-center gap-1.5 bg-white border border-amber-300 rounded-xl px-3 py-1.5"
               >
-                کلیک کنید برای پرداخت
-              </button>
-            </form>
+                <svg class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="reservationCountdown" class="font-mono text-sm font-bold text-amber-700 tabular-nums">--:--</span>
+              </div>
+              <form method="post" action="{% url 'accounts:order_mark_paid' order.tracking_code %}">
+                {% csrf_token %}
+                <button
+                  type="submit"
+                  class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-colors shadow-sm shadow-red-600/20 shrink-0"
+                >
+                  کلیک کنید برای پرداخت
+                </button>
+              </form>
+            </div>
           </div>
           {% elif order.is_paid %}
           <!-- سفارش پرداخت‌شده — حالا «دریافت فاکتور» فعال است. -->

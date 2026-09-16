@@ -11,10 +11,17 @@
 // match the format used everywhere else on the site.
 const PERSIAN_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
 
+// نشست ۴۴: قبلاً این تبدیل فقط این‌جا، داخل formatToman، وجود داشت.
+// شمارش‌معکوسِ رزروِ موجودی (entries/orderDetail.js) هم دقیقاً به همین
+// «رقمِ لاتین → رقمِ فارسی» نیاز داشت، برای همین به یک تابعِ جدا استخراج
+// شد تا دوباره‌نویسیِ همان جدولِ PERSIAN_DIGITS در یک فایلِ دیگر لازم
+// نباشد.
+export function toPersianDigits(value) {
+  return String(value).replace(/\d/g, (digit) => PERSIAN_DIGITS[digit]);
+}
+
 export function formatToman(value) {
   const number = Math.trunc(Number(value));
   if (!Number.isFinite(number)) return String(value);
-  return number
-    .toLocaleString("en-US")
-    .replace(/\d/g, (digit) => PERSIAN_DIGITS[digit]);
+  return toPersianDigits(number.toLocaleString("en-US"));
 }

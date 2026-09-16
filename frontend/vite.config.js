@@ -30,6 +30,7 @@ export default defineConfig({
         auth: resolve(__dirname, "src/js/entries/auth.js"),
         profile: resolve(__dirname, "src/js/entries/profile.js"),
         addressForm: resolve(__dirname, "src/js/entries/addressForm.js"),
+        orderDetail: resolve(__dirname, "src/js/entries/orderDetail.js"),
       },
     },
   },
