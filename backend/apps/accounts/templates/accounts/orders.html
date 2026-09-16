@@ -98,7 +98,7 @@
                 <div class="flex items-center">
                   {% for item in items|slice:":2" %}
                   <div
-                    class="relative {% if forloop.first %}z-30{% else %}z-20 -ms-4{% endif %} w-14 h-14 bg-slate-50 border-2 border-white ring-1 ring-slate-100 rounded-xl overflow-hidden shrink-0"
+                    class="relative {% if forloop.first %}z-30{% else %}z-20 -ms-4{% endif %} w-16 h-16 bg-slate-50 border-2 border-white ring-1 ring-slate-100 rounded-xl overflow-hidden shrink-0"
                     title="{{ item.product_name }} × {{ item.quantity }}"
                   >
                     {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.product_name }}" class="w-full h-full object-cover" />{% endif %}

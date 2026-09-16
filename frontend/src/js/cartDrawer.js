@@ -96,7 +96,7 @@ export function renderCartDrawer() {
     itemsHtml += `
       <div class="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-2xl">
         <div class="flex items-center gap-3">
-          <div class="w-12 h-12 bg-white rounded-xl overflow-hidden shrink-0">
+          <div class="w-16 h-16 bg-white rounded-xl overflow-hidden shrink-0">
             ${thumb}
           </div>
           <div>
