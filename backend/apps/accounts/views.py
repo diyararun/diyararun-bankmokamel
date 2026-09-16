@@ -1,5 +1,6 @@
 import json
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
@@ -69,18 +70,30 @@ def verify_otp(request):
     phone = form.cleaned_data["phone"]
     code = form.cleaned_data["code"]
 
-    otp = (
-        PhoneOTP.objects.filter(phone=phone, is_used=False)
-        .order_by("-created_at")
-        .first()
-    )
-    if not otp or otp.is_expired():
-        return JsonResponse({"ok": False, "message": "کد منقضی شده است. دوباره تلاش کنید."}, status=400)
-    if otp.code != code:
-        return JsonResponse({"ok": False, "message": "کد تایید نادرست است."}, status=400)
+    # نشست ۴۷: در محیطِ توسعه (DEBUG=True)، کدِ ثابتِ دِوِ (PhoneOTP.
+    # DEV_FIXED_CODE، همان "11111") از کلِ چرخه‌ی «یک‌بارمصرف/منقضی‌شونده»
+    # زیر معاف است — هر تعداد بار، برای هر شماره‌ای (چه قبلاً درخواستِ کد
+    # داده باشد چه نه)، و بدونِ توجه به گذشتِ زمان، قبول می‌شود. چون در
+    # توسعه پیامکِ واقعی‌ای در کار نیست (PhoneOTP.generate_for همیشه
+    # همین کد را صادر می‌کند)، منطقِ انقضا/یک‌بارمصرف‌بودن که برای کدهای
+    # واقعیِ پیامکی لازم است، این‌جا فقط باعثِ گیرکردنِ تسترها/توسعه‌دهنده‌ها
+    # می‌شد. در production (DEBUG=False) این شاخه اصلاً اجرا نمی‌شود —
+    # رفتار دقیقاً همان قبلی است.
+    if settings.DEBUG and code == PhoneOTP.DEV_FIXED_CODE:
+        pass
+    else:
+        otp = (
+            PhoneOTP.objects.filter(phone=phone, is_used=False)
+            .order_by("-created_at")
+            .first()
+        )
+        if not otp or otp.is_expired():
+            return JsonResponse({"ok": False, "message": "کد منقضی شده است. دوباره تلاش کنید."}, status=400)
+        if otp.code != code:
+            return JsonResponse({"ok": False, "message": "کد تایید نادرست است."}, status=400)
 
-    otp.is_used = True
-    otp.save(update_fields=["is_used"])
+        otp.is_used = True
+        otp.save(update_fields=["is_used"])
 
     user, _created = User.objects.get_or_create(phone=phone, defaults={"username": phone})
 

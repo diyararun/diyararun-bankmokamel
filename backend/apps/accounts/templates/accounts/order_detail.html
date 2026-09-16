@@ -145,7 +145,7 @@
               <div
                 id="reservationCountdownBox"
                 data-deadline-ts="{{ order.reservation_deadline_ts }}"
-                class="flex items-center gap-2 bg-white border border-amber-300 rounded-xl px-4 py-2"
+                class="flex items-center gap-2 bg-white border border-amber-300 rounded-xl px-2.5 py-1.5"
               >
                 <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -160,15 +160,15 @@
                   عرضِ عدد تکان نخورد. سایز هم طبقِ خواسته‌ی شما بزرگ‌تر
                   شد (text-sm → text-xl).
                 -->
-                <span id="reservationCountdown" class="text-xl font-bold text-amber-700 tabular-nums">--:--</span>
+                <span id="reservationCountdown" class="text-lg font-regular text-amber-700 tabular-nums">--:--</span>
               </div>
               <form method="post" action="{% url 'accounts:order_mark_paid' order.tracking_code %}">
                 {% csrf_token %}
                 <button
                   type="submit"
-                  class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-colors shadow-sm shadow-red-600/20 shrink-0"
+                  class="bg-red-600 hover:bg-red-700 text-white text-sm font-bold px-5 py-3.5 rounded-xl transition-colors shadow-sm shadow-red-600/20 shrink-0"
                 >
-                  کلیک کنید برای پرداخت
+                   برای پرداخت کلیک کنید
                 </button>
               </form>
             </div>
