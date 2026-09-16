@@ -111,6 +111,15 @@
               <p class="text-caption-11 text-amber-600 mt-0.5">
                 اتصال واقعی به درگاه بانکی در فاز بعدی نقشه راه انجام می‌شود؛ دکمه‌ی زیر فعلاً پرداخت را به‌صورت آزمایشی شبیه‌سازی می‌کند.
               </p>
+              <!--
+                نشست ۴۳: موجودیِ کالاهای این سفارش همان لحظه‌ی ثبت (نه
+                الان) از انبار کم شده و فقط تا این مهلت برای همین مشتری
+                نگه داشته می‌شود — بعدش خودکار لغو و به انبار برمی‌گردد
+                (Order.release_expired_pending_orders در models.py).
+              -->
+              <p class="text-caption-11 text-amber-600 mt-0.5">
+                موجودیِ کالاهای این سفارش تا {{ order.reservation_deadline|jdatetime }} برای شما رزرو شده است؛ بعد از این زمان سفارش خودکار لغو می‌شود.
+              </p>
             </div>
             <form method="post" action="{% url 'accounts:order_mark_paid' order.tracking_code %}">
               {% csrf_token %}
@@ -134,6 +143,21 @@
             >
               دریافت فاکتور
             </a>
+          </div>
+          {% elif order.status == "cancelled" %}
+          <!--
+            نشست ۴۳: قبل از این نشست، سفارشِ لغوشده هیچ باکسی این‌جا
+            نداشت (نه دکمه‌ی پرداخت چون status != pending_payment، نه
+            دکمه‌ی فاکتور چون is_paid=False) — یعنی این بخش کاملاً خالی
+            می‌ماند. حالا حداقل یک توضیح می‌دهد چرا.
+          -->
+          <div class="mt-5 flex flex-wrap items-center justify-between gap-4 bg-red-50 border border-red-200 rounded-2xl p-4">
+            <div>
+              <p class="text-xs font-bold text-red-700">این سفارش لغو شده و دیگر قابلِ پرداخت نیست.</p>
+              <p class="text-caption-11 text-red-500 mt-0.5">
+                اگر به‌دلیلِ اتمامِ مهلتِ رزرو لغو شده، موجودیِ کالاهایش به فروشگاه بازگردانده شده است.
+              </p>
+            </div>
           </div>
           {% endif %}
 
