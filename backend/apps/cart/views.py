@@ -41,9 +41,10 @@ class CartAddView(View):
             item.quantity += quantity
 
         # Don't let the cart quantity exceed real stock. This is a soft
-        # guard for a nicer UX, not the final word — full stock
-        # enforcement belongs at checkout time (orders app, next phase),
-        # since stock can change between adding to cart and paying.
+        # guard for a nicer UX, not the final word — the real enforcement
+        # (locking the row and re-checking at the exact moment of
+        # checkout) lives in orders.views.CheckoutView.post (نشست ۴۳),
+        # since stock can still change between adding to cart and paying.
         if item.quantity > variant.stock:
             item.quantity = variant.stock
         item.save()

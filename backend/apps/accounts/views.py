@@ -3,6 +3,7 @@ import json
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.db.models import Prefetch
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -137,6 +138,9 @@ def order_list_view(request):
     Prefetch) — بدون این‌ها، صفحه‌ای با ۱۰ سفارش دوتایی، ده‌ها کوئری
     اضافه به دیتابیس می‌زد (N+1).
     """
+    # نشست ۴۳: همان دلیلِ order_detail_view — بجِ وضعیت روی این لیست هم
+    # نباید یک سفارشِ منقضی‌شده را همچنان «در انتظار پرداخت» نشان بدهد.
+    Order.release_expired_pending_orders()
     orders = (
         request.user.orders.prefetch_related(
             Prefetch(
@@ -165,15 +169,45 @@ def mark_order_paid(request, tracking_code):
     فاکتور) از روی `order.status`/`order.is_paid` کار می‌کنند و دست‌نخورده
     می‌مانند.
 
-    اگر سفارش از قبل پرداخت شده یا لغو شده باشد (مثلاً کاربر روی دکمه
-    دوبار کلیک کرده یا صفحه را رفرش کرده)، کاری انجام نمی‌دهیم — فقط به
-    همان صفحه‌ی جزئیات برمی‌گردیم، بدون خطا.
+    اگر سفارش از قبل پرداخت شده باشد (مثلاً کاربر روی دکمه دوبار کلیک
+    کرده یا صفحه را رفرش کرده)، کاری انجام نمی‌دهیم — فقط به همان
+    صفحه‌ی جزئیات برمی‌گردیم، بدون خطا. اگر لغو شده باشد (نشست ۴۳: یعنی
+    مهلتِ رزروِ موجودی تمام شده)، یک پیامِ خطای صریح نشان می‌دهیم — چون
+    این‌جا واقعاً دیگر امکانِ پرداخت نیست، نه یک نوع بی‌خطرِ double-submit.
     """
-    order = get_object_or_404(Order, tracking_code=tracking_code, user=request.user)
-    if order.status == "pending_payment":
-        order.status = "paid"
-        order.save(update_fields=["status"])
-        messages.success(request, "پرداخت با موفقیت انجام شد.")
+    # نشست ۴۳: قبل از هر تصمیمی، رزروهای منقضی‌شده را آزاد می‌کنیم — یعنی
+    # اگر مهلتِ همین سفارش دقیقاً همین الان (یا کمی قبل‌تر، بدون این‌که
+    # crontab هنوز فرصت کرده باشد) تمام شده باشد، همین‌جا به «لغوشده»
+    # تبدیل می‌شود و پرداختش دیگر قبول نمی‌شود — نه این‌که با کلیکِ همین
+    # دکمه (که در تئوری، اگر کاربر سریع باشد، ممکن است چند لحظه بعد از
+    # پایانِ مهلت هم فشرده شود) موجودیِ کالا اشتباهاً هم برای این مشتری و
+    # هم برای مشتریِ بعدی حساب شود.
+    Order.release_expired_pending_orders()
+
+    # نشست ۴۳: select_for_update این‌جا صرفاً یک احتیاطِ اضافه نیست — بدونش
+    # یک رَیسِ واقعی ممکن است رخ دهد: تصور کنید درست همین لحظه که این
+    # درخواست دارد اجرا می‌شود، دستورِ release_expired_orders (از crontab)
+    # هم دارد دقیقاً همین سفارش را به‌خاطرِ اتمامِ مهلت لغو می‌کند. بدونِ
+    # قفل، ممکن است این‌جا وضعیتِ قدیمیِ «در انتظار پرداخت» را (قبل از
+    # commit شدنِ لغو) بخوانیم، تصمیم به «paid‌کردن» بگیریم، و درست بعد از
+    # این‌که لغوِ آن یکی commit شد، این وضعیت را رویش بازنویسی کنیم —
+    # یعنی سفارشی که موجودی‌اش برگشته، بدونِ کم‌شدنِ دوباره‌ی موجودی
+    # «پرداخت‌شده» ثبت شود. با select_for_update، اگر آن تراکنشِ دیگر قفل
+    # را گرفته باشد، این‌جا صبر می‌کنیم تا آزاد شود و بعد وضعیتِ واقعاً
+    # به‌روز (لغوشده) را می‌خوانیم.
+    with transaction.atomic():
+        order = get_object_or_404(
+            Order.objects.select_for_update(), tracking_code=tracking_code, user=request.user
+        )
+        if order.status == "pending_payment":
+            order.status = "paid"
+            order.save(update_fields=["status"])
+            messages.success(request, "پرداخت با موفقیت انجام شد.")
+        elif order.status == "cancelled":
+            messages.error(
+                request,
+                "مهلتِ رزروِ این سفارش به پایان رسیده و لغو شده است؛ موجودیِ کالاها به فروشگاه بازگشت.",
+            )
     return redirect("accounts:order_detail", tracking_code=order.tracking_code)
 
 
@@ -215,6 +249,12 @@ def order_detail_view(request, tracking_code):
     tracking_code یک سفارش دیگر را حدس بزند (که عملاً غیرممکن است) یا
     لینکش را از جایی دیگر پیدا کند.
     """
+    # نشست ۴۳: قبل از خواندنِ سفارش، رزروهای منقضی‌شده را آزاد می‌کنیم —
+    # وگرنه ممکن است این صفحه دکمه‌ی «کلیک کنید برای پرداخت» را برای
+    # سفارشی نشان بدهد که مهلتش همین چند لحظه پیش تمام شده (و باید
+    # «لغوشده» باشد)، فقط چون تا الان کسی release_expired_pending_orders
+    # را صدا نزده بود.
+    Order.release_expired_pending_orders()
     order = get_object_or_404(
         Order.objects.prefetch_related(
             Prefetch(
