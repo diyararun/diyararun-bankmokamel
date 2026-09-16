@@ -3,7 +3,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 
 # Patches Django admin so every plain number field (e.g.
-# ShippingSettings.flat_rate) accepts Persian/Arabic-indic digits — see
+# CheckoutSettings.flat_rate) accepts Persian/Arabic-indic digits — see
 # the module docstring in apps/store/admin_persian_numbers.py.
 import apps.store.admin_persian_numbers  # noqa: F401
 from apps.store.admin_persian_numbers import PersianDigitCharAdminMixin
@@ -15,20 +15,20 @@ from apps.store.admin_persian_numbers import PersianDigitCharAdminMixin
 import apps.store.admin_ux_fixes  # noqa: F401
 from apps.store.persian_numerals import format_jalali_datetime
 
-from .models import Order, OrderItem, ShippingSettings
+from .models import CheckoutSettings, Order, OrderItem
 
 
-@admin.register(ShippingSettings)
-class ShippingSettingsAdmin(admin.ModelAdmin):
+@admin.register(CheckoutSettings)
+class CheckoutSettingsAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
-        return not ShippingSettings.objects.exists()
+        return not CheckoutSettings.objects.exists()
 
     def has_delete_permission(self, request, obj=None):
         return False
 
     def changelist_view(self, request, extra_context=None):
-        obj = ShippingSettings.load()
-        return redirect(reverse("admin:orders_shippingsettings_change", args=[obj.pk]))
+        obj = CheckoutSettings.load()
+        return redirect(reverse("admin:orders_checkoutsettings_change", args=[obj.pk]))
 
 
 class OrderItemInline(admin.TabularInline):

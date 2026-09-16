@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
+from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django_jalali.db import models as jmodels
 
@@ -30,21 +33,39 @@ COURIER_TRACKING_URLS = {
 }
 
 
-class ShippingSettings(models.Model):
+class CheckoutSettings(models.Model):
     """Singleton, same pattern as store.SiteSettings — lets the store
-    owner change the flat shipping rate from admin instead of it being a
+    owner change checkout-time behavior from admin instead of it being a
     hardcoded constant in views.py.
+
+    نشست ۴۳: قبلاً اسمش ShippingSettings بود و فقط flat_rate را داشت؛
+    چون reservation_minutes (پایین) هم دقیقاً همین‌جور یک عددِ رفتاریِ
+    مربوط به لحظه‌ی checkout است — نه به هزینه‌ی ارسال — اسمِ کلاس به
+    چیزی عمومی‌تر تغییر کرد تا گمراه‌کننده نباشد. (این یعنی یک migration
+    rename لازم است — در پایین همین نشست در progress-log توضیح داده شده.)
     """
 
     flat_rate = models.PositiveIntegerField("هزینه ارسال (تومان)", default=49000)
+
+    # نشست ۴۳: مدت‌زمانی که موجودیِ کالاهای یک سفارشِ «در انتظار پرداخت»
+    # رزرو می‌ماند. اگر مشتری در همین بازه پرداخت را انجام ندهد،
+    # Order.release_expired_pending_orders (پایین) سفارش را «لغوشده»
+    # می‌کند و همان تعداد را به موجودیِ هر کالا برمی‌گرداند — یعنی انگار
+    # اصلاً از موجودی کم نشده بود.
+    reservation_minutes = models.PositiveIntegerField(
+        "مدت‌زمان رزرو موجودی (دقیقه)",
+        default=20,
+        help_text="بعد از ثبتِ سفارش (پر کردنِ فرمِ checkout)، موجودیِ کالاها بلافاصله کم می‌شود. اگر مشتری تا این تعداد دقیقه پرداخت نکند، سفارش خودکار لغو و موجودی برگردانده می‌شود.",
+    )
+
     updated_at = jmodels.jDateTimeField("آخرین ویرایش", auto_now=True)
 
     class Meta:
-        verbose_name = "هزینه ارسال"
-        verbose_name_plural = "هزینه ارسال"
+        verbose_name = "تنظیمات سفارش و ارسال"
+        verbose_name_plural = "تنظیمات سفارش و ارسال"
 
     def __str__(self):
-        return "تنظیمات هزینه‌ی ارسال"
+        return "تنظیمات سفارش و ارسال"
 
     def save(self, *args, **kwargs):
         self.pk = 1
@@ -189,6 +210,18 @@ class Order(models.Model):
         for why this is a fixed landing page, not a deep link."""
         return COURIER_TRACKING_URLS.get(self.courier, "")
 
+    @property
+    def reservation_deadline(self):
+        """Wall-clock moment this order's stock reservation expires, or
+        None when the order isn't in a reservable state (already paid,
+        already cancelled, ...). Display-only — showing the customer
+        "تا فلان ساعت مهلت دارید" on the pay button. Nothing here
+        actually enforces the deadline; release_expired_pending_orders
+        below is what does that."""
+        if self.status != "pending_payment":
+            return None
+        return self.created_at + timedelta(minutes=CheckoutSettings.load().reservation_minutes)
+
     def save(self, *args, **kwargs):
         if not self.tracking_code:
             self.tracking_code = self._generate_tracking_code()
@@ -202,6 +235,49 @@ class Order(models.Model):
             code = "BM-" + get_random_string(8, allowed_chars=TRACKING_CODE_ALPHABET)
             if not cls.objects.filter(tracking_code=code).exists():
                 return code
+
+    @classmethod
+    def release_expired_pending_orders(cls):
+        """نشست ۴۳: قلبِ مکانیزمِ «رزروِ موجودی». هر سفارشِ «در انتظار
+        پرداخت» که مهلتش (CheckoutSettings.reservation_minutes) گذشته
+        باشد را «لغوشده» می‌کند و همان تعدادی که در checkout از موجودیِ
+        هر کالا کم شده بود را برمی‌گرداند.
+
+        دو جای این پروژه این متد را صدا می‌زنند:
+        ۱) به‌صورت «تنبل» (lazy) — از داخلِ چند view که خودشان به‌هرحال
+           دارند اجرا می‌شوند (شروعِ checkout، تلاش برای پرداخت، بازکردنِ
+           صفحه‌ی جزئیاتِ سفارش) — یعنی همین که کسی به سایت سر بزند،
+           رزروهای منقضی‌شده آزاد می‌شوند، بدون نیاز به هیچ فرآیندِ
+           پس‌زمینه‌ای.
+        ۲) از دستورِ مدیریتیِ `release_expired_orders` (management/
+           commands/) — که قرار است هر ۱-۲ دقیقه از crontab سرور اجرا
+           شود، تا حتی اگر مدتی هیچ‌کس به سایت سر نزد، رزروها دقیقاً سرِ
+           وقت آزاد شوند.
+
+        هر دو مسیر همین یک متد را صدا می‌زنند — یعنی منطقِ آزادسازی فقط
+        یک‌جا نوشته شده. select_for_update(skip_locked=True) باعث می‌شود
+        اگر این متد هم‌زمان از هر دو مسیر (مثلاً یک درخواستِ کاربر و
+        crontab دقیقاً هم‌زمان) اجرا شود، هرکدام فقط سفارش‌هایی را قفل
+        می‌کند که دیگری آن‌ها را قفل نکرده — نه دِدلاک، نه دوبار برگرداندنِ
+        موجودیِ یک سفارش.
+        """
+        from apps.catalog.models import ProductVariant
+
+        cutoff = timezone.now() - timedelta(minutes=CheckoutSettings.load().reservation_minutes)
+        released_count = 0
+        with transaction.atomic():
+            expired_orders = cls.objects.select_for_update(skip_locked=True).filter(
+                status="pending_payment", created_at__lt=cutoff
+            )
+            for order in expired_orders:
+                for item in order.items.all():
+                    ProductVariant.objects.filter(pk=item.variant_id).update(
+                        stock=models.F("stock") + item.quantity
+                    )
+                order.status = "cancelled"
+                order.save(update_fields=["status"])
+                released_count += 1
+        return released_count
 
 
 class OrderItem(models.Model):
