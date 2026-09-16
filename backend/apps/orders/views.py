@@ -8,11 +8,12 @@ from django.views.generic import View
 
 from apps.accounts.models import Address
 from apps.cart.services import get_cart, product_discount_total, serialize_cart
+from apps.catalog.models import ProductVariant
 from apps.coupons.models import Coupon, CouponRedemption
 from apps.coupons.services import validate_coupon
 
 from .forms import CheckoutForm
-from .models import Order, OrderItem, ShippingSettings
+from .models import CheckoutSettings, Order, OrderItem
 
 
 class CheckoutView(LoginRequiredMixin, View):
@@ -28,16 +29,33 @@ class CheckoutView(LoginRequiredMixin, View):
     happen: if payment later fails or the customer never comes back,
     the order (and its items) must still exist so they can retry —
     losing the cart on a failed payment would be a real loss for them.
+
+    نشست ۴۳: همین‌جا موجودیِ هر تنوعِ محصول هم بلافاصله کم می‌شود (نه
+    فقط بعد از پرداخت) — یعنی این سفارش، تا مهلتِ رزروش تمام نشده
+    (CheckoutSettings.reservation_minutes)، همان موجودی را واقعاً از
+    مشتریِ بعدی مسدود کرده. اگر پرداخت نشود، Order.
+    release_expired_pending_orders (در models.py) آن را لغو و موجودی را
+    برمی‌گرداند. دلیلِ این انتخاب (به‌جای کم‌کردنِ موجودی فقط در لحظه‌ی
+    پرداخت) در progress-log نشست ۴۳ توضیح داده شده: کم‌کردن در لحظه‌ی
+    پرداخت این ریسک را دارد که دو مشتری هم‌زمان برای آخرین واحدِ یک کالا
+    وارد درگاه شوند و هر دو موفق شوند، بدون این‌که موجودیِ کافی برای
+    هردویشان وجود داشته باشد.
     """
 
     template_name = "orders/checkout.html"
 
     def get(self, request):
+        # نشست ۴۳: قبل از نمایشِ صفحه، رزروهای منقضی‌شده را آزاد می‌کنیم —
+        # وگرنه ممکن است کاربر صفحه‌ای را ببیند که یک کالا «ناموجود» نشان
+        # می‌دهد در حالی که موجودیِ واقعی‌اش همین چند لحظه پیش (با لغوِ
+        # یک سفارشِ رهاشده) آزاد شده، فقط هنوز کسی این متد را صدا نزده.
+        Order.release_expired_pending_orders()
         cart = get_cart(request, create=False)
         form = CheckoutForm(initial=self._initial_data(request.user))
         return render(request, self.template_name, self._context(form, cart))
 
     def post(self, request):
+        Order.release_expired_pending_orders()
         cart = get_cart(request, create=False)
         cart_data = serialize_cart(cart)
 
@@ -50,7 +68,7 @@ class CheckoutView(LoginRequiredMixin, View):
             return render(request, self.template_name, self._context(form, cart))
 
         subtotal = cart_data["total_price"]
-        shipping_cost = ShippingSettings.load().flat_rate
+        shipping_cost = CheckoutSettings.load().flat_rate
         coupon_code = form.cleaned_data.get("coupon_code")
 
         # Order creation, the coupon redemption, the profile update, and
@@ -74,6 +92,33 @@ class CheckoutView(LoginRequiredMixin, View):
                     form.add_error("coupon_code", error)
                     return render(request, self.template_name, self._context(form, cart))
 
+            # نشست ۴۳: رزروِ موجودی — دقیقاً همان الگوی قفلِ کوپن بالا،
+            # این‌بار روی خودِ تنوعِ محصول (ProductVariant). قفل‌گیری بر
+            # اساسِ ترتیبِ variant_id (نه ترتیبِ سبد) عمداً است: اگر دو
+            # مشتری هم‌زمان سبدهایی با همان دو محصول ولی به‌ترتیبِ برعکس
+            # را نهایی کنند، هر دو باید همیشه یک کالای خاص را قبل از
+            # کالای دیگر قفل کنند، وگرنه می‌توانند در یک دِدلاک قفل شوند.
+            # بررسیِ موجودی *قبل از* ساختنِ Order/OrderItem انجام می‌شود
+            # تا اگر موجودی کافی نبود، هنوز هیچ رکوردی ساخته نشده و کافی
+            # است ساده از تابع خارج شویم (مثلِ خطای کوپن بالا) — تراکنش
+            # چیزی برای rollback‌کردن نخواهد داشت.
+            cart_items = list(cart.items.select_related("variant__product").order_by("variant_id"))
+            locked_variants = {}
+            insufficient = []
+            for item in cart_items:
+                variant = ProductVariant.objects.select_for_update().get(pk=item.variant_id)
+                locked_variants[item.variant_id] = variant
+                if variant.stock < item.quantity:
+                    insufficient.append(variant)
+
+            if insufficient:
+                names = "، ".join(f"«{v.product.name}»" for v in insufficient)
+                messages.error(
+                    request,
+                    f"متأسفانه موجودیِ {names} به‌اندازه‌ی کافی نیست. لطفاً تعداد را در سبد خرید اصلاح کنید.",
+                )
+                return redirect(reverse("cart:detail"))
+
             order = Order.objects.create(
                 user=request.user,
                 subtotal_price=subtotal,
@@ -83,7 +128,10 @@ class CheckoutView(LoginRequiredMixin, View):
                 total_price=subtotal - discount_amount + shipping_cost,
                 **form.cleaned_data,
             )
-            for item in cart.items.select_related("variant__product").all():
+            for item in cart_items:
+                variant = locked_variants[item.variant_id]
+                variant.stock -= item.quantity
+                variant.save(update_fields=["stock"])
                 OrderItem.objects.create(
                     order=order,
                     variant=item.variant,
@@ -210,11 +258,11 @@ class CheckoutView(LoginRequiredMixin, View):
     def _context(self, form, cart):
         # The sidebar order summary shows the shipping cost, product
         # discount, and final total *before* the order actually exists, so
-        # they're computed here from the live cart + current ShippingSettings,
+        # they're computed here from the live cart + current CheckoutSettings,
         # the same way post() computes them for the real Order — kept in
         # sync deliberately, not copied.
         cart_data = serialize_cart(cart)
-        shipping_cost = ShippingSettings.load().flat_rate
+        shipping_cost = CheckoutSettings.load().flat_rate
         subtotal = cart_data["total_price"]
 
         # If a coupon is already sitting in the (possibly re-rendered
