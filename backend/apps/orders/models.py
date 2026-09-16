@@ -8,6 +8,27 @@ from django_jalali.db import models as jmodels
 # support, or mistype into a "track my order" field.
 TRACKING_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 
+# نشست ۴۱: باربری‌هایی که سایت ازشون برای ارسال استفاده می‌کند. عمداً یک
+# CharField با choices است، نه یک متن آزاد — چون همین لیست کلید نگاشتِ
+# COURIER_TRACKING_URLS زیر هم هست؛ اضافه‌کردنِ یک باربریِ جدید یعنی یک
+# سطر این‌جا + یک سطر آن دیکشنری، نه تغییر ساختار.
+COURIER_CHOICES = [
+    ("tipax", "تیپاکس"),
+    ("iran_post", "پست ایران"),
+]
+
+# صفحه‌ی عمومیِ رهگیریِ خودِ هر باربری — جایی که مشتری با دست کدِ
+# رهگیری‌اش را وارد می‌کند. عمداً یک لینکِ ساده به همین صفحه‌ی ثابت است، نه
+# یک لینکِ عمیق با کدِ از پیش پرشده: هیچ‌کدام از این دو باربری فرمتِ
+# مستندی برای این کار در URL منتشر نکرده‌اند، پس تنها راهِ همیشه-درستْ
+# نشان‌دادنِ همین صفحه است (کدِ رهگیری هم همان کنارش، روی صفحه‌ی سفارش
+# خودمان، به‌صورت متنِ قابل‌کپی نشان داده می‌شود). یعنی هیچ API، کلید، یا
+# webhookای در کار نیست — فقط دو آدرسِ ثابت.
+COURIER_TRACKING_URLS = {
+    "tipax": "https://tipaxco.com/tracking",
+    "iran_post": "https://tracking.post.ir/",
+}
+
 
 class ShippingSettings(models.Model):
     """Singleton, same pattern as store.SiteSettings — lets the store
@@ -72,6 +93,25 @@ class Order(models.Model):
         settings.AUTH_USER_MODEL, verbose_name="کاربر", related_name="orders", on_delete=models.PROTECT
     )
     status = models.CharField("وضعیت", max_length=20, choices=STATUS_CHOICES, default="pending_payment")
+
+    # نشست ۴۱: پر می‌شوند وقتی فروشنده مرسوله را تحویلِ باربری می‌دهد و
+    # وضعیت را به «ارسال‌شده» تغییر می‌دهد — کدِ رهگیریِ خودِ باربری است
+    # (نه tracking_code بالا که شناسه‌ی داخلیِ خودِ سفارش در سایتِ ماست).
+    # هر دو blank=True هستند چون قبل از ارسال معنایی ندارند و روی
+    # سفارش‌های قدیمی هم باید بدون migration دستی خالی بمانند.
+    courier = models.CharField(
+        "شرکت باربری",
+        max_length=20,
+        choices=COURIER_CHOICES,
+        blank=True,
+        help_text="بعد از تحویلِ مرسوله به باربری پر کنید — همراه با کدِ رهگیریِ زیر، دکمه‌ی «پیگیری مرسوله» را در صفحه‌ی سفارشِ مشتری فعال می‌کند.",
+    )
+    courier_tracking_code = models.CharField(
+        "کدِ رهگیریِ باربری",
+        max_length=64,
+        blank=True,
+        help_text="کدی که خودِ باربری (نه سایتِ ما) هنگام تحویل‌گرفتنِ مرسوله می‌دهد. مشتری همین کد را در سایتِ باربری وارد می‌کند تا وضعیتِ لحظه‌ای مرسوله را ببیند.",
+    )
 
     # Public-facing identifier shown to the customer everywhere (order
     # history, support, future invoices) INSTEAD OF the database primary
@@ -140,6 +180,14 @@ class Order(models.Model):
     @property
     def is_paid(self):
         return self.status in self.PAID_STATUSES
+
+    @property
+    def courier_tracking_url(self):
+        """Static tracking-page URL of the chosen courier, or "" if no
+        courier is set yet. Used by the template to decide whether the
+        "پیگیری مرسوله" button appears — see COURIER_TRACKING_URLS above
+        for why this is a fixed landing page, not a deep link."""
+        return COURIER_TRACKING_URLS.get(self.courier, "")
 
     def save(self, *args, **kwargs):
         if not self.tracking_code:
