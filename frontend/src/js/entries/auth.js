@@ -12,7 +12,18 @@ async function handleSendOtp(e) {
   e.preventDefault();
   const phone = document.getElementById("userPhone").value.trim();
 
-  const result = await postForm("/accounts/otp/request/", { phone });
+  // نشست ۴۸: قبلاً اگر پاسخِ سرور یک خطای ۵۰۰ (صفحه‌ی HTML، نه JSON) بود،
+  // postForm روی response.json() کرش می‌کرد، این await هیچ‌وقت resolve
+  // نمی‌شد، و از دیدِ کاربر دکمه اصلاً «کار نمی‌کرد» — بدونِ هیچ پیام یا
+  // خطایی. حالا حداقل یک toast نشان داده می‌شود (دقیقاً همان الگویی که
+  // فرم کدِ تخفیف در checkout.js از قبل داشت).
+  let result;
+  try {
+    result = await postForm("/accounts/otp/request/", { phone });
+  } catch (err) {
+    showToast("خطا", "خطا در برقراری ارتباط با سرور. دوباره تلاش کنید.");
+    return;
+  }
 
   if (!result.ok) {
     const message =
@@ -120,14 +131,23 @@ async function handleVerifyOtp(e) {
     return;
   }
 
-  const result = await postForm("/accounts/otp/verify/", {
-    phone: currentPhone,
-    code,
-    // Passed through from LoginRequiredMixin's own redirect (?next=...)
-    // when the user was sent here from a page like checkout — without
-    // this, verify_otp has no way to know where to send them back.
-    next: new URLSearchParams(window.location.search).get("next") || "",
-  });
+  let result;
+  try {
+    result = await postForm("/accounts/otp/verify/", {
+      phone: currentPhone,
+      code,
+      // Passed through from LoginRequiredMixin's own redirect (?next=...)
+      // when the user was sent here from a page like checkout — without
+      // this, verify_otp has no way to know where to send them back.
+      next: new URLSearchParams(window.location.search).get("next") || "",
+    });
+  } catch (err) {
+    // نشست ۴۸: همان دلیلِ کامنتِ بالا در handleSendOtp — بدونِ این catch،
+    // یک خطای سمتِ سرور یعنی دکمه‌ی «تأیید و ورود به حساب» ظاهراً هیچ
+    // واکنشی نشان نمی‌دهد.
+    showToast("خطا", "خطا در برقراری ارتباط با سرور. دوباره تلاش کنید.");
+    return;
+  }
 
   if (!result.ok) {
     showToast("خطا", result.message || "کد تأیید نادرست است.");

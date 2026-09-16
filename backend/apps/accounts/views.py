@@ -95,7 +95,15 @@ def verify_otp(request):
         otp.is_used = True
         otp.save(update_fields=["is_used"])
 
-    user, _created = User.objects.get_or_create(phone=phone, defaults={"username": phone})
+    # نشست ۴۸: قبلاً این‌جا `defaults={"username": phone}` بود — باقیمانده‌ی
+    # زمانی که هنوز فیلدِ username روی مدلِ User وجود داشت. از وقتی که
+    # (در یک نشستِ قبلی‌تر) username کاملاً از مدل حذف شد (چون
+    # USERNAME_FIELD = "phone" است)، این kwarg دیگر معتبر نبود — برای هر
+    # شماره‌ی کاملاً جدید (که واقعاً وارد شاخه‌ی create می‌شد، نه get)
+    # با `TypeError: 'username' is an invalid keyword argument` کرش
+    # می‌کرد. چون phone خودش هم شرطِ جست‌وجو است هم تنها فیلدِ لازم برای
+    # ساختِ کاربر، نیازی به defaults نیست.
+    user, _created = User.objects.get_or_create(phone=phone)
 
     # Must read the session key BEFORE login(): login() rotates it for
     # session-fixation security, so it has to be captured while it still
