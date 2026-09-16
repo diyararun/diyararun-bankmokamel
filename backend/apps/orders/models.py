@@ -222,6 +222,44 @@ class Order(models.Model):
             return None
         return self.created_at + timedelta(minutes=CheckoutSettings.load().reservation_minutes)
 
+    @property
+    def reservation_deadline_ts(self):
+        """Unix timestamp (int seconds) of reservation_deadline, or None.
+
+        نشست ۴۵: باگ — قبلاً تمپلیت مستقیماً از فیلترِ استانداردِ جنگو
+        استفاده می‌کرد: `order.reservation_deadline|date:'U'`. این خط
+        در production با این خطا می‌ترکید:
+            TypeError: combine() argument 1 must be datetime.date, not datetime
+        دلیلش: created_at از نوعِ jDateTimeField است، و django-jalali
+        مقدارش را به‌صورتِ یک شیِ jdatetime.datetime برمی‌گرداند — نه یک
+        datetime.datetime واقعیِ پایتون. کلاسِ jdatetime.datetime هم اسمش
+        دقیقاً "datetime" است (برای همین پیامِ خطا گیج‌کننده به‌نظر
+        می‌رسد: انگار می‌گوید «یک datetime گرفتم ولی datetime.date
+        می‌خواستم»)، ولی این کلاس از datetime.datetime استانداردِ پایتون
+        ارث‌بری نمی‌کند. فیلترِ `|date` جنگو (`dateformat.DateFormat`)
+        این را تشخیص نمی‌دهد، فرض می‌کند با یک `date` ساده طرف است، و
+        سعی می‌کند با `datetime.combine()` آن را به datetime تبدیل کند —
+        که چون آرگومانش یک jdatetime.datetime است (نه date.datetime
+        واقعی)، شکست می‌خورد.
+
+        فیلترِ سفارشیِ `|jdatetime` (که در همین صفحه، چند خط بالاتر،
+        برای نمایشِ ساعتِ دقیق استفاده شده) این مشکل را ندارد چون منطقِ
+        فرمت‌دهیِ خودش را دارد، نه فیلترِ استانداردِ جنگو. راه‌حل: به‌جای
+        عبورِ این مقدار از فیلترِ `|date` جنگو، خودمان این‌جا در پایتون
+        صریحاً به datetime.datetime واقعی تبدیلش می‌کنیم (togregorian —
+        دقیقاً همان متدی که jdatetime برای همین‌جور تعامل ارائه می‌دهد)
+        و بعد timestamp واقعی را حساب می‌کنیم؛ اگر یک‌وقت created_at از
+        قبل datetime.datetime معمولی بود (togregorian نداشت)، همان‌طور
+        مستقیم استفاده می‌شود.
+        """
+        deadline = self.reservation_deadline
+        if deadline is None:
+            return None
+        to_gregorian = getattr(deadline, "togregorian", None)
+        if to_gregorian is not None:
+            deadline = to_gregorian()
+        return int(deadline.timestamp())
+
     def save(self, *args, **kwargs):
         if not self.tracking_code:
             self.tracking_code = self._generate_tracking_code()
