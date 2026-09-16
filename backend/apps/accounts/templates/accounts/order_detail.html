@@ -181,6 +181,31 @@
               به w-24/h-24 (۹۶px) رسید.
             -->
             <div class="flex items-center gap-4 p-3 bg-slate-50 border border-slate-100 rounded-2xl">
+              {% with product=item.variant.product %}
+              {% if product.is_active %}
+              <!--
+                نشست ۴۲: لینک فقط وقتی زده می‌شود که محصول هنوز
+                is_active=True باشد — یعنی هنوز صفحه‌ی خودش را دارد.
+                variant با PROTECT هیچ‌وقت پاک نمی‌شود (کد بالای models.py
+                توضیح می‌دهد)، پس product همیشه در دیتابیس هست، ولی ممکن
+                است ادمین بعداً همان محصول را از فروشگاه پنهان
+                (is_active=False) کرده باشد — در آن حالت لینک‌دادن فقط
+                مشتری را به یک صفحه‌ی ۴۰۴ می‌برد، پس به‌جایش همان نمایشِ
+                ساده‌ی قبلی (بدون لینک) نگه داشته می‌شود.
+              -->
+              <a
+                href="{% url 'store:product_detail' slug=product.slug %}"
+                class="flex items-center gap-4 flex-1 min-w-0 group"
+              >
+                <div class="w-24 h-24 bg-white rounded-xl overflow-hidden shrink-0">
+                  {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.product_name }}" class="w-full h-full object-cover" />{% endif %}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-title font-bold text-heading-14 text-slate-900 group-hover:text-red-600 transition-colors line-clamp-1">{{ item.product_name }}</h3>
+                  <p class="text-xs text-slate-400 mt-0.5">{{ item.variant_label }} · {{ item.quantity }} عدد</p>
+                </div>
+              </a>
+              {% else %}
               <div class="w-24 h-24 bg-white rounded-xl overflow-hidden shrink-0">
                 {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.product_name }}" class="w-full h-full object-cover" />{% endif %}
               </div>
@@ -188,6 +213,8 @@
                 <h3 class="font-title font-bold text-heading-14 text-slate-900 line-clamp-1">{{ item.product_name }}</h3>
                 <p class="text-xs text-slate-400 mt-0.5">{{ item.variant_label }} · {{ item.quantity }} عدد</p>
               </div>
+              {% endif %}
+              {% endwith %}
               <div class="text-left shrink-0">
                 <span class="block font-bold text-sm text-slate-900">{{ item.total_price|toman }} تومان</span>
                 <span class="block text-caption-11 text-slate-400">{{ item.unit_price|toman }} تومان / عدد</span>
