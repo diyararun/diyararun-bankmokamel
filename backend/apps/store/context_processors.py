@@ -28,6 +28,23 @@ def site_settings(request):
     return {"site_settings": SiteSettings.load()}
 
 
+def seo(request):
+    """Exposes a self-referencing canonical URL for every page as
+    {{ canonical_url }} (used by <link rel="canonical"> in
+    backend/templates/base.html) — نشست ۵۲.
+
+    Deliberately keeps the query string (request.get_full_path(), not
+    just request.path) instead of stripping it. A canonical that always
+    pointed at the query-less URL would tell Google that, e.g., a
+    paginated page (?page=2) or a filtered listing (?category=...) is
+    the same page as the plain URL — which actively hurts indexing of
+    real, distinct paginated/filtered content instead of helping it.
+    Google's own guidance is that a self-referencing canonical should
+    normally match the current URL exactly, query string included.
+    """
+    return {"canonical_url": request.build_absolute_uri(request.get_full_path())}
+
+
 def category_drawer(request):
     """Feeds the "همه دسته‌بندی‌ها" drawer (partials/category_drawer.html,
     included from base.html on every page) with real data instead of the

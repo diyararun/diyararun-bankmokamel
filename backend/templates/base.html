@@ -1,4 +1,5 @@
 {% load django_vite %}
+{% load seo_tags %}
 <!doctype html>
 <html lang="fa" dir="rtl" class="scroll-smooth">
   <head>
@@ -6,6 +7,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token }}" />
     <title>{% block title %}بانک مکمل | مرجع تخصصی مکمل‌های ورزشی و غذایی{% endblock %}</title>
+
+    <!--
+      نشست ۵۲: توضیحات متا + canonical + Open Graph / Twitter Card.
+
+      این‌جا از یک ویژگیِ مستندِ جنگو استفاده شده: یک بلاکِ قالب را
+      می‌شود در یک تمپلیت بیش از یک‌بار به کار برد — جنگو مقدارِ
+      override‌شده در تمپلیتِ فرزند را در هر جایی که آن نامِ بلاک دوباره
+      ظاهر شود، دوباره قرار می‌دهد. برای همین بلاکِ «title» (که هر ۱۳
+      تمپلیتِ فرزند از قبل یک‌بار override کرده‌اند) و بلاکِ
+      «meta_description» (که پایین‌تر پیش‌فرضش تعریف می‌شود) هرکدام
+      دوباره داخل تگ‌های og:title/og:description و
+      twitter:title/twitter:description تکرار شده‌اند — بدونِ اینکه لازم
+      باشد هیچ‌کدام از تمپلیت‌های فرزند دست بخورند.
+
+      توضیحاتِ متا از محتوای از قبل موجود و قابل‌ویرایش در پنلِ ادمین
+      (SiteSettings.site_description و مشابه‌هایش، یا Product.short_description)
+      خوانده می‌شوند — طبقِ خواسته‌ی شما، این مرحله به محتوای جدید کاری
+      ندارد؛ فقط همان محتوای موجود را در جای درستش (تگ‌های سئو) قرار
+      می‌دهد.
+    -->
+    <link rel="canonical" href="{{ canonical_url }}" />
+
+    <meta name="description" content="{% block meta_description %}{{ site_settings.site_description|default:"بانک مکمل، فروشگاه اینترنتی تخصصی مکمل‌های ورزشی، بدنسازی و غذایی با ضمانت اصالت کالا و ارسال سریع به سراسر ایران."|striptags|truncatechars:160 }}{% endblock %}" />
+
+    <meta property="og:site_name" content="بانک مکمل" />
+    <meta property="og:locale" content="fa_IR" />
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
+    <meta property="og:url" content="{{ canonical_url }}" />
+    <meta property="og:title" content="{% block title %}بانک مکمل | مرجع تخصصی مکمل‌های ورزشی و غذایی{% endblock %}" />
+    <meta property="og:description" content="{% block meta_description %}{{ site_settings.site_description|default:"بانک مکمل، فروشگاه اینترنتی تخصصی مکمل‌های ورزشی، بدنسازی و غذایی با ضمانت اصالت کالا و ارسال سریع به سراسر ایران."|striptags|truncatechars:160 }}{% endblock %}" />
+    <meta property="og:image" content="{% block meta_image %}{% if site_settings.brand_image %}{% absolute_url site_settings.brand_image.url %}{% endif %}{% endblock %}" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{% block title %}بانک مکمل | مرجع تخصصی مکمل‌های ورزشی و غذایی{% endblock %}" />
+    <meta name="twitter:description" content="{% block meta_description %}{{ site_settings.site_description|default:"بانک مکمل، فروشگاه اینترنتی تخصصی مکمل‌های ورزشی، بدنسازی و غذایی با ضمانت اصالت کالا و ارسال سریع به سراسر ایران."|striptags|truncatechars:160 }}{% endblock %}" />
+    <meta name="twitter:image" content="{% block meta_image %}{% if site_settings.brand_image %}{% absolute_url site_settings.brand_image.url %}{% endif %}{% endblock %}" />
 
     <!--
       نشست ۴۹: فاویکون قبلاً اصلاً وجود نداشت (هیچ تگِ <link rel="icon">

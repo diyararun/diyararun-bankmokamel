@@ -3,8 +3,24 @@
 {% load toman %}
 {% load jalali_datetime %}
 {% load persian_digits %}
+{% load seo_tags %}
 
 {% block title %}{{ product.name }} | بانک مکمل{% endblock %}
+
+<!--
+  نشست ۵۲: توضیحِ متا از همان فیلدهای موجودِ محصول (بدونِ افزودنِ
+  محتوای جدید) — اول توضیحِ کوتاه، اگر خالی بود توضیحِ کامل، اگر آن هم
+  خالی بود یک متنِ عمومی. og:type روی این صفحه «product» است، نه
+  «website» (پیش‌فرضِ base.html)، و og:image/twitter:image به‌جای
+  لوگوی سایت، اولین تصویرِ گالریِ همین محصول را نشان می‌دهند — همان
+  تصویری که در همین صفحه (بالای بردکرامب و گالری) هم به‌عنوانِ تصویرِ
+  اصلی استفاده می‌شود.
+-->
+{% block meta_description %}{{ product.short_description|default:product.description|default:"توضیحات، مشخصات و خرید این محصول از بانک مکمل با ضمانت اصالت کالا."|striptags|truncatechars:160 }}{% endblock %}
+
+{% block og_type %}product{% endblock %}
+
+{% block meta_image %}{% if product.images.first %}{% absolute_url product.images.first.image.url %}{% endif %}{% endblock %}
 
 {% block entry %}{% vite_asset 'src/js/entries/productDetail.js' %}{% endblock %}
 

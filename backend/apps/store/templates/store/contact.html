@@ -3,6 +3,8 @@
 
 {% block title %}تماس با ما | بانک مکمل{% endblock %}
 
+{% block meta_description %}{{ site_settings.contact_hero_description|default:site_settings.site_description|striptags|truncatechars:160 }}{% endblock %}
+
 {% block entry %}{% vite_asset 'src/js/entries/contact.js' %}{% endblock %}
 
 {% block content %}
