@@ -27,6 +27,13 @@ class SiteSettingsAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (
+            "برند سایت",
+            {
+                "fields": ("brand_image",),
+                "description": "این تصویر هم به‌جای لوگوی هدر/فوتر سایت و هم به‌عنوان فاویکونِ تبِ مرورگر استفاده می‌شود — نیازی به وارد‌کردنِ دو تصویرِ جداگانه نیست.",
+            },
+        ),
+        (
             "هیرو صفحه‌ی اصلی",
             {"fields": ("hero_title", "hero_subtitle", "hero_description", "hero_product")},
         ),
