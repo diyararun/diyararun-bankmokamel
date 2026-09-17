@@ -9,17 +9,23 @@
     <title>{% block title %}بانک مکمل | مرجع تخصصی مکمل‌های ورزشی و غذایی{% endblock %}</title>
 
     <!--
-      نشست ۵۲: توضیحات متا + canonical + Open Graph / Twitter Card.
+      نشست ۵۲ (با یک تصحیح): توضیحات متا + canonical + Open Graph / Twitter Card.
 
-      این‌جا از یک ویژگیِ مستندِ جنگو استفاده شده: یک بلاکِ قالب را
-      می‌شود در یک تمپلیت بیش از یک‌بار به کار برد — جنگو مقدارِ
-      override‌شده در تمپلیتِ فرزند را در هر جایی که آن نامِ بلاک دوباره
-      ظاهر شود، دوباره قرار می‌دهد. برای همین بلاکِ «title» (که هر ۱۳
-      تمپلیتِ فرزند از قبل یک‌بار override کرده‌اند) و بلاکِ
-      «meta_description» (که پایین‌تر پیش‌فرضش تعریف می‌شود) هرکدام
-      دوباره داخل تگ‌های og:title/og:description و
-      twitter:title/twitter:description تکرار شده‌اند — بدونِ اینکه لازم
-      باشد هیچ‌کدام از تمپلیت‌های فرزند دست بخورند.
+      نسخه‌ی اول این بخش را طوری نوشته بودم که یک بلاکِ قالب (مثلاً
+      «title») چند بار در همین فایل تکرار شود، به این تصور که جنگو
+      override تمپلیتِ فرزند را در هر تکرار دوباره می‌گذارد — این تصور
+      اشتباه بود و باعثِ کرشِ واقعی روی سایتِ شما شد
+      («'block' tag with name 'title' appears more than once»). واقعیتِ
+      جنگو این است: هر نامِ بلاک فقط می‌تواند یک‌بار در کلِ یک فایلِ
+      تمپلیت ظاهر شود، نه بیشتر. برای همین این‌جا اصلاح شد: هر بلاک
+      (title، meta_description، meta_image) دقیقاً یک‌بار استفاده شده،
+      و برای og:title/og:description یک بلاکِ جداگانه
+      (og_title/og_description) اضافه شد که تمپلیت‌های فرزندِ مهم
+      (product_detail، about، contact) به‌صورتِ اختیاری override‌اش
+      می‌کنند. تگ‌های twitter:title/description/image عمداً حذف شدند:
+      طبقِ مستنداتِ خودِ توییتر، وقتی این تگ‌ها نباشند، از همان
+      og:title/og:description/og:image استفاده می‌کند — یعنی تکرارِ
+      همان مقدار در دو جای دیگر اصلاً لازم نبود.
 
       توضیحاتِ متا از محتوای از قبل موجود و قابل‌ویرایش در پنلِ ادمین
       (SiteSettings.site_description و مشابه‌هایش، یا Product.short_description)
@@ -35,14 +41,11 @@
     <meta property="og:locale" content="fa_IR" />
     <meta property="og:type" content="{% block og_type %}website{% endblock %}" />
     <meta property="og:url" content="{{ canonical_url }}" />
-    <meta property="og:title" content="{% block title %}بانک مکمل | مرجع تخصصی مکمل‌های ورزشی و غذایی{% endblock %}" />
-    <meta property="og:description" content="{% block meta_description %}{{ site_settings.site_description|default:"بانک مکمل، فروشگاه اینترنتی تخصصی مکمل‌های ورزشی، بدنسازی و غذایی با ضمانت اصالت کالا و ارسال سریع به سراسر ایران."|striptags|truncatechars:160 }}{% endblock %}" />
+    <meta property="og:title" content="{% block og_title %}بانک مکمل | مرجع تخصصی مکمل‌های ورزشی و غذایی{% endblock %}" />
+    <meta property="og:description" content="{% block og_description %}{{ site_settings.site_description|default:"بانک مکمل، فروشگاه اینترنتی تخصصی مکمل‌های ورزشی، بدنسازی و غذایی با ضمانت اصالت کالا و ارسال سریع به سراسر ایران."|striptags|truncatechars:160 }}{% endblock %}" />
     <meta property="og:image" content="{% block meta_image %}{% if site_settings.brand_image %}{% absolute_url site_settings.brand_image.url %}{% endif %}{% endblock %}" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="{% block title %}بانک مکمل | مرجع تخصصی مکمل‌های ورزشی و غذایی{% endblock %}" />
-    <meta name="twitter:description" content="{% block meta_description %}{{ site_settings.site_description|default:"بانک مکمل، فروشگاه اینترنتی تخصصی مکمل‌های ورزشی، بدنسازی و غذایی با ضمانت اصالت کالا و ارسال سریع به سراسر ایران."|striptags|truncatechars:160 }}{% endblock %}" />
-    <meta name="twitter:image" content="{% block meta_image %}{% if site_settings.brand_image %}{% absolute_url site_settings.brand_image.url %}{% endif %}{% endblock %}" />
 
     <!--
       نشست ۴۹: فاویکون قبلاً اصلاً وجود نداشت (هیچ تگِ <link rel="icon">

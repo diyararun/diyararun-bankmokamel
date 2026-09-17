@@ -5,6 +5,10 @@
 
 {% block meta_description %}{{ site_settings.about_hero_description|default:site_settings.site_description|striptags|truncatechars:160 }}{% endblock %}
 
+{% block og_title %}درباره ما | بانک مکمل{% endblock %}
+
+{% block og_description %}{{ site_settings.about_hero_description|default:site_settings.site_description|striptags|truncatechars:160 }}{% endblock %}
+
 {% block entry %}{% vite_asset 'src/js/entries/about.js' %}{% endblock %}
 
 {% block content %}

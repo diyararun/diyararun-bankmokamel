@@ -6,6 +6,9 @@
 
 {% block meta_description %}{{ site_settings.hero_description|default:site_settings.site_description|striptags|truncatechars:160 }}{% endblock %}
 
+<!-- og_title عمداً override نشده: متنش دقیقاً همان پیش‌فرضِ سیستمیِ base.html است -->
+{% block og_description %}{{ site_settings.hero_description|default:site_settings.site_description|striptags|truncatechars:160 }}{% endblock %}
+
 {% block entry %}{% vite_asset 'src/js/entries/home.js' %}{% endblock %}
 
 {% block content %}
