@@ -7,6 +7,22 @@
     <meta name="csrf-token" content="{{ csrf_token }}" />
     <title>{% block title %}بانک مکمل | مرجع تخصصی مکمل‌های ورزشی و غذایی{% endblock %}</title>
 
+    <!--
+      نشست ۴۹: فاویکون قبلاً اصلاً وجود نداشت (هیچ تگِ <link rel="icon">
+      در کلِ پروژه نبود) — تبِ مرورگر همیشه آیکونِ پیش‌فرض/خالی نشان
+      می‌داد. حالا اگر فروشنده از پنلِ ادمین (SiteSettings.brand_image)
+      یک تصویر وارد کرده باشد، همان‌جا هم به‌عنوانِ لوگوی هدر/فوتر (در
+      partials/header_*.html و footer_main.html) هم این‌جا به‌عنوانِ
+      فاویکون استفاده می‌شود — دقیقاً طبقِ خواسته‌ی شما، بدونِ نیاز به
+      وارد‌کردنِ دو تصویرِ جدا. اگر هنوز تصویری وارد نشده، این تگ‌ها
+      اصلاً رندر نمی‌شوند و مرورگر به همان رفتارِ قبلی (بدونِ فاویکون)
+      برمی‌گردد.
+    -->
+    {% if site_settings.brand_image %}
+      <link rel="icon" href="{{ site_settings.brand_image.url }}" />
+      <link rel="apple-touch-icon" href="{{ site_settings.brand_image.url }}" />
+    {% endif %}
+
     <!-- Google Font: Vazirmatn -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
