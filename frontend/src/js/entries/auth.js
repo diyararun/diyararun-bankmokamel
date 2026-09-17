@@ -163,7 +163,33 @@ async function handleVerifyOtp(e) {
   }, 1500);
 }
 
+// ======================== مودالِ «شرایط و قوانین» (نشست ۵۰) ========================
+//
+// همان الگویِ باز/بسته‌شدنِ کشوی سبدِ خرید (cartDrawer.js: opacity-0 +
+// pointer-events-none ↔ opacity-100) — نه چیزی جدید، فقط برای یک مودالِ
+// وسط‌چین به‌جای یک کشوی کناری.
+function openTermsModal(e) {
+  if (e) e.preventDefault();
+  const modal = document.getElementById("termsModal");
+  if (!modal) return;
+  modal.classList.remove("opacity-0", "pointer-events-none");
+  modal.classList.add("opacity-100");
+}
+
+function closeTermsModal() {
+  const modal = document.getElementById("termsModal");
+  if (!modal) return;
+  modal.classList.remove("opacity-100");
+  modal.classList.add("opacity-0", "pointer-events-none");
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeTermsModal();
+});
+
 window.handleSendOtp = handleSendOtp;
 window.goToStepPhone = goToStepPhone;
 window.resendOtpCode = resendOtpCode;
 window.handleVerifyOtp = handleVerifyOtp;
+window.openTermsModal = openTermsModal;
+window.closeTermsModal = closeTermsModal;
