@@ -1,5 +1,7 @@
 from django.contrib import messages
+from django.http import HttpResponse
 from django.shortcuts import redirect
+from django.urls import reverse
 from django.views.generic import TemplateView, View
 from django.shortcuts import render
 
@@ -76,6 +78,37 @@ class AboutView(TemplateView):
         context["active_nav"] = "about"
         context["testimonials"] = Testimonial.objects.filter(is_active=True)
         return context
+
+
+def robots_txt(request):
+    """Plain-text ``robots.txt`` — نشست ۵۲، مرحله‌ی ۳ (گزارشِ نشستِ ۵۱
+    گزارش کرده بود این فایل اصلاً وجود نداشت).
+
+    عمداً یک ویوی جنگو است، نه یک فایلِ استاتیک: خطِ ``Sitemap:`` باید
+    آدرسِ کاملِ دامنه را داشته باشد، و با ساختنش از روی خودِ
+    ``request`` (به‌جای هاردکد‌کردنِ دامنه)، همین یک فایل برای dev/سرورِ
+    واقعی/هر دامنه‌ای که بعداً سایت رویش بیاید، درست کار می‌کند — دقیقاً
+    همان دلیلی که context_processors.py::seo هم برای canonical_url
+    دامنه را از request می‌خواند، نه از یک تنظیمِ ثابت.
+
+    صفحاتِ خصوصی/تراکنشی (پنلِ ادمین، حسابِ کاربری، سبدِ خرید، تسویه‌
+    حساب، کدهای تخفیف) از خزیدن مستثنا شده‌اند — این‌ها صفحاتی نیستند
+    که بخواهیم در نتیجه‌ی جست‌وجوی گوگل ظاهر شوند.
+    """
+    lines = [
+        "User-agent: *",
+        "Disallow: /admin/",
+        "Disallow: /accounts/",
+        "Disallow: /cart/",
+        "Disallow: /checkout/",
+        "Disallow: /coupons/",
+        # این یک صفحه نیست، endpoint جنگو برای دراپ‌داونِ جست‌وجوی زنده
+        # است (ProductSearchSuggestView) — محتوایی برای ایندکس ندارد.
+        "Disallow: /products/search/",
+        "",
+        f"Sitemap: {request.build_absolute_uri(reverse('sitemap'))}",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
 
 
 class ContactView(View):

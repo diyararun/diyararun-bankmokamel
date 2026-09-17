@@ -34,6 +34,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # فقط برای اینکه sitemap.xml/sitemap_index.xml خودِ جنگو (که
+    # django.contrib.sitemaps از قبل به‌همراه دارد) پیدا شوند — بدونِ
+    # این‌جا بودن، APP_DIRS اصلاً پوشه‌ی templates این اپ را نمی‌بیند.
+    # نیازی به django.contrib.sites نیست: وقتی آن اپ نصب نباشد، جنگو
+    # خودش دامنه را مستقیماً از خودِ request می‌سازد (RequestSite) —
+    # همان چیزی که همین‌جا هم می‌خواهیم، بدونِ نگه‌داشتنِ یک ردیفِ
+    # دامنه‌ی جداگانه در دیتابیس که باید دستی به‌روز نگه داشته شود.
+    "django.contrib.sitemaps",
     "django_vite",
     "django_jalali",
     "apps.accounts",
