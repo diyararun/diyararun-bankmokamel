@@ -34,6 +34,13 @@ class SiteSettingsAdmin(admin.ModelAdmin):
             },
         ),
         (
+            "شرایط و قوانین",
+            {
+                "fields": ("terms_text",),
+                "description": "در مودالِ «شرایط و قوانین» صفحه‌ی ورود/ثبت‌نام نمایش داده می‌شود. هر پاراگراف را با یک خط خالی جدا کنید.",
+            },
+        ),
+        (
             "هیرو صفحه‌ی اصلی",
             {"fields": ("hero_title", "hero_subtitle", "hero_description", "hero_product")},
         ),
