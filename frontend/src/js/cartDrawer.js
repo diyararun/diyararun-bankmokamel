@@ -90,8 +90,11 @@ export function renderCartDrawer() {
   let itemsHtml = '<div class="space-y-4">';
 
   cart.items.forEach((item) => {
+    // width/height="1000" (ابعادِ واقعیِ همین عکس — همه‌ی عکس‌های محصول
+    // یک مربعِ نرمال‌شده‌اند) + loading="lazy" چون این کشو تا وقتی کاربر
+    // بازش نکند اصلاً دیده نمی‌شود — نشست ۵۲، مرحله‌ی ۴.
     const thumb = item.image_url
-      ? `<img src="${item.image_url}" alt="${item.product_name}" class="w-full h-full object-cover" />`
+      ? `<img src="${item.image_url}" alt="${item.product_name}" class="w-full h-full object-cover" width="1000" height="1000" loading="lazy" />`
       : "";
     itemsHtml += `
       <div class="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-2xl">

@@ -264,7 +264,7 @@
                 class="flex items-center gap-4 flex-1 min-w-0 group"
               >
                 <div class="w-24 h-24 bg-white rounded-xl overflow-hidden shrink-0">
-                  {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.product_name }}" class="w-full h-full object-cover" />{% endif %}
+                  {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.product_name }}" class="w-full h-full object-cover" width="1000" height="1000" loading="lazy" />{% endif %}
                 </div>
                 <div class="flex-1 min-w-0">
                   <h3 class="font-title font-bold text-heading-14 text-slate-900 group-hover:text-red-600 transition-colors line-clamp-1">{{ item.product_name }}</h3>
@@ -273,7 +273,7 @@
               </a>
               {% else %}
               <div class="w-24 h-24 bg-white rounded-xl overflow-hidden shrink-0">
-                {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.product_name }}" class="w-full h-full object-cover" />{% endif %}
+                {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.product_name }}" class="w-full h-full object-cover" width="1000" height="1000" loading="lazy" />{% endif %}
               </div>
               <div class="flex-1 min-w-0">
                 <h3 class="font-title font-bold text-heading-14 text-slate-900 line-clamp-1">{{ item.product_name }}</h3>

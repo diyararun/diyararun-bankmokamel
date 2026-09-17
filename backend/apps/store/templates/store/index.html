@@ -170,6 +170,8 @@
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   src="{% if image %}{{ image.image.url }}{% endif %}"
                   alt="{{ product.name }}"
+                  width="1000"
+                  height="1000"
                 />
                 {% endwith %}
               </a>
@@ -280,7 +282,7 @@
               class="w-14 h-14 mb-3 rounded-xl bg-red-50 group-hover:bg-white/20 text-red-600 group-hover:text-white flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:-rotate-3 overflow-hidden"
             >
               {% if cat.icon %}
-              <img src="{{ cat.icon.url }}" alt="{{ cat.name }}" class="w-full h-full object-cover" />
+              <img src="{{ cat.icon.url }}" alt="{{ cat.name }}" class="w-full h-full object-cover" width="56" height="56" loading="lazy" />
               {% else %}
               <svg
                 class="w-7 h-7"
@@ -379,6 +381,9 @@
                     class="max-w-full max-h-full w-auto h-auto rounded-lg object-contain"
                     src="{% if image %}{{ image.image.url }}{% endif %}"
                     alt="{{ p.name }}"
+                    width="1000"
+                    height="1000"
+                    loading="lazy"
                   />
                   {% endwith %}
                 </a>
@@ -645,6 +650,9 @@
                     class="max-w-full max-h-full w-auto h-auto object-contain rounded-lg"
                     src="{% if image %}{{ image.image.url }}{% endif %}"
                     alt="{{ p.name }}"
+                    width="1000"
+                    height="1000"
+                    loading="lazy"
                   />
                   {% endwith %}
                 </a>

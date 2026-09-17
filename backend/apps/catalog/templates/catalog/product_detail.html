@@ -98,6 +98,8 @@
                     class="max-w-full max-h-full w-auto h-auto object-contain"
                     src="{% if image %}{{ image.image.url }}{% endif %}"
                     alt="{{ product.name }}"
+                    width="1000"
+                    height="1000"
                   />{% endwith %}</span
             >
             {% with variant=product.default_variant %}
@@ -576,6 +578,9 @@
                     class="max-w-full max-h-full w-auto h-auto object-contain"
                     src="{% if image %}{{ image.image.url }}{% endif %}"
                     alt="{{ p.name }}"
+                    width="1000"
+                    height="1000"
+                    loading="lazy"
                   />
                 {% endwith %}
               </div>
@@ -681,7 +686,7 @@
           class="modal-img-animate w-[85vw] h-[50vh] sm:w-[75vw] sm:h-[65vh] lg:h-[75vh] max-w-3xl bg-slate-800 rounded-3xl flex items-center justify-center shadow-2xl border border-slate-700 select-none overflow-hidden"
         >
           {% with image=product.images.first %}
-          <img class="max-w-full max-h-full w-auto h-auto object-contain" src="{% if image %}{{ image.image.url }}{% endif %}" alt="{{ product.name }}" />
+          <img class="max-w-full max-h-full w-auto h-auto object-contain" src="{% if image %}{{ image.image.url }}{% endif %}" alt="{{ product.name }}" width="1000" height="1000" loading="lazy" />
           {% endwith %}
         </div>
         <p

@@ -72,7 +72,7 @@
               class="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center text-lg overflow-hidden"
             >
               {% if cat.icon %}
-              <img src="{{ cat.icon.url }}" alt="{{ cat.name }}" class="w-full h-full object-cover" />
+              <img src="{{ cat.icon.url }}" alt="{{ cat.name }}" class="w-full h-full object-cover" width="36" height="36" loading="lazy" />
               {% else %}
               🏷️
               {% endif %}
@@ -123,7 +123,7 @@
           class="w-9 h-9 rounded-xl bg-white shadow-sm flex items-center justify-center text-lg overflow-hidden shrink-0"
         >
           {% if cat.icon %}
-          <img src="{{ cat.icon.url }}" alt="{{ cat.name }}" class="w-full h-full object-cover" />
+          <img src="{{ cat.icon.url }}" alt="{{ cat.name }}" class="w-full h-full object-cover" width="36" height="36" loading="lazy" />
           {% else %}
           🏷️
           {% endif %}

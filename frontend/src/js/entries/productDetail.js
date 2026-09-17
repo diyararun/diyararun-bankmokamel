@@ -22,8 +22,13 @@ let selectedVariantId = productData.defaultVariantId;
 // the product itself whenever that destination's box isn't exactly
 // square, on a normalized image that already isn't cropped at the
 // source (see ProductImage.normalize_image in apps/catalog/models.py).
+// width/height="1000" — نشست ۵۲، مرحله‌ی ۴: هر عکسِ محصول، صرف‌نظر از
+// این‌که کجای صفحه استفاده شود، همیشه دقیقاً همین ابعاد را دارد (مربعِ
+// نرمال‌شده‌ی ProductImage.normalize_image)، پس گذاشتنِ همین عدد این‌جا
+// هم برای مرورگر صحیح است، هم جلوی جابه‌جایی‌ لِی‌اوت (CLS) هنگامِ
+// عوض‌شدنِ تصویرِ اصلی/تامبنیل‌ها/مودالِ زوم را می‌گیرد.
 const productImageHTML = (url) =>
-  `<img class="max-w-full max-h-full w-auto h-auto object-contain" src="${url}" alt="${productData.name}" />`;
+  `<img class="max-w-full max-h-full w-auto h-auto object-contain" src="${url}" alt="${productData.name}" width="1000" height="1000" />`;
 
 // Falls back to a single empty placeholder if the product has no
 // uploaded images yet, so the gallery/thumbnail code below never has to

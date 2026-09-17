@@ -85,7 +85,10 @@ export function initHeaderSearch() {
           <div class="w-12 h-12 shrink-0 rounded-lg bg-slate-100 overflow-hidden">
             ${
               p.image
-                ? `<img src="${p.image}" alt="${escapeHtml(p.name)}" class="w-full h-full object-cover" />`
+                ? // width/height="1000" (ابعادِ واقعیِ عکسِ محصول) +
+                  // loading="lazy" چون این دراپ‌داون تا شروعِ تایپِ کاربر
+                  // اصلاً نمایش داده نمی‌شود — نشست ۵۲، مرحله‌ی ۴.
+                  `<img src="${p.image}" alt="${escapeHtml(p.name)}" class="w-full h-full object-cover" width="1000" height="1000" loading="lazy" />`
                 : ""
             }
           </div>
