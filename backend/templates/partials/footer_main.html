@@ -128,11 +128,20 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
       <div class="space-y-4">
         <a href="{% url 'store:index' %}" class="flex items-center gap-2">
+          <!-- نشست ۴۹: تصویرِ برند (SiteSettings.brand_image)، وقتی فروشنده از پنلِ ادمین وارد کرده باشد؛ وگرنه همان باکسِ ثابتِ «BM» قبلی -->
+          {% if site_settings.brand_image %}
+          <img
+            src="{{ site_settings.brand_image.url }}"
+            alt="بانک مکمل"
+            class="w-9 h-9 rounded-xl object-cover"
+          />
+          {% else %}
           <div
             class="w-9 h-9 bg-red-600 rounded-xl flex items-center justify-center text-white font-black text-lg"
           >
             BM
           </div>
+          {% endif %}
           <span class="text-2xl font-black text-white tracking-tight"
             >بانک<span class="text-red-600">مکمل</span></span
           >
