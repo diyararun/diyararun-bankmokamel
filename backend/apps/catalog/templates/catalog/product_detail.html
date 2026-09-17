@@ -24,6 +24,19 @@
 
 {% block entry %}{% vite_asset 'src/js/entries/productDetail.js' %}{% endblock %}
 
+<!--
+  نشست ۵۲، مرحله‌ی ۲: دیتای ساختاریافته‌ی Schema.org (JSON-LD) — قیمت،
+  موجودی و امتیازِ نظرات از همین داده‌های موجودِ محصول ساخته می‌شود
+  (backend/apps/catalog/schema.py توضیح می‌دهد چرا قیمت به ریال تبدیل
+  می‌شود و چرا از AggregateOffer به‌جای یک قیمتِ ثابت استفاده شده).
+  product_ld_json از قبل در ProductDetailView کاملاً امن برای قرارگیری
+  داخلِ همین تگ ساخته شده (escape‌شده، دقیقاً مثلِ فیلترِ json_script
+  خودِ جنگو) — به همین دلیل اینجا با |safe رندر می‌شود.
+-->
+{% block extra_head %}
+  <script type="application/ld+json">{{ product_ld_json|safe }}</script>
+{% endblock %}
+
 {% block content %}
     {{ product_json|json_script:"product-data" }}
     <!-- ==================== BREADCRUMB ==================== -->

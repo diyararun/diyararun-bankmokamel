@@ -8,6 +8,7 @@ from apps.reviews.forms import ReviewForm
 
 from .forms import WEIGHT_RANGE_CHOICES, ProductFilterForm
 from .models import Brand, Category, Flavor, Product, ProductVariant
+from .schema import build_product_json_ld, json_ld_script
 
 # Fallback price-slider bounds (تومان) for the rare case where there are no
 # active variants at all yet (a brand-new store with an empty catalog) — a
@@ -258,6 +259,14 @@ class ProductDetailView(DetailView):
                 for v in product.active_variants
             ],
         }
+        # نشست ۵۲، مرحله‌ی ۲: داده‌ی ساختاریافته‌ی Schema.org برای همین
+        # محصول. context["reviews"] همین چند خط بالاتر ساخته شده؛ فراخوانیِ
+        # count() رویش یک کوئریِ COUNT جداگانه می‌زند (چون هنوز جایی در
+        # تمپلیت iterate نشده که result_cache پر شود) — هزینه‌ی ناچیزی
+        # برای یک بارگذاریِ صفحه‌ی محصول.
+        context["product_ld_json"] = json_ld_script(
+            build_product_json_ld(product, self.request, context["reviews"].count())
+        )
         return context
 
     # Pool size for _related_products below: how many same-category
