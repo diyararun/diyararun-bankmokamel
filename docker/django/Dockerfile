@@ -133,7 +133,7 @@ WORKDIR /app/backend
 # variables at *container start* (via docker-compose's "env_file: .env"),
 # never at *image build* time. So this can't be a "RUN" step here — it now
 # runs from entrypoint.sh instead, right before Gunicorn starts, when those
-# variables actually exist. See docker/django/entrypoint.sh.
+# variables actually exist. See docker/django/entrypoint.sh .
 COPY docker/django/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
