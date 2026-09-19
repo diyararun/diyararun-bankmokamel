@@ -64,7 +64,15 @@ COPY backend/requirements/ /app/backend/requirements/
 # =============================================================================
 FROM python-base AS dev
 
-RUN pip install --no-cache-dir -r backend/requirements/dev.txt
+# --retries و --timeout: چون سرورهایی که این پروژه رویشان build می‌شود گاهی
+# اتصال ناپایداری به PyPI دارند (نمونه‌ی مستندشده: build از کار افتاد با
+# "ERROR: Could not find a version that satisfies the requirement Pillow
+# ... (from versions: none)" — که به‌رغم پیام گمراه‌کننده‌اش، معنایش نبودِ
+# پکیج نبود؛ pip اصلاً وقت نکرده بود metadata آن پکیج را از PyPI بگیرد).
+# مقادیر پیش‌فرض pip (5 retry، 15 ثانیه timeout) برای این نوسانات شبکه کافی
+# نبودند؛ اینجا آن‌ها را بالا بردیم تا یک قطعی/کندی چندثانیه‌ای کل build را
+# خراب نکند.
+RUN pip install --no-cache-dir --retries 10 --timeout 100 -r backend/requirements/dev.txt
 
 # We deliberately do NOT copy the source code here. docker-compose.yml
 # bind-mounts ./backend into the container instead, so code changes on the
@@ -80,7 +88,12 @@ CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 # =============================================================================
 FROM python-base AS prod
 
-RUN pip install --no-cache-dir -r backend/requirements/prod.txt
+# --retries و --timeout: همان دلیلِ نسخه‌ی dev بالاتر — این خط دقیقاً همان
+# خطی بود که در لاگ deploy واقعی شکست خورد (روی Pillow، بعد از ۵۰ ثانیه
+# معطلی و بدون هیچ retry اضافه‌ای). بالا بردنِ این دو مقدار به pip اجازه
+# می‌دهد در برابر قطعی/کندیِ گذرای شبکه به PyPI چند بار دوباره تلاش کند،
+# به‌جای اینکه با یک بار تلاشِ ناموفق کل build را fail کند.
+RUN pip install --no-cache-dir --retries 10 --timeout 100 -r backend/requirements/prod.txt
 
 # Unlike "dev", production bakes the code into the image (no bind mount),
 # so the image is a self-contained, deployable artifact.
