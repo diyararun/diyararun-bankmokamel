@@ -15,4 +15,3 @@ frontend/dist/
 .vscode/
 .idea/
 /.env
-/backend/apps/accounts/migrations/0001_initial.py
