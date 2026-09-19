@@ -45,11 +45,33 @@ FROM python:3.12-slim AS python-base
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
+# PIP_INDEX_URL / PIP_TRUSTED_HOST: به‌جای اتصالِ مستقیم به pypi.org (که در
+# لاگِ deploy واقعی نشان داد گاهی ناپایدار/کند است — نمونه‌ی مستندشده: خطای
+# Pillow "from versions: none" بعد از ۵۰ ثانیه معطلی)، pip را به میررورِ
+# رانفلر (Runflare) هدایت می‌کنیم. چون این دو خط ENV هستند (نه ARG)، برای
+# همه‌ی دستورهای "pip install" در ادامه‌ی این stage و هر stage ای که از آن
+# ارث می‌برد (dev و prod، هر دو) به‌صورت خودکار اعمال می‌شوند — نیازی به
+# تکرارِ "--index-url" روی هر خطِ pip نیست.
+# نشست ۵۳: میررورِ پارس‌پک (mirror.abrha.net) هم امتحان شد، ولی همان‌جا هم
+# ReadTimeoutError گرفتیم — به همین دلیل سراغ این یکی رفتیم.
+# مرجع: https://runflare.com/mirrors/pypi-mirror/
+ENV PIP_INDEX_URL=https://mirror-pypi.runflare.com/simple \
+    PIP_TRUSTED_HOST=mirror-pypi.runflare.com
+
 # System libraries required to build/run psycopg2 (the PostgreSQL driver).
-# libpq-dev = PostgreSQL client headers, gcc = C compiler needed to build it.
+# libpq-dev = PostgreSQL client headers, build-essential = gcc + make + libc6-dev
+# (فایل‌هدرهای پایه‌ایِ C مثل stdlib.h).
+#
+# نشست ۵۳: قبلاً اینجا فقط "gcc" بود (بدون build-essential). چون همیشه قبل
+# از رسیدن به این مرحله، build رو مشکلِ شبکه (Pillow/PyPI) fail می‌کرد، این
+# نقص هیچ‌وقت دیده نشده بود. بعد از حل‌شدنِ مشکلِ شبکه (میررورِ رانفلر)،
+# اولین باری که واقعاً به کامپایلِ psycopg2 رسیدیم، این خطا ظاهر شد:
+#   fatal error: stdlib.h: No such file or directory
+# یعنی gcc به‌تنهایی نصب بود ولی فایل‌هدرهای libc (که از build-essential
+# میان) نبودن.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
-    gcc \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # /app mirrors the repository root, so paths inside the container match
@@ -64,7 +86,15 @@ COPY backend/requirements/ /app/backend/requirements/
 # =============================================================================
 FROM python-base AS dev
 
-RUN pip install --no-cache-dir -r backend/requirements/dev.txt
+# --retries و --timeout: چون سرورهایی که این پروژه رویشان build می‌شود گاهی
+# اتصال ناپایداری به PyPI دارند (نمونه‌ی مستندشده: build از کار افتاد با
+# "ERROR: Could not find a version that satisfies the requirement Pillow
+# ... (from versions: none)" — که به‌رغم پیام گمراه‌کننده‌اش، معنایش نبودِ
+# پکیج نبود؛ pip اصلاً وقت نکرده بود metadata آن پکیج را از PyPI بگیرد).
+# مقادیر پیش‌فرض pip (5 retry، 15 ثانیه timeout) برای این نوسانات شبکه کافی
+# نبودند؛ اینجا آن‌ها را بالا بردیم تا یک قطعی/کندی چندثانیه‌ای کل build را
+# خراب نکند.
+RUN pip install --no-cache-dir --retries 10 --timeout 100 -r backend/requirements/dev.txt
 
 # We deliberately do NOT copy the source code here. docker-compose.yml
 # bind-mounts ./backend into the container instead, so code changes on the
@@ -80,7 +110,12 @@ CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 # =============================================================================
 FROM python-base AS prod
 
-RUN pip install --no-cache-dir -r backend/requirements/prod.txt
+# --retries و --timeout: همان دلیلِ نسخه‌ی dev بالاتر — این خط دقیقاً همان
+# خطی بود که در لاگ deploy واقعی شکست خورد (روی Pillow، بعد از ۵۰ ثانیه
+# معطلی و بدون هیچ retry اضافه‌ای). بالا بردنِ این دو مقدار به pip اجازه
+# می‌دهد در برابر قطعی/کندیِ گذرای شبکه به PyPI چند بار دوباره تلاش کند،
+# به‌جای اینکه با یک بار تلاشِ ناموفق کل build را fail کند.
+RUN pip install --no-cache-dir --retries 10 --timeout 100 -r backend/requirements/prod.txt
 
 # Unlike "dev", production bakes the code into the image (no bind mount),
 # so the image is a self-contained, deployable artifact.
