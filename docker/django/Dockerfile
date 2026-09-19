@@ -45,6 +45,19 @@ FROM python:3.12-slim AS python-base
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
+# PIP_INDEX_URL / PIP_TRUSTED_HOST: به‌جای اتصالِ مستقیم به pypi.org (که در
+# لاگِ deploy واقعی نشان داد گاهی ناپایدار/کند است — نمونه‌ی مستندشده: خطای
+# Pillow "from versions: none" بعد از ۵۰ ثانیه معطلی)، pip را به میررورِ
+# رانفلر (Runflare) هدایت می‌کنیم. چون این دو خط ENV هستند (نه ARG)، برای
+# همه‌ی دستورهای "pip install" در ادامه‌ی این stage و هر stage ای که از آن
+# ارث می‌برد (dev و prod، هر دو) به‌صورت خودکار اعمال می‌شوند — نیازی به
+# تکرارِ "--index-url" روی هر خطِ pip نیست.
+# نشست ۵۳: میررورِ پارس‌پک (mirror.abrha.net) هم امتحان شد، ولی همان‌جا هم
+# ReadTimeoutError گرفتیم — به همین دلیل سراغ این یکی رفتیم.
+# مرجع: https://runflare.com/mirrors/pypi-mirror/
+ENV PIP_INDEX_URL=https://mirror-pypi.runflare.com/simple \
+    PIP_TRUSTED_HOST=mirror-pypi.runflare.com
+
 # System libraries required to build/run psycopg2 (the PostgreSQL driver).
 # libpq-dev = PostgreSQL client headers, gcc = C compiler needed to build it.
 RUN apt-get update && apt-get install -y --no-install-recommends \
