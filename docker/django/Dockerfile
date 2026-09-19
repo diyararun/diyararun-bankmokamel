@@ -93,10 +93,15 @@ COPY --from=frontend-builder /frontend/dist /app/frontend/dist
 
 WORKDIR /app/backend
 
-# NOTE (Phase 0 TODO): collectstatic needs a valid SECRET_KEY and DB
-# configuration to run, which requires settings.py to read from .env first.
-# We wire that up in Phase 0 — until then this stays commented out.
-# RUN python manage.py collectstatic --noinput
+# NOTE (Phase 0 — resolved): collectstatic needs a valid SECRET_KEY and DB
+# configuration to run, which are only available as real environment
+# variables at *container start* (via docker-compose's "env_file: .env"),
+# never at *image build* time. So this can't be a "RUN" step here — it now
+# runs from entrypoint.sh instead, right before Gunicorn starts, when those
+# variables actually exist. See docker/django/entrypoint.sh.
+COPY docker/django/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 8000
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
