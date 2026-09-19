@@ -55,8 +55,17 @@ services:
     volumes:
       - static_volume:/app/backend/staticfiles:ro
       - media_volume:/app/backend/media:ro
-    ports:
-      - "80:80"
+    # 2026-09-19: "ports: - 80:80" اینجا بود و همین باعثِ فیل‌شدنِ دیپلوی
+    # شد: "Bind for :::80 failed: port is already allocated". پورتِ ۸۰ی
+    # هاست از قبل متعلق به خودِ ریورس‌پروکسیِ Coolify (کانتینرِ
+    # coolify-proxy / Traefik) است — طبقِ معماریِ Coolify، فقط همان یک
+    # پروکسیِ مرکزی باید پورتِ ۸۰/۴۴۳ را روی هاست bind کند، و بعد بر اساسِ
+    # لیبل‌های داکری که خودِ Coolify (بر اساسِ FQDN تنظیم‌شده برای این
+    # اپ در پنل) به این سرویس اضافه می‌کند، ترافیک را به آن روت می‌کند.
+    # با "expose" فقط داخلِ شبکه‌ی داکر در دسترسِ Traefik قرار می‌گیرد و
+    # دیگر مستقیماً با coolify-proxy روی پورتِ هاست تصادم نمی‌کند.
+    expose:
+      - "80"
     depends_on:
       - backend
     restart: unless-stopped
