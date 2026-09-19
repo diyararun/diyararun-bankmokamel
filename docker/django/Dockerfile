@@ -59,10 +59,19 @@ ENV PIP_INDEX_URL=https://mirror-pypi.runflare.com/simple \
     PIP_TRUSTED_HOST=mirror-pypi.runflare.com
 
 # System libraries required to build/run psycopg2 (the PostgreSQL driver).
-# libpq-dev = PostgreSQL client headers, gcc = C compiler needed to build it.
+# libpq-dev = PostgreSQL client headers, build-essential = gcc + make + libc6-dev
+# (فایل‌هدرهای پایه‌ایِ C مثل stdlib.h).
+#
+# نشست ۵۳: قبلاً اینجا فقط "gcc" بود (بدون build-essential). چون همیشه قبل
+# از رسیدن به این مرحله، build رو مشکلِ شبکه (Pillow/PyPI) fail می‌کرد، این
+# نقص هیچ‌وقت دیده نشده بود. بعد از حل‌شدنِ مشکلِ شبکه (میررورِ رانفلر)،
+# اولین باری که واقعاً به کامپایلِ psycopg2 رسیدیم، این خطا ظاهر شد:
+#   fatal error: stdlib.h: No such file or directory
+# یعنی gcc به‌تنهایی نصب بود ولی فایل‌هدرهای libc (که از build-essential
+# میان) نبودن.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
-    gcc \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # /app mirrors the repository root, so paths inside the container match
