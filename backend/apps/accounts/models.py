@@ -52,7 +52,7 @@ class User(AbstractUser):
     username = None
 
     phone = models.CharField("شماره موبایل", max_length=11, unique=True)
-    national_code = models.CharField("کد ملی", max_length=10, blank=True)
+    national_code = models.CharField("کد ملی", max_length=10, blank=True, null=True)
     avatar_emoji = models.CharField("آیکون پروفایل", max_length=4, default="👤")
     # Temporary single-address convenience field, filled automatically from
     # checkout — superseded once the real "آدرس‌های من" address book (with
@@ -134,7 +134,7 @@ class Address(models.Model):
     province = models.CharField("استان", max_length=50)
     city = models.CharField("شهر", max_length=50)
     full_address = models.TextField("آدرس کامل پستی")
-    postal_code = models.CharField("کد پستی", max_length=10)
+    postal_code = models.CharField("کد پستی", max_length=10, blank=True, null=True)
     plaque = models.CharField("پلاک", max_length=20)
     unit = models.CharField("واحد", max_length=20, blank=True)
     is_default = models.BooleanField("آدرس پیش‌فرض", default=False)
