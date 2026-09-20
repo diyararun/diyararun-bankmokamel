@@ -53,6 +53,7 @@ class CheckoutForm(forms.Form):
         label="کد ملی",
         max_length=10,
         widget=forms.TextInput(attrs={"placeholder": "۰۰۱۲۳۴۵۶۷۸", "dir": "ltr", "class": LTR_INPUT_CLASS}),
+        required=False,
     )
 
     # ---- Section 2: آدرس دقیق محل تحویل ----
