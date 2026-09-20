@@ -498,7 +498,7 @@ class ProductVariant(models.Model):
     label = models.CharField("برچسب وزن/سروینگ", max_length=100, help_text="مثال: ۲۲۷۰ گرم (۷۴ سروینگ)")
     weight_grams = models.PositiveIntegerField("وزن (گرم)", null=True, blank=True)
     servings_count = models.PositiveIntegerField("تعداد سروینگ", null=True, blank=True)
-    sku = models.CharField("کد کالا (SKU)", max_length=50, unique=True)
+    sku = models.CharField("کد کالا (SKU)", max_length=50, unique=True, blank=True, null=True)
     price = models.PositiveIntegerField("قیمت (تومان)")
     compare_at_price = models.PositiveIntegerField(
         "قیمت قبل از تخفیف (تومان)", null=True, blank=True, help_text="خالی بگذارید اگر تخفیف ندارد"
